@@ -117,18 +117,20 @@ const handleTopicClick = () => {
 
 .icon-holder {
   display: inline-block;
-  margin-left: .25em;
+  margin-left: .5em;
   margin-right: .5em;
   /* margin-bottom: .5em; */
   width: 1em;
-  font-size: 20px;
+  /* font-size: 20px; */
+  font-size: 16px;
 }
 
 .name-holder {
   display: inline-block;
   font-weight: 600;
   font-family: Montserrat !important;
-  font-size: 20px !important;
+  font-size: 16px;
+  /* font-size: 20px !important; */
 }
 
 .is-vcentered {
@@ -144,8 +146,8 @@ const handleTopicClick = () => {
   background-color: #f0f0f0;
   color: #0f4d90;
   border: 0px solid #cfcfcf;
-  /* margin-top: 16px; */
-  margin-top: .5em;
+  margin-top: 16px;
+  /* margin-top: .5em; */
   padding: .25em;
   cursor: pointer;
   width: 100%;
