@@ -208,7 +208,7 @@ describe("Building Search Page | Tests are in progress", function () {
       );
       await zoningTopic.click();
       const tableElement = await driver.wait(
-        until.elementLocated(By.css("div[class='column is-3 code'] b")),
+        until.elementLocated(By.css("div[class='column is-3 badge-cell'] b")),
         60000
       );
       const tableText = await tableElement.getText();

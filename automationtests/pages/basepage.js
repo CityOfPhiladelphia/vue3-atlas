@@ -69,7 +69,7 @@ describe("Base Page | Test in progress", function () {
         60000
       );
       await driver.wait(
-        until.elementLocated(By.css(".topic-panel-final-content")),
+        until.elementLocated(By.css(".topic-panel-no-content")),
         60000
       );
       await driver.wait(

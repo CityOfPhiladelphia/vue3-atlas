@@ -164,9 +164,9 @@ describe("Condominiums | Tests are in progress", function () {
           By.css("section[id='Zoning-topic'] div[class='topic-name']")
         )
         .click();
-      await driver.wait(until.elementLocated(By.css("div[class='column is-3 code'] b")), 60000);
+      await driver.wait(until.elementLocated(By.css("div[class='column is-3 badge-cell'] b")), 60000);
       const table = await driver.findElement(
-        By.css("div[class='column is-3 code'] b")
+        By.css("div[class='column is-3 badge-cell'] b")
       );
       const tableText = await table.getText();
       //console.log(tableText);
