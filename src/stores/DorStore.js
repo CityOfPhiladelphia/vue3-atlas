@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { useParcelsStore } from './ParcelsStore';
-import { useGeocodeStore } from './GeocodeStore';
+import { useGeocodeStore } from '@/stores/GeocodeStore';
 
 import bboxPolygon from '@turf/bbox-polygon';
 import axios from 'axios';

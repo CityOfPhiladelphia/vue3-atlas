@@ -1,4 +1,4 @@
-<script setup>
+<script setup type='ts'>
 import { computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { point, featureCollection } from '@turf/helpers';
 

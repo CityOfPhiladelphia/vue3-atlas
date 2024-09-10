@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 import { defineStore } from 'pinia';
-import { useGeocodeStore } from '@/stores/GeocodeStore.js'
+import { useGeocodeStore } from '@/stores/GeocodeStore'
 
 export const useVotingStore = defineStore("VotingStore", {
   state: () => {

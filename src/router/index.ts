@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import App from '@/App.vue';
 import $config from '@/config';
 
-import { useGeocodeStore } from '@/stores/GeocodeStore.js'
+import { useGeocodeStore } from '@/stores/GeocodeStore'
 import { useCondosStore } from '@/stores/CondosStore.js'
 import { useParcelsStore } from '@/stores/ParcelsStore.js'
 import { useOpaStore } from '@/stores/OpaStore.js'

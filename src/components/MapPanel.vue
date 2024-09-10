@@ -1,4 +1,4 @@
-<script setup>
+<script setup type='ts'>
 
 import { useMapStore } from '@/stores/MapStore'
 const MapStore = useMapStore();

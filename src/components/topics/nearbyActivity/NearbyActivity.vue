@@ -1,4 +1,4 @@
-<script setup>
+<script setup type='ts'>
 import { ref, computed, watch, onMounted } from 'vue';
 
 import { useMainStore } from '@/stores/MainStore';

@@ -1,4 +1,4 @@
-<script setup>
+<script setup type='ts'>
 
 import $config from '@/config';
 if (import.meta.env.VITE_DEBUG == 'true') console.log('Map.vue $config:', $config);
@@ -22,7 +22,7 @@ import { useMapStore } from '@/stores/MapStore';
 const MapStore = useMapStore();
 import { useMainStore } from '@/stores/MainStore'
 const MainStore = useMainStore();
-import { useGeocodeStore } from '@/stores/GeocodeStore.js'
+import { useGeocodeStore } from '@/stores/GeocodeStore'
 const GeocodeStore = useGeocodeStore();
 import { useParcelsStore } from '@/stores/ParcelsStore.js'
 const ParcelsStore = useParcelsStore();

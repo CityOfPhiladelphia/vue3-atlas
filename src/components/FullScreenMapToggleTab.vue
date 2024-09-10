@@ -1,5 +1,5 @@
 
-<script setup>
+<script setup type='ts'>
 
 import { ref, computed, onMounted, watch } from 'vue';
 

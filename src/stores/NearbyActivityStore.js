@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { useGeocodeStore } from '@/stores/GeocodeStore.js'
+import { useGeocodeStore } from '@/stores/GeocodeStore'
 import { useMapStore } from '@/stores/MapStore'
 
 import axios from 'axios';

@@ -1,5 +1,5 @@
 
-<script setup>
+<script setup type='ts'>
 
 import { useMainStore } from '@/stores/MainStore';
 const MainStore = useMainStore();

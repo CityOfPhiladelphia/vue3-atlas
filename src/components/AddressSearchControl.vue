@@ -1,4 +1,4 @@
-<script setup>
+<script setup type='ts'>
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 

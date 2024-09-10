@@ -2,7 +2,7 @@ import axios from 'axios';
 
 import { defineStore } from 'pinia';
 import { useParcelsStore } from './ParcelsStore';
-import { useGeocodeStore } from '@/stores/GeocodeStore.js'
+import { useGeocodeStore } from '@/stores/GeocodeStore'
 
 import useTransforms from '@/composables/useTransforms';
 const { rcoPrimaryContact, phoneNumber } = useTransforms();

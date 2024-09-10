@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { useGeocodeStore } from '@/stores/GeocodeStore.js'
+import { useGeocodeStore } from '@/stores/GeocodeStore'
 
 import useTransforms from '@/composables/useTransforms';
 const { titleCase, prettyNumber, currency, date } = useTransforms();

@@ -1,4 +1,4 @@
-<script setup>
+<script setup type='ts'>
 
 import $config from '@/config';
 import { onMounted, computed, watch } from 'vue';

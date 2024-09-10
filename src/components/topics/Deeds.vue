@@ -1,4 +1,4 @@
-<script setup>
+<script setup type='ts'>
 
 import { ref, computed, onBeforeMount } from 'vue';
 

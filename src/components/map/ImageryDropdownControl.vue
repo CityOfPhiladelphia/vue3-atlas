@@ -1,4 +1,4 @@
-<script setup>
+<script setup type='ts'>
 import { ref, computed } from 'vue';
 import { useMapStore } from '@/stores/MapStore';
 const MapStore = useMapStore();

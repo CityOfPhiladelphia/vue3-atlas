@@ -1,9 +1,9 @@
-<script setup>
+<script setup type='ts'>
 
 import { computed } from 'vue';
 import { useMainStore } from '@/stores/MainStore'
 const GeocodeStore = useGeocodeStore();
-import { useGeocodeStore } from '@/stores/GeocodeStore.js'
+import { useGeocodeStore } from '@/stores/GeocodeStore'
 const MainStore = useMainStore();
 import { useCondosStore } from '@/stores/CondosStore.js'
 const CondosStore = useCondosStore();

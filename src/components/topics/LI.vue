@@ -1,4 +1,4 @@
-<script setup>
+<script setup type='ts'>
 import { ref, computed, watch, onMounted } from 'vue';
 import { polygon, featureCollection } from '@turf/helpers';
 

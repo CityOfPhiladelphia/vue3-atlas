@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { useGeocodeStore } from '@/stores/GeocodeStore.js'
+import { useGeocodeStore } from '@/stores/GeocodeStore'
 import axios from 'axios';
 
 export const useCondosStore = defineStore('CondosStore', {

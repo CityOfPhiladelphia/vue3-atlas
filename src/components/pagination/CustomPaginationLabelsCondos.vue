@@ -47,7 +47,7 @@
   </div>
 </template>
 
-<script>
+<script type='ts'>
 import VgtPaginationPageInfo from './VgtPaginationPageInfo.vue';
 import {
   PAGINATION_MODES,

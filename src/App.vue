@@ -1,4 +1,4 @@
-<script setup>
+<script setup type='ts'>
 if (import.meta.env.VITE_DEBUG == 'true') console.log('App.vue setup is running in debug mode');
 
 import isMobileDevice from './util/is-mobile-device';
