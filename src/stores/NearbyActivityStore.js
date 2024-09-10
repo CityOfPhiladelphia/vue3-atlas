@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { useGeocodeStore } from '@/stores/GeocodeStore.js'
-import { useMapStore } from '@/stores/MapStore.js'
+import { useMapStore } from '@/stores/MapStore'
 
 import axios from 'axios';
 import { format, subHours, subDays, subWeeks, subMonths, subYears } from 'date-fns';

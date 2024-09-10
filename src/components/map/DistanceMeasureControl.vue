@@ -1,7 +1,7 @@
 <script>
 
-import { useMainStore } from '@/stores/MainStore.js';
-import { useMapStore} from '@/stores/MapStore.js';
+import { useMainStore } from '@/stores/MainStore';
+import { useMapStore } from '@/stores/MapStore';
 
 
 // import mapbox-gl-draw-min.js, cloned from https://gist.github.com/godismyjudge95/a4ea43263db53b90b05511c911cd0034

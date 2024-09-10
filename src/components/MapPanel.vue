@@ -1,6 +1,6 @@
 <script setup>
 
-import { useMapStore } from '@/stores/MapStore.js'
+import { useMapStore } from '@/stores/MapStore'
 const MapStore = useMapStore();
 import Map from '@/components/map/Map.vue';
 

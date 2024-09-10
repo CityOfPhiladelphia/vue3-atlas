@@ -18,9 +18,9 @@ import bbox from '@turf/bbox';
 import buffer from '@turf/buffer';
 
 // STORES
-import { useMapStore } from '@/stores/MapStore.js';
+import { useMapStore } from '@/stores/MapStore';
 const MapStore = useMapStore();
-import { useMainStore } from '@/stores/MainStore.js'
+import { useMainStore } from '@/stores/MainStore'
 const MainStore = useMainStore();
 import { useGeocodeStore } from '@/stores/GeocodeStore.js'
 const GeocodeStore = useGeocodeStore();

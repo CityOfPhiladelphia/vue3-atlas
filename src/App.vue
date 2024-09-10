@@ -5,7 +5,7 @@ import isMobileDevice from './util/is-mobile-device';
 import isMac from './util/is-mac'; // this can probably be removed from App.vue, and only run in main.js
 
 // STORES
-import { useMainStore } from '@/stores/MainStore.js'
+import { useMainStore } from '@/stores/MainStore'
 const MainStore = useMainStore();
 
 if (!import.meta.env.VITE_PUBLICPATH) {

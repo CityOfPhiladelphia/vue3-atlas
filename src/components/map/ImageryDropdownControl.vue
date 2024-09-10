@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { useMapStore } from '@/stores/MapStore.js';
+import { useMapStore } from '@/stores/MapStore';
 const MapStore = useMapStore();
 
 const $emit = defineEmits(['setImagery']);

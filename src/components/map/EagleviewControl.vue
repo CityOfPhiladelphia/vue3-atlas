@@ -1,8 +1,8 @@
 <script setup>
 import { computed } from 'vue';
-import { useMainStore } from '@/stores/MainStore.js'
+import { useMainStore } from '@/stores/MainStore'
 const MainStore = useMainStore();
-import { useMapStore } from '@/stores/MapStore.js';
+import { useMapStore } from '@/stores/MapStore';
 const MapStore = useMapStore();
 
 defineEmits(['toggleEagleview']);

@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { useMainStore } from '@/stores/MainStore.js'
+import { useMainStore } from '@/stores/MainStore'
 const MainStore = useMainStore();
 
 const router = useRouter();

@@ -13,7 +13,7 @@ import { useVotingStore } from '@/stores/VotingStore.js'
 import { useCity311Store } from '@/stores/City311Store.js'
 import { useStormwaterStore } from '@/stores/StormwaterStore.js'
 import { useNearbyActivityStore } from '@/stores/NearbyActivityStore.js'
-import { useMainStore } from '@/stores/MainStore.js'
+import { useMainStore } from '@/stores/MainStore'
 
 import useRouting from '@/composables/useRouting';
 const { routeApp } = useRouting();
@@ -44,7 +44,7 @@ const clearStoreData = async() => {
   CondosStore.condosData.pages = { page_1: { features: [] } };
 }
 
-const getGeocodeAndPutInStore = async(address) => {
+const getGeocodeAndPutInStore = async(address: string) => {
   const GeocodeStore = useGeocodeStore();
   const MainStore = useMainStore();
   await GeocodeStore.fillAisData(address);

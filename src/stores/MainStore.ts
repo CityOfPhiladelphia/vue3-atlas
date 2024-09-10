@@ -32,7 +32,7 @@ export const useMainStore = defineStore("MainStore", {
   },
 
   actions: {
-    setCurrentAddress(address) {
+    setCurrentAddress(address: string | null) {
       this.currentAddress = address;
     },
     setCurrentGeocodeParameter(value) {
