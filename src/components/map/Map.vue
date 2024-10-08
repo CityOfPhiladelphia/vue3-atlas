@@ -1050,11 +1050,13 @@ const toggleEagleview = () => {
       @update-camera-yaw="updateCyclomediaCameraAngle"
       @update-camera-h-fov="updateCyclomediaCameraViewcone"
       @update-camera-lng-lat="updateCyclomediaCameraLngLat"
+      @toggle-cyclomedia="toggleCyclomedia"
     />
   </KeepAlive>
   <KeepAlive>
     <EagleviewPanel
       v-if="MapStore.eagleviewOn"
+      @toggle-eagleview="toggleEagleview"
     />
   </KeepAlive>
 </template>

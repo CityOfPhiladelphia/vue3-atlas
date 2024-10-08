@@ -13,7 +13,7 @@ const projection2272 = "+proj=lcc +lat_1=40.96666666666667 +lat_2=39.93333333333
 
 const cyclomediaInitialized = ref(false);
 
-const $emit = defineEmits(['updateCameraYaw', 'updateCameraLngLat', 'updateCameraHFov']);
+const $emit = defineEmits(['updateCameraYaw', 'updateCameraLngLat', 'updateCameraHFov', 'toggleCyclomedia']);
 
 watch(
   () => MapStore.currentAddressCoords,
@@ -152,25 +152,54 @@ onMounted( async() => {
   }
 })
 
+const popoutClicked = () => {
+  window.open('//cyclomedia.phila.gov/?lat=' + MapStore.cyclomediaCameraLngLat[1] + '&lng=' + MapStore.cyclomediaCameraLngLat[0], '_blank');
+  $emit('toggleCyclomedia');
+}
+
 </script>
 
 <template>
   <div class="cyclomedia-panel">
+
+    <div class="cyclomedia-pop-out">
+      <font-awesome-icon
+        icon="fa-external-link-alt"
+        @click="popoutClicked"
+      ></font-awesome-icon>
+    </div>
     <div
       id="cycloviewer"
       ref="cycloviewer"
       class="panoramaViewerWindow"
-    />
+    >
+    </div>
+
+    
+
   </div>
 </template>
 
 <style scoped>
 
 .cyclomedia-panel {
+  position: relative;
   height: 100%;
   width: 100%;
 }
 
+.cyclomedia-pop-out {
+  position: absolute;
+  right: 0;
+  z-index: 2;
+  background-color: white;
+  padding-left: 6px;
+  padding-right: 6px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  cursor: pointer;
+  border-radius: 2px;
+}
 
 @media 
 only screen and (max-width: 768px),

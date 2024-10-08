@@ -9,6 +9,8 @@ import { useMapStore } from '@/stores/MapStore';
 // import { config } from 'maplibre-gl';
 const MapStore = useMapStore();
 
+const $emit = defineEmits(['toggleEagleview']);
+
 const clientId = import.meta.env.VITE_EAGLEVIEW_CLIENT_ID;
 const clientSecret = import.meta.env.VITE_EAGLEVIEW_CLIENT_SECRET;
 const options = {
@@ -90,21 +92,56 @@ onMounted( async() => {
   // });
 });
 
+const popoutClicked = () => {
+  window.open('//pictometry.phila.gov/?lat=' + MapStore.currentAddressCoords[1] + '&lng=' + MapStore.currentAddressCoords[0], '_blank');
+  $emit('toggleEagleview');
+}
+
 </script>
 
 <template>
-  <div
-    id="eagleview"
-    class="eagleview-div"
-  />
+  <div class="eagleview-panel">
+
+    <div class="eagleview-pop-out">
+      <font-awesome-icon
+        icon="fa-external-link-alt"
+        @click="popoutClicked"
+      ></font-awesome-icon>
+    </div>
+
+    <div
+      id="eagleview"
+      class="eagleview-div"
+    />
+
+  </div>
 </template>
 
 <style>
+
+.eagleview-panel {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
 
 .eagleview-div {
   position: relative;
   height: 100%;
   width: 100%;
+}
+
+.eagleview-pop-out {
+  position: absolute;
+  right: 0;
+  z-index: 2;
+  background-color: white;
+  padding-left: 6px;
+  padding-right: 6px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  cursor: pointer;
+  border-radius: 2px;
 }
 
 @media 

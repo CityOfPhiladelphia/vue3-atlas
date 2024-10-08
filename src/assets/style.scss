@@ -73,7 +73,7 @@ a {
 
 .map-panel-holder {
   width: 50%;
-  flex-grow: 1;
+  height: calc(100vh - 110px);
   margin-bottom: 0px;
 }
 
@@ -114,8 +114,7 @@ a {
 }
 
 .map-panel.cyclomedia-eagleview {
-  // height: 51.5%;
-  height: 52.5%;
+  height: 50%;
 }
 
 .map-class {
