@@ -39,20 +39,25 @@ const setNewLocation = async (coords) => {
   const today = new Date();
   const year = MapStore.cyclomediaYear;
   let thisYear, lastYear;
+  let params = {};
+  const coords2272 = proj4(projection4326, projection2272, coords);
   if (year) {
     lastYear = `${year}-01-01`;
     thisYear = `${year + 1}-01-01`;
-  } else {
-    lastYear = format(subYears(today, 1), 'yyyy-MM-dd');
-    thisYear = format(today, 'yyyy-MM-dd');
-  }
-  if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue setNewLocation, coords:', coords);
-  const coords2272 = proj4(projection4326, projection2272, coords);
-  const response = await StreetSmartApi.open(
-    {
+    params = {
       coordinate: [coords2272[0],coords2272[1]],
       dateRange: { from: lastYear, to: thisYear },
-    },
+    };
+  } else {
+    // lastYear = format(subYears(today, 2), 'yyyy-MM-dd');
+    // thisYear = format(today, 'yyyy-MM-dd');
+    params = {
+      coordinate: [coords2272[0],coords2272[1]],
+    };
+  }
+  if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue setNewLocation, lastYear:', lastYear, 'thisYear:', thisYear, 'coords:', coords, 'coords2272:', coords2272);
+  const response = await StreetSmartApi.open(
+    params,
     {
       viewerType: StreetSmartApi.ViewerType.PANORAMA,
       srs: 'EPSG:2272',
@@ -63,8 +68,8 @@ const setNewLocation = async (coords) => {
     }
   )
   let viewer = response[0];
-  if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue setNewLocation, viewer:', viewer);
-  viewer.toggleNavbarExpanded(navBarExpanded.value);
+  if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue setNewLocation, viewer:', viewer, 'response:', response);
+  // viewer.toggleNavbarExpanded(navBarExpanded.value);
   viewer.toggleButtonEnabled('panorama.elevation', false);
   viewer.toggleButtonEnabled('panorama.reportBlurring', false);
 
@@ -129,8 +134,10 @@ onMounted( async() => {
     CYCLOMEDIA_USERNAME = import.meta.env.VITE_CITYATLAS_CYCLOMEDIA_USERNAME;
     CYCLOMEDIA_PASSWORD = import.meta.env.VITE_CITYATLAS_CYCLOMEDIA_PASSWORD;
   }
+  if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue onMounted, StreetSmartApi:', StreetSmartApi, 'CYCLOMEDIA_USERNAME:', CYCLOMEDIA_USERNAME, 'CYCLOMEDIA_PASSWORD:', CYCLOMEDIA_PASSWORD);
 
   if (!cyclomediaInitialized.value) {
+    if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue onMounted, initializing cyclomedia');
     await StreetSmartApi.init({
       targetElement: cycloviewer,
       username: CYCLOMEDIA_USERNAME,
@@ -143,6 +150,7 @@ onMounted( async() => {
         database: 'CMDatabase',
       },
     })
+    if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue onMounted, cyclomedia initialized');
     cyclomediaInitialized.value = true;
   }
   if (GeocodeStore.aisData.features) {
