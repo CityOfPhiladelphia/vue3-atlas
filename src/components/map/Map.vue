@@ -1001,7 +1001,7 @@ const toggleEagleview = () => {
         icon="fa-solid fa-spinner"
         class="fa-6x center-spinner"
         spin
-        />
+      />
     </div>
 
     <AddressSearchControl :input-id="'map-search-input'" />

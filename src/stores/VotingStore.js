@@ -9,7 +9,7 @@ export const useVotingStore = defineStore("VotingStore", {
       divisions: {},
       pollingPlaces: {},
       electedOfficials: {},
-      nextElection: {},
+      // nextElection: {},
       electionSplit: {},
       loadingVotingData: true,
     };
@@ -20,13 +20,13 @@ export const useVotingStore = defineStore("VotingStore", {
       this.fillPollingPlaces();
       this.fillElectedOfficials();
       this.fillElectionSplit();
-      this.fillNextElection();
+      // this.fillNextElection();
     },
     async clearAllVotingData() {
       this.divisions = {};
       this.pollingPlaces = {};
       this.electedOfficials = {};
-      this.nextElection = {};
+      // this.nextElection = {};
       this.electionSplit = {};
       this.loadingVotingData = true;
     },
@@ -45,7 +45,7 @@ export const useVotingStore = defineStore("VotingStore", {
             if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillDivisions - await resolved but HTTP status was not successful');
           }
         } else if (import.meta.env.VITE_VOTING_DATA_SOURCE === 'arcgis') {
-          let url = '//services.arcgis.com/fLeGjb7u4uXqeF9q/arcgis/rest/services/Political_Divisions/FeatureServer/0/query';
+          let url = 'https://services.arcgis.com/fLeGjb7u4uXqeF9q/arcgis/rest/services/Political_Divisions/FeatureServer/0/query';
           let params = {
             'returnGeometry': true,
             'where': "1=1",
@@ -90,7 +90,7 @@ export const useVotingStore = defineStore("VotingStore", {
           }
         } else if (import.meta.env.VITE_VOTING_DATA_SOURCE === 'arcgis') {
 
-          let baseUrl = '//services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/POLLING_PLACES/FeatureServer/0/query';
+          let baseUrl = 'https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/POLLING_PLACES/FeatureServer/0/query';
           let params = {
             'returnGeometry': true,
             'where': `PRECINCT = '${precinct}'`,
@@ -129,7 +129,7 @@ export const useVotingStore = defineStore("VotingStore", {
             if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillElectedOfficials - await resolved but HTTP status was not successful');
           }
         } else if (import.meta.env.VITE_VOTING_DATA_SOURCE === 'arcgis') {
-          let baseUrl = '//services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/ELECTED_OFFICIALS/FeatureServer/0/query';
+          let baseUrl = 'https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/ELECTED_OFFICIALS/FeatureServer/0/query';
           let params = {
             'returnGeometry': false,
             'where': `OFFICE = 'city_council' AND DISTRICT = '${feature.properties.council_district_2024}'`,
@@ -180,7 +180,7 @@ export const useVotingStore = defineStore("VotingStore", {
           }
         } else if (import.meta.env.VITE_VOTING_DATA_SOURCE === 'arcgis') {
 
-          let baseUrl = '//services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/SPLITS/FeatureServer/0/query';
+          let baseUrl = 'https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/SPLITS/FeatureServer/0/query';
           let params = {
             'returnGeometry': false,
             'where': `PRECINCT = '${precinct}'`,
