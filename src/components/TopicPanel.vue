@@ -102,6 +102,17 @@ const zipCode = computed(() => {
     class="topics"
   >
     <topic
+      v-if="MainStore.appVersion == 'atlas'"
+      :topic-name="'Voting'"
+      :topic-slug="'voting'"
+      :topic-icon="'fa-solid fa-gavel'"
+      :loading="!dataSourcesLoadedArray.includes('voting')"
+      :topic-index="5"
+    >
+      <Voting />
+    </topic>
+    
+    <topic
       :topic-name="'Property Assessments'"
       :topic-slug="'property'"
       :topic-icon="'fa-solid fa-home'"
@@ -152,7 +163,7 @@ const zipCode = computed(() => {
       <Zoning />
     </topic>
 
-    <topic
+    <!-- <topic
       v-if="MainStore.appVersion == 'atlas'"
       :topic-name="'Voting'"
       :topic-slug="'voting'"
@@ -161,7 +172,7 @@ const zipCode = computed(() => {
       :topic-index="5"
     >
       <Voting />
-    </topic>
+    </topic> -->
 
     <topic
       v-if="MainStore.appVersion == 'cityatlas'"
