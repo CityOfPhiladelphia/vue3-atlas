@@ -101,7 +101,8 @@ const zipCode = computed(() => {
     id="topic-panel-content"
     class="topics"
   >
-    <topic
+    <!-- on election days, uncomment this, and comment the same code out below -->
+    <!-- <topic
       v-if="MainStore.appVersion == 'atlas'"
       :topic-name="'Voting'"
       :topic-slug="'voting'"
@@ -110,7 +111,7 @@ const zipCode = computed(() => {
       :topic-index="5"
     >
       <Voting />
-    </topic>
+    </topic> -->
     
     <topic
       :topic-name="'Property Assessments'"
@@ -163,7 +164,7 @@ const zipCode = computed(() => {
       <Zoning />
     </topic>
 
-    <!-- <topic
+    <topic
       v-if="MainStore.appVersion == 'atlas'"
       :topic-name="'Voting'"
       :topic-slug="'voting'"
@@ -172,7 +173,7 @@ const zipCode = computed(() => {
       :topic-index="5"
     >
       <Voting />
-    </topic> -->
+    </topic>
 
     <topic
       v-if="MainStore.appVersion == 'cityatlas'"
