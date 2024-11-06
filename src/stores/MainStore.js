@@ -18,7 +18,6 @@ export const useMainStore = defineStore("MainStore", {
       currentParcelAddress:'',
       otherParcelAddress:'',
       currentAddress: '',
-      currentTopic: 'voting',
       currentLang: null,
       currentNearbyDataType: null,
       currentNearbyTimeInterval: {},
@@ -30,6 +29,9 @@ export const useMainStore = defineStore("MainStore", {
       fullScreenMapEnabled: false,
       fullScreenTopicsEnabled: false,
       windowDimensions: {},
+      // on election days, switch these two
+      currentTopic: 'property',
+      // currentTopic: 'voting',
     };
   },
 
