@@ -417,14 +417,14 @@ export const useLiStore = defineStore('LiStore', {
 
         let query;
         if (eclipse_location_id) {
-          query = `SELECT * FROM BUSINESS_LICENSES WHERE ( addressobjectid IN ('`+ eclipse_location_id +`') \
-          OR address = '${streetaddress}' \
-          OR parcel_id_num IN ( '${ pwd_parcel_id }' ) ) \
+          query = `SELECT * FROM BUSINESS_LICENSES WHERE ( addressobjectid IN ('`+ eclipse_location_id +`') AND addressed_license = 'Yes' \
+          OR address = '${streetaddress}' AND addressed_license = 'Yes' \
+          OR parcel_id_num IN ( '${ pwd_parcel_id }' ) AND addressed_license = 'Yes'  ) \
           ${opaQuery } \
           ORDER BY licensetype`;
         } else {
-          query = `SELECT * FROM BUSINESS_LICENSES WHERE ( address = '${streetaddress}' \
-          OR parcel_id_num IN ( '${ pwd_parcel_id }' ) ) \
+          query = `SELECT * FROM BUSINESS_LICENSES WHERE ( address = '${streetaddress}' AND addressed_license = 'Yes'  \
+          OR parcel_id_num IN ( '${ pwd_parcel_id }' ) AND addressed_license = 'Yes' ) \
           ${opaQuery } \
           ORDER BY licensetype`;
         }
