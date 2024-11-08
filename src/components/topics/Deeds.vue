@@ -36,8 +36,8 @@ const selectedDocs = computed(() => {
     // if (import.meta.env.VITE_DEBUG == 'true') console.log('selectedParcelId.value:', selectedParcelId.value);
     let data = [];
     for (let feature of DorStore.dorDocuments[selectedParcelId.value].features) {
-      if (feature.attributes.GRANTORS.toLowerCase().includes(textSearch.value.toLowerCase())
-        || feature.attributes.GRANTEES.toLowerCase().includes(textSearch.value.toLowerCase())
+      if (feature.attributes.GRANTORS != null && feature.attributes.GRANTORS.toLowerCase().includes(textSearch.value.toLowerCase())
+        || feature.attributes.GRANTEES != null && feature.attributes.GRANTEES.toLowerCase().includes(textSearch.value.toLowerCase())
         || feature.attributes.UNIT_NUM != null && feature.attributes.UNIT_NUM.toLowerCase().includes(textSearch.value.toLowerCase())
       ){
         data.push({
