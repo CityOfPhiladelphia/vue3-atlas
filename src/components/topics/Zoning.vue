@@ -132,7 +132,7 @@ const appealsTableData = computed(() => {
         html: true,
       },
       {
-        label: 'Description',
+        label: 'Description & Coordinating RCO',
         field: 'appealgrounds',
       },
       {
