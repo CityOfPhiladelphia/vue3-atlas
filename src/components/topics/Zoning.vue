@@ -384,9 +384,9 @@ const rcosTableData = computed(() => {
         <template #table-row='props'>
           <span v-if="props.column.field === 'appealgrounds'">
             {{ props.row.appealgrounds }}<br>
-          </span>
-          <span v-if="props.row.coordinatingrco">
-            <b>Coordinating RCO:</b> {{ props.row.coordinatingrco || 'N/A' }}
+            <span v-if="props.row.coordinatingrco">
+              <b>Coordinating RCO:</b> {{ props.row.coordinatingrco || 'N/A' }}
+            </span>
           </span>
         </template>
 
