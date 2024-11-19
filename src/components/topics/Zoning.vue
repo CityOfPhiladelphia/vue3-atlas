@@ -381,6 +381,13 @@ const rcosTableData = computed(() => {
           >
           </custom-pagination-labels>
         </template>
+        <template #table-row='props'>
+          <span v-if="props.column.field === 'appealgrounds'">
+            {{ props.row.appealgrounds }}<br>
+            <b>Coordinating RCO:</b> {{ props.row.coordinatingrco || 'N/A' }}
+          </span>
+        </template>
+
       </vue-good-table>
     </div>
   </div>
