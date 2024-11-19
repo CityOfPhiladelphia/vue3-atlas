@@ -132,7 +132,7 @@ const appealsTableData = computed(() => {
         html: true,
       },
       {
-        label: 'Description',
+        label: 'Description & Coordinating RCO',
         field: 'appealgrounds',
       },
       {
@@ -381,6 +381,15 @@ const rcosTableData = computed(() => {
           >
           </custom-pagination-labels>
         </template>
+        <template #table-row='props'>
+          <span v-if="props.column.field === 'appealgrounds'">
+            {{ props.row.appealgrounds }}<br>
+          </span>
+          <span v-if="props.row.coordinatingrco">
+            <b>Coordinating RCO:</b> {{ props.row.coordinatingrco || 'N/A' }}
+          </span>
+        </template>
+
       </vue-good-table>
     </div>
   </div>
