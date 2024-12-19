@@ -5,6 +5,8 @@ const MapStore = useMapStore();
 import { useGeocodeStore } from '@/stores/GeocodeStore';
 const GeocodeStore = useGeocodeStore();
 
+import $config from '@/config';
+
 import { format, subYears } from 'date-fns';
 
 import proj4 from 'proj4';
@@ -28,7 +30,11 @@ watch(
   newCyclomediaOn => {
     if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue watch cyclomediaOn, newCyclomediaOn:', newCyclomediaOn);
     if (newCyclomediaOn) {
-      setNewLocation(MapStore.currentAddressCoords);
+      if (MapStore.currentAddressCoords.length) {
+        setNewLocation(MapStore.currentAddressCoords);
+      } else {
+        setNewLocation($config.cityCenterCoords);
+      }
     }
   }
 )
@@ -45,14 +51,14 @@ const setNewLocation = async (coords) => {
     lastYear = `${year}-01-01`;
     thisYear = `${year + 1}-01-01`;
     params = {
-      coordinate: [coords2272[0],coords2272[1]],
+      coordinate: coords,
       dateRange: { from: lastYear, to: thisYear },
     };
   } else {
     // lastYear = format(subYears(today, 2), 'yyyy-MM-dd');
     // thisYear = format(today, 'yyyy-MM-dd');
     params = {
-      coordinate: [coords2272[0],coords2272[1]],
+      coordinate: coords,
     };
   }
   if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue setNewLocation, lastYear:', lastYear, 'thisYear:', thisYear, 'coords:', coords, 'coords2272:', coords2272);
@@ -60,7 +66,7 @@ const setNewLocation = async (coords) => {
     params,
     {
       viewerType: StreetSmartApi.ViewerType.PANORAMA,
-      srs: 'EPSG:2272',
+      srs: 'EPSG:4326',
       panoramaViewer: {
         closable: false,
         maximizable: false,
@@ -69,7 +75,7 @@ const setNewLocation = async (coords) => {
   )
   let viewer = response[0];
   if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue setNewLocation, viewer:', viewer, 'response:', response);
-  // viewer.toggleNavbarExpanded(navBarExpanded.value);
+  viewer.toggleNavbarExpanded(navBarExpanded.value);
   viewer.toggleButtonEnabled('panorama.elevation', false);
   viewer.toggleButtonEnabled('panorama.reportBlurring', false);
 
@@ -89,7 +95,8 @@ const setNewLocation = async (coords) => {
       $emit('updateCameraYaw', e.detail.yaw);
       $emit('updateCameraHFov', e.detail.hFov, e.detail.yaw);
       if (viewer.props.orientation.xyz !== MapStore.cyclomediaCameraXyz) {
-        const lngLat = proj4(projection2272, projection4326, [ viewer.props.orientation.xyz[0], viewer.props.orientation.xyz[1] ]);
+        // const lngLat = proj4(projection2272, projection4326, [ viewer.props.orientation.xyz[0], viewer.props.orientation.xyz[1] ]);
+        const lngLat = [ viewer.props.orientation.xyz[0], viewer.props.orientation.xyz[1] ];
         MapStore.setCyclomediaCameraLngLat(lngLat, viewer.props.orientation.xyz);
         $emit('updateCameraLngLat', lngLat);
       }
@@ -104,7 +111,8 @@ const setNewLocation = async (coords) => {
     const orientation = viewer.getOrientation();
     if (import.meta.env.VITE_DEBUG == 'true') console.log('orientation:', orientation);
     if (viewer.props.orientation.xyz !== MapStore.cyclomediaCameraXyz) {
-      const lngLat = proj4(projection2272, projection4326, [ viewer.props.orientation.xyz[0], viewer.props.orientation.xyz[1] ]);
+      // const lngLat = proj4(projection2272, projection4326, [ viewer.props.orientation.xyz[0], viewer.props.orientation.xyz[1] ]);
+      const lngLat = [ viewer.props.orientation.xyz[0], viewer.props.orientation.xyz[1] ];
       MapStore.setCyclomediaCameraLngLat(lngLat, viewer.props.orientation.xyz);
       $emit('updateCameraLngLat', lngLat);
       const orientation = viewer.getOrientation();
@@ -113,6 +121,13 @@ const setNewLocation = async (coords) => {
       $emit('updateCameraHFov', orientation.hFov, orientation.yaw);
     }
   });
+
+  if (!MapStore.currentAddressCoords.length) {
+    $emit('updateCameraLngLat', coords);
+  }
+  const orientation = viewer.getOrientation();
+  $emit('updateCameraYaw', orientation.yaw);
+  $emit('updateCameraHFov', orientation.hFov, orientation.yaw);
 }
 
 watch(
@@ -143,7 +158,7 @@ onMounted( async() => {
       username: CYCLOMEDIA_USERNAME,
       password: CYCLOMEDIA_PASSWORD,
       apiKey: import.meta.env.VITE_CYCLOMEDIA_API_KEY,
-      srs: 'EPSG:2272',
+      srs: 'EPSG:4326',
       locale: 'en-us',
       addressSettings: {
         locale: 'en-us',
@@ -213,7 +228,7 @@ const popoutClicked = () => {
 only screen and (max-width: 768px),
 (min-device-width: 768px) and (max-device-width: 1024px)  {
   .cyclomedia-panel {
-    height: 150px;
+    height: 250px;
   }
 }
 
