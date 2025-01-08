@@ -148,7 +148,7 @@ const popoutClicked = () => {
 only screen and (max-width: 768px),
 (min-device-width: 768px) and (max-device-width: 1024px)  {
   .eagleview-div {
-    height: 150px;
+    height: 250px;
   }
 }
 

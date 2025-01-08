@@ -55,7 +55,7 @@
     "eslint-plugin-vue": "^9.17.0",
     "sass": "^1.74.1",
     "vite": "^5.1.6",
-    "vite-plugin-vue-devtools": "^7.3.1"
+    "vite-plugin-vue-devtools": "^7.7.0"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "4.6.1"

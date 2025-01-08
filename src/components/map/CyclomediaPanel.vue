@@ -42,93 +42,96 @@ watch(
 const navBarExpanded = ref(false);
 
 const setNewLocation = async (coords) => {
-  const today = new Date();
-  const year = MapStore.cyclomediaYear;
-  let thisYear, lastYear;
-  let params = {};
-  const coords2272 = proj4(projection4326, projection2272, coords);
-  if (year) {
-    lastYear = `${year}-01-01`;
-    thisYear = `${year + 1}-01-01`;
-    params = {
-      coordinate: coords,
-      dateRange: { from: lastYear, to: thisYear },
-    };
-  } else {
-    // lastYear = format(subYears(today, 2), 'yyyy-MM-dd');
-    // thisYear = format(today, 'yyyy-MM-dd');
-    params = {
-      coordinate: coords,
-    };
-  }
-  if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue setNewLocation, lastYear:', lastYear, 'thisYear:', thisYear, 'coords:', coords, 'coords2272:', coords2272);
-  const response = await StreetSmartApi.open(
-    params,
-    {
-      viewerType: StreetSmartApi.ViewerType.PANORAMA,
-      srs: 'EPSG:4326',
-      panoramaViewer: {
-        closable: false,
-        maximizable: false,
-      },
-    }
-  )
-  let viewer = response[0];
-  if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue setNewLocation, viewer:', viewer, 'response:', response);
-  viewer.toggleNavbarExpanded(navBarExpanded.value);
-  viewer.toggleButtonEnabled('panorama.elevation', false);
-  viewer.toggleButtonEnabled('panorama.reportBlurring', false);
+  if (MapStore.cyclomediaOn) {
 
-  for (let overlay of viewer.props.overlays) {
-    if (overlay.id === 'surfaceCursorLayer') {
-      if (overlay.visible === true) {
-        viewer.toggleOverlay(overlay);
+    const today = new Date();
+    const year = MapStore.cyclomediaYear;
+    let thisYear, lastYear;
+    let params = {};
+    const coords2272 = proj4(projection4326, projection2272, coords);
+    if (year) {
+      lastYear = `${year}-01-01`;
+      thisYear = `${year + 1}-01-01`;
+      params = {
+        coordinate: coords,
+        dateRange: { from: lastYear, to: thisYear },
+      };
+    } else {
+      // lastYear = format(subYears(today, 2), 'yyyy-MM-dd');
+      // thisYear = format(today, 'yyyy-MM-dd');
+      params = {
+        coordinate: coords,
+      };
+    }
+    if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue setNewLocation, lastYear:', lastYear, 'thisYear:', thisYear, 'coords:', coords, 'coords2272:', coords2272);
+    const response = await StreetSmartApi.open(
+      params,
+      {
+        viewerType: StreetSmartApi.ViewerType.PANORAMA,
+        srs: 'EPSG:4326',
+        panoramaViewer: {
+          closable: false,
+          maximizable: false,
+        },
+      }
+    )
+    let viewer = response[0];
+    if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue setNewLocation, viewer:', viewer, 'response:', response);
+    viewer.toggleNavbarExpanded(navBarExpanded.value);
+    viewer.toggleButtonEnabled('panorama.elevation', false);
+    viewer.toggleButtonEnabled('panorama.reportBlurring', false);
+
+    for (let overlay of viewer.props.overlays) {
+      if (overlay.id === 'surfaceCursorLayer') {
+        if (overlay.visible === true) {
+          viewer.toggleOverlay(overlay);
+        }
       }
     }
-  }
 
-  viewer.on('VIEW_CHANGE', function(e) {
-    if (import.meta.env.VITE_DEBUG == 'true') console.log('on VIEW_CHANGE fired, type:', e.type, 'detail:', e.detail, 'viewer.props:', viewer.props, 'viewer.props.orientation.xyz:', viewer.props.orientation.xyz, 'MapStore.cyclomediaCameraXyz:', MapStore.cyclomediaCameraXyz);
-    if (MapStore.cyclomediaOn) {
-      MapStore.cyclomediaCameraYaw = e.detail.yaw;
-      MapStore.cyclomediaCameraHFov = e.detail.hFov;
-      $emit('updateCameraYaw', e.detail.yaw);
-      $emit('updateCameraHFov', e.detail.hFov, e.detail.yaw);
+    viewer.on('VIEW_CHANGE', function(e) {
+      if (import.meta.env.VITE_DEBUG == 'true') console.log('on VIEW_CHANGE fired, type:', e.type, 'detail:', e.detail, 'viewer.props:', viewer.props, 'viewer.props.orientation.xyz:', viewer.props.orientation.xyz, 'MapStore.cyclomediaCameraXyz:', MapStore.cyclomediaCameraXyz);
+      if (MapStore.cyclomediaOn) {
+        MapStore.cyclomediaCameraYaw = e.detail.yaw;
+        MapStore.cyclomediaCameraHFov = e.detail.hFov;
+        $emit('updateCameraYaw', e.detail.yaw);
+        $emit('updateCameraHFov', e.detail.hFov, e.detail.yaw);
+        if (viewer.props.orientation.xyz !== MapStore.cyclomediaCameraXyz) {
+          // const lngLat = proj4(projection2272, projection4326, [ viewer.props.orientation.xyz[0], viewer.props.orientation.xyz[1] ]);
+          const lngLat = [ viewer.props.orientation.xyz[0], viewer.props.orientation.xyz[1] ];
+          MapStore.setCyclomediaCameraLngLat(lngLat, viewer.props.orientation.xyz);
+          $emit('updateCameraLngLat', lngLat);
+        }
+      }
+    });
+
+    viewer.on('VIEW_LOAD_END', function(e) {
+      if (import.meta.env.VITE_DEBUG == 'true') console.log('on VIEW_LOAD_END fired, type:', e.type, 'e:', e, 'viewer.props.orientation:', viewer.props.orientation, 'viewer.props:', viewer.props);
+      if (import.meta.env.VITE_DEBUG == 'true') console.log('update cyclomedia date, viewer.props.recording.year:', viewer.props.recording.year);
+      MapStore.cyclomediaYear = viewer.props.recording.year;
+      // $emit('updateCyclomediaDate', e.recording.year);
+      const orientation = viewer.getOrientation();
+      // viewer.setOrientation({ pitch: 0 });
+      if (import.meta.env.VITE_DEBUG == 'true') console.log('orientation:', orientation);
       if (viewer.props.orientation.xyz !== MapStore.cyclomediaCameraXyz) {
         // const lngLat = proj4(projection2272, projection4326, [ viewer.props.orientation.xyz[0], viewer.props.orientation.xyz[1] ]);
         const lngLat = [ viewer.props.orientation.xyz[0], viewer.props.orientation.xyz[1] ];
         MapStore.setCyclomediaCameraLngLat(lngLat, viewer.props.orientation.xyz);
         $emit('updateCameraLngLat', lngLat);
+        const orientation = viewer.getOrientation();
+        if (import.meta.env.VITE_DEBUG == 'true') console.log('orientation:', orientation);
+        $emit('updateCameraYaw', orientation.yaw);
+        $emit('updateCameraHFov', orientation.hFov, orientation.yaw);
       }
-    }
-  });
+    });
 
-  viewer.on('VIEW_LOAD_END', function(e) {
-    if (import.meta.env.VITE_DEBUG == 'true') console.log('on VIEW_LOAD_END fired, type:', e.type, 'e:', e, 'viewer.props.orientation:', viewer.props.orientation, 'viewer.props:', viewer.props);
-    if (import.meta.env.VITE_DEBUG == 'true') console.log('update cyclomedia date, viewer.props.recording.year:', viewer.props.recording.year);
-    MapStore.cyclomediaYear = viewer.props.recording.year;
-    // $emit('updateCyclomediaDate', e.recording.year);
+    if (!MapStore.currentAddressCoords.length) {
+      $emit('updateCameraLngLat', coords);
+    }
     const orientation = viewer.getOrientation();
-    // viewer.setOrientation({ pitch: 0 });
-    if (import.meta.env.VITE_DEBUG == 'true') console.log('orientation:', orientation);
-    if (viewer.props.orientation.xyz !== MapStore.cyclomediaCameraXyz) {
-      // const lngLat = proj4(projection2272, projection4326, [ viewer.props.orientation.xyz[0], viewer.props.orientation.xyz[1] ]);
-      const lngLat = [ viewer.props.orientation.xyz[0], viewer.props.orientation.xyz[1] ];
-      MapStore.setCyclomediaCameraLngLat(lngLat, viewer.props.orientation.xyz);
-      $emit('updateCameraLngLat', lngLat);
-      const orientation = viewer.getOrientation();
-      if (import.meta.env.VITE_DEBUG == 'true') console.log('orientation:', orientation);
-      $emit('updateCameraYaw', orientation.yaw);
-      $emit('updateCameraHFov', orientation.hFov, orientation.yaw);
-    }
-  });
-
-  if (!MapStore.currentAddressCoords.length) {
-    $emit('updateCameraLngLat', coords);
+    $emit('updateCameraYaw', orientation.yaw);
+    $emit('updateCameraHFov', orientation.hFov, orientation.yaw);
   }
-  const orientation = viewer.getOrientation();
-  $emit('updateCameraYaw', orientation.yaw);
-  $emit('updateCameraHFov', orientation.hFov, orientation.yaw);
 }
 
 watch(
