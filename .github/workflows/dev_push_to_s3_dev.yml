@@ -6,7 +6,7 @@ name: dev Push to S3 dev bucket
 on:
   push:
     branches:
-      - feature/use-old-cyclomedia
+      - fix/li-records-issue
 jobs:
   build:
 
