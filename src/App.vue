@@ -23,7 +23,7 @@ import { useRouter, useRoute } from 'vue-router';
 const route = useRoute();
 const router = useRouter();
 
-import { onMounted, computed, getCurrentInstance, watch } from 'vue';
+import { onMounted, computed, getCurrentInstance, watch, ref, nextTick } from 'vue';
 
 // COMPONENTS
 import TopicPanel from '@/components/TopicPanel.vue';
@@ -33,6 +33,16 @@ const instance = getCurrentInstance();
 // if (import.meta.env.VITE_DEBUG == 'true') console.log('instance:', instance);
 const locale = computed(() => instance.appContext.config.globalProperties.$i18n.locale);
 // if (import.meta.env.VITE_DEBUG == 'true') console.log('locale:', locale);
+
+const showSlowServiceBanner = ref(true);
+
+const isMobile = computed(() => {
+  return MainStore.isMobileDevice || MainStore.windowDimensions.width < 768;
+});
+
+// const showSlowServiceBanner = computed(() => {
+//   return true;
+// });
 
 onMounted(async () => {
   MainStore.appVersion = import.meta.env.VITE_VERSION;
@@ -51,7 +61,9 @@ onMounted(async () => {
   main.scrollTop = -main.scrollHeight;
 
   window.addEventListener('resize', handleWindowResize);
+  await nextTick();
   handleWindowResize();
+  setHeights();
 });
 
 const links = [
@@ -138,6 +150,47 @@ const appTitle = computed(() => {
   return version;
 })
 
+const closeSlowServiceBanner = async() => {
+  showSlowServiceBanner.value = false;
+  // showAutomaticHolidayBanner.value = false;
+  // showForceHolidayBanner.value = false;
+  await nextTick();
+  handleWindowResize();
+  setHeights();
+};
+
+const setHeights = () => {
+  const mainRow = document.getElementById('main-row');
+  const slowServiceBanner = document.getElementById('slow-service-banner');
+  let slowServiceBannerOffsetHeight = 0;
+  if (slowServiceBanner) {
+    slowServiceBannerOffsetHeight = slowServiceBanner.offsetHeight;
+  }
+  const topicsHolder = document.querySelector('.topics-holder');
+  const mapPanelHolder = document.querySelector('.map-panel-holder');
+  const mapPanel = document.querySelector('.map-panel');
+  if (import.meta.env.VITE_DEBUG) console.log('setHeights topicsHolder:', topicsHolder, 'mapPanelHolder:', mapPanelHolder, 'mapPanel:', mapPanel);
+  if (isMobile.value) {
+    if (import.meta.env.VITE_DEBUG) console.log('setHeights in if 1, slowServiceBannerOffsetHeight:', slowServiceBannerOffsetHeight);
+    mainRow.style.setProperty('height' , `calc(100vh - 110px - ${slowServiceBannerOffsetHeight}px)`);
+    topicsHolder.style.setProperty('height' , `calc(100vh - 110px - ${slowServiceBannerOffsetHeight}px)`);
+    mapPanelHolder.style.height = '250px';
+    mapPanel.style.height = '250px';
+  } else if (showSlowServiceBanner.value) {
+    if (import.meta.env.VITE_DEBUG) console.log('setHeights in if 2, slowServiceBannerOffsetHeight:', slowServiceBannerOffsetHeight);
+    mainRow.style.setProperty('height' , `calc(100vh - 110px - ${slowServiceBannerOffsetHeight}px)`);
+    topicsHolder.style.setProperty('height' , `calc(100vh - 110px - ${slowServiceBannerOffsetHeight}px)`);
+    mapPanelHolder.style.setProperty('height' , `calc(100vh - 110px - ${slowServiceBannerOffsetHeight}px)`);
+    mapPanel.style.setProperty('height' , `calc(100vh - 110px - ${slowServiceBannerOffsetHeight}px)`);
+  } else {
+    if (import.meta.env.VITE_DEBUG) console.log('setHeights in else');
+    mainRow.style.setProperty('height' , `calc(100vh - 110px)`);
+    topicsHolder.style.setProperty('height' , `calc(100vh - 110px)`);
+    mapPanelHolder.style.setProperty('height' , `calc(100vh - 110px)`);
+    mapPanel.style.setProperty('height' , `calc(100vh - 110px)`);
+  }
+}
+
 </script>
 
 <template>
@@ -164,33 +217,57 @@ const appTitle = computed(() => {
   </app-header>
 
   <!-- MAIN CONTENT -->
-  <main
-    id="main"
-    class="main invisible-scrollbar"
-  >
-    <!-- TOPIC PANEL ON LEFT -->
+  <main id="main" class="main invisible-scrollbar">
+    
     <div
-      v-if="!isMobileDevice() && MainStore.windowDimensions.width > 768 && !fullScreenMapEnabled"
-      class="topics-holder"
-      :class="fullScreenTopicsEnabled ? 'topics-holder-full' : ''"
+      v-if="showSlowServiceBanner"
+      id="slow-service-banner"
+      class="slow-service-banner columns is-mobile"
     >
-      <topic-panel />
+      <div class="column slow-service-banner-column is-11">
+        Service is slow right now
+      </div>
+      <div class="column slow-service-banner-column is-1">
+        <button
+          style="height: 100% !important;"
+          class="button is-primary is-small is-pulled-right slow-service-banner-close-button"
+          @click="closeSlowServiceBanner"
+        >
+          x
+        </button>
+      </div>
     </div>
 
-    <!-- MAP PANEL ON RIGHT - right now only contains the address input -->
     <div
-      v-show="!fullScreenTopicsEnabled"
-      class="map-panel-holder"
-      :class="fullScreenMapEnabled ? 'topics-holder-full' : ''"
+      id="main-row"
+      class="main-row"
     >
-      <map-panel />
-    </div>
 
-    <div
-      v-if="isMobileDevice() || MainStore.windowDimensions.width <= 768"
-      class="topics-holder"
-    >
-      <topic-panel />
+      <!-- TOPIC PANEL ON LEFT -->
+      <div
+        v-if="!isMobileDevice() && MainStore.windowDimensions.width > 768 && !fullScreenMapEnabled"
+        class="topics-holder"
+        :class="fullScreenTopicsEnabled ? 'topics-holder-full' : ''"
+      >
+        <topic-panel />
+      </div>
+
+      <!-- MAP PANEL ON RIGHT - right now only contains the address input -->
+      <div
+        v-show="!fullScreenTopicsEnabled"
+        class="map-panel-holder"
+        :class="fullScreenMapEnabled ? 'topics-holder-full' : ''"
+      >
+        <map-panel />
+      </div>
+
+      <div
+        v-if="isMobileDevice() || MainStore.windowDimensions.width <= 768"
+        class="topics-holder"
+      >
+        <topic-panel />
+      </div>
+
     </div>
   </main>
 
@@ -204,6 +281,25 @@ const appTitle = computed(() => {
 
 <style>
 
+.slow-service-banner {
+  margin-top: 0px !important;
+  margin-bottom: 0px !important;
+  padding-left: 1rem;
+  background-color: #fff7d0;
+}
+
+.slow-service-banner-column {
+  padding-top: 0px !important;
+  padding-bottom: 0px !important;
+}
+
+.slow-service-banner-close-button {
+  justify-content: center !important;
+  width: 48px !important;
+  height: 100% !important;
+  padding-top: 0px !important;
+  padding-bottom: 0px !important;
+}
 
 
 </style>

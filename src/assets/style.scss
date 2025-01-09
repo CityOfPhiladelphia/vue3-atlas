@@ -5,7 +5,7 @@ $primary-color: #0f4254;
 $dropdown-menu-min-width: 100px;
 
 html {
-  min-height: 100dvh;
+  min-height: 100vh;
   overflow-y: hidden !important;
 }
 
@@ -14,25 +14,32 @@ body {
   overflow-y: hidden !important;
 }
 
+// #app {
+//   height: 100vh;
+//   display: flex;
+//   flex-direction: column;
+//   overflow-y: hidden;
+//   justify-content: space-evenly;
+// }
+
 a {
   color: #0f4d90;
   font-weight: bold;
 }
 
-#app {
-  height: 100dvh;
+.main {
+  // height: calc(100vh - 50px);
   display: flex;
   flex-direction: column;
-  overflow-y: hidden;
-  justify-content: space-evenly;
+  padding: 0px !important;
+  // padding-top: 42px !important;
+  // margin-top: 0px !important;
 }
 
-.main {
-  height: calc(100vh - 50px);
+.main-row {
   display: flex;
   flex-direction: row;
-  padding-top: 42px !important;
-  margin-top: 0px !important;
+  height: 50%;
 }
 
 .topics-holder {
@@ -41,7 +48,7 @@ a {
   width: 50% !important;
   padding: 0;
   margin: 0;
-  height: calc(100vh - 110px);
+  // height: calc(100vh - 110px);
 }
 
 .topics-holder-full {
@@ -73,7 +80,8 @@ a {
 
 .map-panel-holder {
   width: 50%;
-  height: calc(100vh - 110px);
+  // height: calc(100vh - 110px);
+  height: 50%;
   margin-bottom: 0px;
 }
 
@@ -110,7 +118,8 @@ a {
 }
 
 .map-panel {
-  height: calc(100vh - 110px);
+  height: 50%;
+  // height: calc(100vh - 110px);
 }
 
 .map-panel.cyclomedia-eagleview {
@@ -254,12 +263,12 @@ only screen and (max-width: 768px),
   }
 
   #app {
-    height: 100dvh;
-    display: flex;
-    flex-direction: column;
+    // height: 100dvh;
+    // display: flex;
+    // flex-direction: column;
     overflow-y: hidden;
     overflow-x: hidden;
-    justify-content: space-evenly;
+    // justify-content: space-evenly;
   }
 
   .main {
@@ -267,6 +276,12 @@ only screen and (max-width: 768px),
     display: flex;
     flex-direction: column;
     overflow-y: scroll;
+  }
+
+  .main-row {
+    display: flex;
+    flex-direction: column;
+    // height: 100%;
   }
 
   .topics-holder {
@@ -296,7 +311,7 @@ only screen and (max-width: 768px),
   }
 
   .map-panel-holder {
-    padding-top: 28px !important;
+    // padding-top: 28px !important;
     width: 100%;
     flex-grow: 1;
     margin-bottom: 0px;
