@@ -412,7 +412,7 @@ export const useLiStore = defineStore('LiStore', {
         let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
         const eclipse_location_id = feature.properties.eclipse_location_id.replace(/\|/g, "', '");
         const streetaddress = feature.properties.street_address;
-        const opaQuery = feature.properties.opa_account_num ? ` AND opa_account_num IN ('${ feature.properties.opa_account_num}')` : ``;
+        const opaQuery = feature.properties.opa_account_num ? ` OR opa_account_num IN ('${ feature.properties.opa_account_num}')` : ``;
         const pwd_parcel_id = feature.properties.pwd_parcel_id;
         const addressId = feature.properties.li_address_key.replace(/\|/g, "', '");
 
