@@ -142,6 +142,14 @@ watch(
     document.title = newPageTitle;
   }
 )
+
+watch(
+  () => isMobile.value,
+  () => {
+    setHeights()
+  }
+)
+
 const appTitle = computed(() => {
   let version = 'Atlas';
   if (import.meta.env.VITE_VERSION == 'cityatlas'){
@@ -152,8 +160,6 @@ const appTitle = computed(() => {
 
 const closeSlowServiceBanner = async() => {
   showSlowServiceBanner.value = false;
-  // showAutomaticHolidayBanner.value = false;
-  // showForceHolidayBanner.value = false;
   await nextTick();
   handleWindowResize();
   setHeights();
@@ -166,26 +172,22 @@ const setHeights = () => {
   if (slowServiceBanner) {
     slowServiceBannerOffsetHeight = slowServiceBanner.offsetHeight;
   }
-  const topicsHolder = document.querySelector('.topics-holder');
   const mapPanelHolder = document.querySelector('.map-panel-holder');
   const mapPanel = document.querySelector('.map-panel');
-  if (import.meta.env.VITE_DEBUG) console.log('setHeights topicsHolder:', topicsHolder, 'mapPanelHolder:', mapPanelHolder, 'mapPanel:', mapPanel);
+  if (import.meta.env.VITE_DEBUG) console.log('setHeights mapPanelHolder:', mapPanelHolder, 'mapPanel:', mapPanel);
   if (isMobile.value) {
     if (import.meta.env.VITE_DEBUG) console.log('setHeights in if 1, slowServiceBannerOffsetHeight:', slowServiceBannerOffsetHeight);
-    mainRow.style.setProperty('height' , `calc(100vh - 110px - ${slowServiceBannerOffsetHeight}px)`);
-    topicsHolder.style.setProperty('height' , `calc(100vh - 110px - ${slowServiceBannerOffsetHeight}px)`);
+    mainRow.style.setProperty('height' , `calc(100vh - 50px - ${slowServiceBannerOffsetHeight}px)`);
     mapPanelHolder.style.height = '250px';
     mapPanel.style.height = '250px';
   } else if (showSlowServiceBanner.value) {
     if (import.meta.env.VITE_DEBUG) console.log('setHeights in if 2, slowServiceBannerOffsetHeight:', slowServiceBannerOffsetHeight);
-    mainRow.style.setProperty('height' , `calc(100vh - 110px - ${slowServiceBannerOffsetHeight}px)`);
-    topicsHolder.style.setProperty('height' , `calc(100vh - 110px - ${slowServiceBannerOffsetHeight}px)`);
+    mainRow.style.setProperty('height' , `calc(100vh - 114px - ${slowServiceBannerOffsetHeight}px)`);
     mapPanelHolder.style.setProperty('height' , `calc(100vh - 110px - ${slowServiceBannerOffsetHeight}px)`);
     mapPanel.style.setProperty('height' , `calc(100vh - 110px - ${slowServiceBannerOffsetHeight}px)`);
   } else {
     if (import.meta.env.VITE_DEBUG) console.log('setHeights in else');
-    mainRow.style.setProperty('height' , `calc(100vh - 110px)`);
-    topicsHolder.style.setProperty('height' , `calc(100vh - 110px)`);
+    mainRow.style.setProperty('height' , `calc(100vh - 114px)`);
     mapPanelHolder.style.setProperty('height' , `calc(100vh - 110px)`);
     mapPanel.style.setProperty('height' , `calc(100vh - 110px)`);
   }
