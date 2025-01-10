@@ -6,7 +6,7 @@ name: dev Push to S3 dev bucket
 on:
   push:
     branches:
-      - fix/li-records-issue
+      - fix/more-li-records-issues
 jobs:
   build:
 
