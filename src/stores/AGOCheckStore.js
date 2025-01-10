@@ -3,7 +3,7 @@ import { defineStore, acceptHMRUpdate } from 'pinia';
 export const useAGOCheckStore = defineStore("AGOCheckStore", {
   state: () => {
     return {
-      AGOChecked: false,
+      AGOChecked: true,
       responseTime: 0,
     };
   },

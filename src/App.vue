@@ -40,17 +40,26 @@ const isMobile = computed(() => {
   return MainStore.isMobileDevice || MainStore.windowDimensions.width < 768;
 });
 
-const showSlowServiceBanner = computed(() => {
+const showSlowServiceBanner = ref(false);
+
+const setShowSlowServiceBanner = () => {
   const checkValue = !AGOCheckStore.AGOChecked;
   const responseTime = AGOCheckStore.responseTime ? AGOCheckStore.responseTime < 5000 : true;
-  return checkValue && responseTime;
-});
+  showSlowServiceBanner.value = checkValue && responseTime;
+}
+
+// const showSlowServiceBanner = computed(() => {
+//   const checkValue = !AGOCheckStore.AGOChecked;
+//   const responseTime = AGOCheckStore.responseTime ? AGOCheckStore.responseTime < 5000 : true;
+//   return checkValue && responseTime;
+// });
 
 onMounted(async () => {
   MainStore.appVersion = import.meta.env.VITE_VERSION;
   MainStore.isMobileDevice = isMobileDevice();
   MainStore.isMac = isMac();
   AGOCheckStore.checkAGO();
+  setShowSlowServiceBanner();
   await router.isReady()
   if (import.meta.env.VITE_DEBUG == 'true') console.log('App onMounted, route.params.topic:', route.params.topic, 'route.params.address:', route.params.address);
   if (route.name === 'not-found') {
