@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-import { defineStore } from 'pinia';
+import { defineStore, acceptHMRUpdate } from 'pinia';
 import { useParcelsStore } from './ParcelsStore';
 import { useGeocodeStore } from '@/stores/GeocodeStore.js'
 
@@ -261,4 +261,9 @@ export const useZoningStore = defineStore('ZoningStore', {
   // keeping formatting getters here in the store only works if the data is not looped
   // through for a horizontal table
   getters: {},
-})
+});
+
+// this is from https://pinia.vuejs.org/cookbook/hot-module-replacement.html
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useZoningStore, import.meta.hot))
+};

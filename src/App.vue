@@ -10,6 +10,8 @@ const languages = i18nFromFiles.i18n.languages;
 // STORES
 import { useMainStore } from '@/stores/MainStore.js'
 const MainStore = useMainStore();
+import { useAGOCheckStore } from '@/stores/AGOCheckStore.js'
+const AGOCheckStore = useAGOCheckStore();
 
 if (!import.meta.env.VITE_PUBLICPATH) {
   MainStore.publicPath = '/';
@@ -34,20 +36,21 @@ const instance = getCurrentInstance();
 const locale = computed(() => instance.appContext.config.globalProperties.$i18n.locale);
 // if (import.meta.env.VITE_DEBUG == 'true') console.log('locale:', locale);
 
-const showSlowServiceBanner = ref(true);
-
 const isMobile = computed(() => {
   return MainStore.isMobileDevice || MainStore.windowDimensions.width < 768;
 });
 
-// const showSlowServiceBanner = computed(() => {
-//   return true;
-// });
+const showSlowServiceBanner = computed(() => {
+  const checkValue = !AGOCheckStore.AGOChecked;
+  const responseTime = AGOCheckStore.responseTime ? AGOCheckStore.responseTime < 5000 : true;
+  return checkValue && responseTime;
+});
 
 onMounted(async () => {
   MainStore.appVersion = import.meta.env.VITE_VERSION;
   MainStore.isMobileDevice = isMobileDevice();
   MainStore.isMac = isMac();
+  AGOCheckStore.checkAGO();
   await router.isReady()
   if (import.meta.env.VITE_DEBUG == 'true') console.log('App onMounted, route.params.topic:', route.params.topic, 'route.params.address:', route.params.address);
   if (route.name === 'not-found') {
@@ -145,6 +148,13 @@ watch(
 
 watch(
   () => isMobile.value,
+  () => {
+    setHeights()
+  }
+)
+
+watch(
+  () => showSlowServiceBanner.value,
   () => {
     setHeights()
   }

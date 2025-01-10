@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-import { defineStore } from 'pinia';
+import { defineStore, acceptHMRUpdate } from 'pinia';
 import { useGeocodeStore } from '@/stores/GeocodeStore.js'
 
 export const useVotingStore = defineStore("VotingStore", {
@@ -204,3 +204,8 @@ export const useVotingStore = defineStore("VotingStore", {
     },
   },
 });
+
+// this is from https://pinia.vuejs.org/cookbook/hot-module-replacement.html
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useVotingStore, import.meta.hot))
+};

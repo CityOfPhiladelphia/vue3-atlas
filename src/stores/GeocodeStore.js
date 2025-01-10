@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia';
+import { defineStore, acceptHMRUpdate } from 'pinia';
 
 export const useGeocodeStore = defineStore("GeocodeStore", {
   state: () => {
@@ -44,3 +44,8 @@ export const useGeocodeStore = defineStore("GeocodeStore", {
   },
 
 });
+
+// this is from https://pinia.vuejs.org/cookbook/hot-module-replacement.html
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useGeocodeStore, import.meta.hot))
+};

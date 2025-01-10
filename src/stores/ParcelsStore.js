@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia';
+import { defineStore, acceptHMRUpdate } from 'pinia';
 import { useGeocodeStore } from '@/stores/GeocodeStore.js'
 import { useMainStore } from '@/stores/MainStore.js'
 import axios from 'axios';
@@ -139,4 +139,9 @@ export const useParcelsStore = defineStore('ParcelsStore', {
       }
     },
   },
-})
+});
+
+// this is from https://pinia.vuejs.org/cookbook/hot-module-replacement.html
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useParcelsStore, import.meta.hot))
+};

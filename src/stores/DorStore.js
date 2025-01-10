@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia';
+import { defineStore, acceptHMRUpdate } from 'pinia';
 import { useParcelsStore } from './ParcelsStore';
 import { useGeocodeStore } from './GeocodeStore';
 
@@ -369,4 +369,9 @@ export const useDorStore = defineStore("DorStore", {
       });
     },
   }
-})
+});
+
+// this is from https://pinia.vuejs.org/cookbook/hot-module-replacement.html
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useDorStore, import.meta.hot))
+};
