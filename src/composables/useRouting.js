@@ -6,13 +6,15 @@ export default function useRouting() {
     
     const MainStore = useMainStore();
     let startQuery = { ...route.query };
+    delete startQuery['address'];
+    if (!MainStore.currentLang) {
+      delete startQuery['lang'];
+    }
     if (!MainStore.currentAddress && MainStore.currentTopic == 'voting'){
       if (import.meta.env.VITE_DEBUG) console.log('routeApp routing to topic because MainStore.currentTopic:', MainStore.currentTopic);
-      // let startQuery = { ...route.query };
       if (MainStore.currentLang) {
         router.replace({ name: 'topic', params: { topic: MainStore.currentTopic }, query: { ...startQuery, 'lang': MainStore.currentLang } });
       } else {
-        delete startQuery['lang'];
         router.replace({ name: 'topic', params: { topic: MainStore.currentTopic }, query: { ...startQuery } });
       }
     } else if (MainStore.currentAddress && MainStore.currentTopic == 'nearby') {
