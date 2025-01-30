@@ -46,7 +46,7 @@ const yPosition = computed(() => {
 
 const replaceRoute = (address) => {
   let startQuery = { ...route.query };
-  router.replace({ name: 'search', query: { ...startQuery, address: address, lang: MainStore.currentLang }});
+  router.replace({ name: 'search', query: { ...startQuery, address: address }});
 }
 
 </script>
@@ -70,7 +70,6 @@ const replaceRoute = (address) => {
           placeholder="Search for an address, OPA account, or DOR number"
           @keydown.enter="replaceRoute(MainStore.addressSearchValue)"
         >
-        <!-- @keydown.enter="router.replace({ name: 'search', query: { address: MainStore.addressSearchValue, lang: MainStore.currentLang }})" -->
       </div>
       <div class="control">
         <button
