@@ -2,13 +2,13 @@ import { useMainStore } from '@/stores/MainStore';
 
 export default function useRouting() {
   const routeApp = (router, route) => {
-    if (import.meta.env.VITE_DEBUG) console.log('routeApp, router:', router, 'route:', route);
     
     const MainStore = useMainStore();
     let startQuery = { ...route.query };
     delete startQuery['address'];
     delete startQuery['lat'];
     delete startQuery['lng'];
+    if (import.meta.env.VITE_DEBUG) console.log('routeApp, router:', router, 'route:', route, 'startQuery:', startQuery);
     if (!MainStore.currentAddress && MainStore.currentTopic == 'voting'){
       if (import.meta.env.VITE_DEBUG) console.log('routeApp routing to topic because MainStore.currentTopic:', MainStore.currentTopic);
       if (MainStore.currentLang) {
