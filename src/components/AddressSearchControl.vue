@@ -1,11 +1,12 @@
 <script setup>
 import { computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 
 import { useMainStore } from '@/stores/MainStore.js'
 const MainStore = useMainStore();
 
 const router = useRouter();
+const route = useRoute();
 
 defineProps({
   inputId: {
@@ -43,6 +44,11 @@ const yPosition = computed(() => {
   }
 });
 
+const replaceRoute = (address) => {
+  let startQuery = { ...route.query };
+  router.replace({ name: 'search', query: { ...startQuery, address: address, lang: MainStore.currentLang }});
+}
+
 </script>
 
 <template>
@@ -62,8 +68,9 @@ const yPosition = computed(() => {
           class="input address-input"
           type="text"
           placeholder="Search for an address, OPA account, or DOR number"
-          @keydown.enter="router.replace({ name: 'search', query: { address: MainStore.addressSearchValue, lang: MainStore.currentLang }})"
+          @keydown.enter="replaceRoute(MainStore.addressSearchValue)"
         >
+        <!-- @keydown.enter="router.replace({ name: 'search', query: { address: MainStore.addressSearchValue, lang: MainStore.currentLang }})" -->
       </div>
       <div class="control">
         <button
@@ -83,7 +90,7 @@ const yPosition = computed(() => {
           class="button is-info address-search-button"
           type="submit"
           title="Address Search Button"
-          @click="router.replace({ name: 'search', query: { address: MainStore.addressSearchValue, lang: MainStore.currentLang }})"
+          @click="replaceRoute(MainStore.addressSearchValue)"
         >
           <font-awesome-icon
             :icon="['fas', 'search']"
