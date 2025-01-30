@@ -47,7 +47,8 @@ const currentNearbyDataType = computed(() => {
 });
 
 const setDataTypeInRouter = (newDataType) => {
-  router.push({ name: 'address-topic-and-data', params: { address: MainStore.currentAddress, topic: route.params.topic, data: newDataType } });
+  let startQuery = { ...route.query };
+  router.push({ name: 'address-topic-and-data', params: { address: MainStore.currentAddress, topic: route.params.topic, data: newDataType }, query: { ...startQuery }});
 }
 
 const selectedDataType = ref('nearby311');
