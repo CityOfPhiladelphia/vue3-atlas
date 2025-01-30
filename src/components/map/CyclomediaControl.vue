@@ -4,9 +4,11 @@ const MainStore = useMainStore();
 import { useMapStore } from '@/stores/MapStore.js'
 const MapStore = useMapStore();
 
-import { computed } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+const route = useRoute();
+const router = useRouter();
 
-defineEmits(['toggleCyclomedia']);
+import { computed } from 'vue';
 
 const imgSrc = computed(() => {
   return MainStore.publicPath + 'images/cyclomedia.png';
@@ -15,6 +17,18 @@ const imgSrc = computed(() => {
 const cyclomediaOn = computed(() => {
   return MapStore.cyclomediaOn;
 });
+
+const toggleCyclomedia = () => {
+  let startQuery = { ...route.query };
+  if (import.meta.env.VITE_DEBUG) console.log('startQuery:', startQuery);
+  if (cyclomediaOn.value) {
+    delete startQuery['streetview'];
+    router.push({ query: { ...startQuery }});
+  } else {
+    delete startQuery['obliqueview'];
+    router.push({ query: { ...startQuery, 'streetview': !cyclomediaOn.value } });
+  }
+};
 
 </script>
 
@@ -26,8 +40,9 @@ const cyclomediaOn = computed(() => {
   >
     <button
       type="button"
-      @click="$emit('toggleCyclomedia')"
+      @click="toggleCyclomedia"
     >
+    <!-- @click="$emit('toggleCyclomedia')" -->
       <img
         class="img-src"
         alt="street-view"

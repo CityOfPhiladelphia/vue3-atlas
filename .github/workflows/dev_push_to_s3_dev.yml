@@ -6,7 +6,7 @@ name: dev Push to S3 dev bucket
 on:
   push:
     branches:
-      - fix/more-li-records-issues
+      - main
 jobs:
   build:
 
@@ -33,8 +33,8 @@ jobs:
         VITE_CYCLOMEDIA_API_KEY: ${{ secrets.VITE_CYCLOMEDIA_API_KEY }}
         VITE_CYCLOMEDIA_PASSWORD: ${{ secrets.VITE_CYCLOMEDIA_PASSWORD }}
         VITE_CYCLOMEDIA_USERNAME: ${{ secrets.VITE_CYCLOMEDIA_USERNAME }}
-        VITE_PICTOMETRY_API_KEY: ${{ secrets.VITE_PICTOMETRY_API_KEY }}
-        VITE_PICTOMETRY_SECRET_KEY: ${{ secrets.VITE_PICTOMETRY_SECRET_KEY }}
+        VITE_EAGLEVIEW_CLIENT_ID: ${{ secrets.VITE_EAGLEVIEW_CLIENT_ID }}
+        VITE_EAGLEVIEW_CLIENT_SECRET: ${{ secrets.VITE_EAGLEVIEW_CLIENT_SECRET }}
 
     - name: Deploy to Dev s3, Set index headers, and Invalidate Cloudfront
       env:

@@ -323,13 +323,13 @@ const router = createRouter({
           MainStore.currentTopic = to.params.addressOrTopic;
           MainStore.currentAddress = null;
           MainStore.currentLang = to.query.lang;
-          routeApp(router);
+          routeApp(router, to);
         } else {
           if (import.meta.env.VITE_DEBUG === 'true') console.log('inside else, routing to address');
           MainStore.currentTopic = null;
           MainStore.currentAddress = to.params.addressOrTopic;
           MainStore.currentLang = to.query.lang;
-          routeApp(router);
+          routeApp(router, to);
         }
       }
     },
@@ -382,7 +382,7 @@ const router = createRouter({
           if (!GeocodeStore.aisData.features) {
             MainStore.currentTopic = null;
           }
-          routeApp(router);
+          routeApp(router, to);
         } else if (lat && lng) {
           MainStore.setLastSearchMethod('mapClick');
           await getParcelsAndPutInStore(lng, lat);
@@ -391,7 +391,7 @@ const router = createRouter({
             return false;
           }
           await checkParcelInAis();
-          routeApp(router);
+          routeApp(router, to);
         } else {
           return false;
         }

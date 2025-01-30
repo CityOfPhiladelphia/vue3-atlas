@@ -856,39 +856,6 @@ const votingDrawnMapStyle = mergeDeep(imageryInfo,{
       type: 'raster',
     },
     {
-      id: 'votingDivision',
-      type: 'fill',
-      source: 'votingDivision',
-      layout: {},
-      paint: {
-        'fill-color': '#9e9ac8',
-        'fill-opacity': 0.4,
-        'fill-outline-color': '#9e9ac8',
-      }
-    },
-    {
-      id: 'votingDivisionLine',
-      type: 'line',
-      source: 'votingDivision',
-      layout: {},
-      paint: {
-        'line-color': '#9e9ac8',
-        'line-width': 2
-      }
-    },
-    {
-      id: 'buildingColumnsMarker',
-      source: 'buildingColumnsMarker',
-      type: 'symbol',
-      layout: {
-        'icon-image': 'building-columns-solid',
-        'icon-anchor' : 'bottom',
-        'icon-size': .05,
-        "icon-allow-overlap" : true,
-        "text-allow-overlap": true,
-      },
-    },
-    {
       id: 'cyclomediaRecordings',
       source: 'cyclomediaRecordings',
       type: 'circle',
@@ -922,6 +889,39 @@ const votingDrawnMapStyle = mergeDeep(imageryInfo,{
       'paint': {
         'fill-color': 'rgb(0,102,255)',
         'fill-opacity': 0.2,
+      },
+    },
+    {
+      id: 'votingDivision',
+      type: 'fill',
+      source: 'votingDivision',
+      layout: {},
+      paint: {
+        'fill-color': '#9e9ac8',
+        'fill-opacity': 0.4,
+        'fill-outline-color': '#9e9ac8',
+      }
+    },
+    {
+      id: 'votingDivisionLine',
+      type: 'line',
+      source: 'votingDivision',
+      layout: {},
+      paint: {
+        'line-color': '#9e9ac8',
+        'line-width': 2
+      }
+    },
+    {
+      id: 'buildingColumnsMarker',
+      source: 'buildingColumnsMarker',
+      type: 'symbol',
+      layout: {
+        'icon-image': 'building-columns-solid',
+        'icon-anchor' : 'bottom',
+        'icon-size': .05,
+        "icon-allow-overlap" : true,
+        "text-allow-overlap": true,
       },
     },
     {

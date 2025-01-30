@@ -46,7 +46,7 @@ const handleTopicClick = () => {
     MainStore.currentTopic = props.topicSlug;
   }
   if (import.meta.env.VITE_DEBUG == 'true') console.log('topic clicked:', props.topicName);
-  routeApp(router);
+  routeApp(router, route);
 
   setTimeout(() => {
     const element = document.getElementById(props.topicName+'-topic');

@@ -87,6 +87,13 @@ onMounted(async () => {
   map.on('load', () => {
     let canvas = document.querySelector(".maplibregl-canvas");
     canvas.setAttribute('tabindex', -1);
+
+    if (route.query.streetview) {
+      turnOnCyclomedia();
+    }
+    if (route.query.obliqueview) {
+      turnOnEagleview();
+    }
   })
 
   // add the address marker and camera icon sources
@@ -216,7 +223,8 @@ onMounted(async () => {
     // if (import.meta.env.VITE_DEBUG == 'true') console.log('Map.vue handleMapClick, e:', e, 'drawLayers:', drawLayers, 'drawMode:', drawMode, 'e:', e, 'map.getStyle():', map.getStyle(), 'MapStore.drawStart:', MapStore.drawStart);
     if (!drawLayers.length && draw.getMode() !== 'draw_polygon') {
       MainStore.lastClickCoords = [e.lngLat.lng, e.lngLat.lat];
-      router.replace({ name: 'search', query: { lng: e.lngLat.lng, lat: e.lngLat.lat, lang: MainStore.currentLang }})
+      let startQuery = { ...route.query };
+      router.replace({ name: 'search', query: { ...startQuery, lng: e.lngLat.lng, lat: e.lngLat.lat }})
     }
     if (draw.getMode() === 'draw_polygon') {
       distanceMeasureControlRef.value.getDrawDistances(e);
@@ -833,26 +841,40 @@ const removeAllCyclomediaMapLayers = () => {
   MapStore.setCyclomediaCameraLngLat(MapStore.cyclomediaCameraLngLat, null);
 }
 
-// toggle cyclomedia on and off
-const toggleCyclomedia = async() => {
-  if (import.meta.env.VITE_DEBUG == 'true') console.log('toggleCyclomedia, map.getStyle().sources:', map.getStyle().sources, 'map.getStyle().layers:', map.getStyle().layers);
-  MapStore.cyclomediaOn = !MapStore.cyclomediaOn;
-  if (MapStore.cyclomediaOn) {
-    MapStore.eagleviewOn = false;
-    const zoom = map.getZoom();
-    if (zoom > 16.5) {
-      await updateCyclomediaRecordings();
-      if (MapStore.cyclomediaCameraLngLat) {
-        if (import.meta.env.VITE_DEBUG == 'true') console.log('in toggleCyclomedia, calling updateCyclomediaCameraLngLat, MapStore.cyclomediaCameraLngLat:', MapStore.cyclomediaCameraLngLat);
-        updateCyclomediaCameraLngLat(MapStore.cyclomediaCameraLngLat);
-      }
-      if (MapStore.cyclomediaCameraHFov && MapStore.cyclomediaCameraYaw) {
-        if (import.meta.env.VITE_DEBUG == 'true') console.log('calling updateCyclomediaCameraViewcone');
-        updateCyclomediaCameraViewcone(MapStore.cyclomediaCameraHFov, MapStore.cyclomediaCameraYaw);
+watch(
+  () => route.query,
+  async newQuery => {
+    if (import.meta.env.VITE_DEBUG) console.log('Map.vue watch route.query.streetview, newQuery:', newQuery, 'map.loaded():', map.loaded());
+    if (map.loaded()) {
+      if (newQuery.streetview) {
+        turnOnCyclomedia();
+      } else if (newQuery.obliqueview) {
+        turnOnEagleview();
+      } else {
+        removeAllCyclomediaMapLayers();
+        MapStore.cyclomediaOn = false;
+        MapStore.eagleviewOn = false;
       }
     }
-  } else {
-    removeAllCyclomediaMapLayers();
+  }
+)
+
+// turn cyclomedia on
+const turnOnCyclomedia = async() => {
+  if (import.meta.env.VITE_DEBUG == 'true') console.log('Map.vue cyclo turnOnCyclomedia, map.getStyle().sources:', map.getStyle().sources, 'map.getStyle().layers:', map.getStyle().layers);
+  MapStore.cyclomediaOn = true;
+  MapStore.eagleviewOn = false;
+  const zoom = map.getZoom();
+  if (MapStore.cyclomediaCameraLngLat) {
+    if (import.meta.env.VITE_DEBUG == 'true') console.log('Map.vue cyclo in turnOnCyclomedia, calling updateCyclomediaCameraLngLat, MapStore.cyclomediaCameraLngLat:', MapStore.cyclomediaCameraLngLat);
+    updateCyclomediaCameraLngLat(MapStore.cyclomediaCameraLngLat);
+  }
+  if (zoom > 16.5) {
+    await updateCyclomediaRecordings();
+    if (MapStore.cyclomediaCameraHFov && MapStore.cyclomediaCameraYaw) {
+      if (import.meta.env.VITE_DEBUG == 'true') console.log('calling updateCyclomediaCameraViewcone');
+      updateCyclomediaCameraViewcone(MapStore.cyclomediaCameraHFov, MapStore.cyclomediaCameraYaw);
+    }
   }
 }
 
@@ -899,10 +921,11 @@ const updateCyclomediaRecordings = async () => {
 
 // everything for adding, moving, and orienting the cyclomedia camera icon and viewcone
 const updateCyclomediaCameraLngLat = (lngLat) => {
-  // if (import.meta.env.VITE_DEBUG == 'true') console.log('updateCyclomediaCameraLngLat is running, lngLat:', lngLat);
+  if (import.meta.env.VITE_DEBUG == 'true') console.log('Map.vue cyclo updateCyclomediaCameraLngLat is running 1, lngLat:', lngLat);
   if (!MapStore.cyclomediaOn) {
     return;
   } else {
+    if (import.meta.env.VITE_DEBUG) console.log('Map.vue cyclo updateCyclomediaCameraLngLat is running 2, lngLat:', lngLat);
     const theData = point(lngLat);
     map.getSource('cyclomediaCamera').setData(theData);
     $config.dorDrawnMapStyle.sources.cyclomediaCamera.data = theData;
@@ -977,13 +1000,11 @@ const updateCyclomediaCameraViewcone = (cycloHFov, cycloYaw) => {
   $config.dorDrawnMapStyle.sources.cyclomediaViewcone.data = data;
 }
 
-const toggleEagleview = () => {
-  if (import.meta.env.VITE_DEBUG == 'true') console.log('toggleEagleview');
-  MapStore.eagleviewOn = !MapStore.eagleviewOn;
-  if (MapStore.eagleviewOn) {
-    MapStore.cyclomediaOn = false;
-    removeAllCyclomediaMapLayers();
-  }
+const turnOnEagleview = () => {
+  if (import.meta.env.VITE_DEBUG == 'true') console.log('turnOnEagleview');
+  MapStore.cyclomediaOn = false;
+  removeAllCyclomediaMapLayers();
+  MapStore.eagleviewOn = true;
 }
 
 </script>
@@ -1010,8 +1031,10 @@ const toggleEagleview = () => {
       v-if="MapStore.imageryOn"
       @set-imagery="setImagery"
     />
-    <EagleviewControl @toggle-eagleview="toggleEagleview" />
-    <CyclomediaControl @toggle-cyclomedia="toggleCyclomedia" />
+    <EagleviewControl />
+    <CyclomediaControl />
+    <!-- <EagleviewControl @toggle-eagleview="turnOnEagleview" />
+    <CyclomediaControl @toggle-cyclomedia="toggleCyclomedia" /> -->
     <OpacitySlider
       v-if="MainStore.currentTopic == 'deeds' && selectedRegmap"
       :initial-opacity="MapStore.regmapOpacity"
@@ -1050,15 +1073,15 @@ const toggleEagleview = () => {
       @update-camera-yaw="updateCyclomediaCameraAngle"
       @update-camera-h-fov="updateCyclomediaCameraViewcone"
       @update-camera-lng-lat="updateCyclomediaCameraLngLat"
-      @toggle-cyclomedia="toggleCyclomedia"
     />
   </KeepAlive>
+    <!-- @turn-off-cyclomedia="turnOffCyclomedia" -->
   <KeepAlive>
     <EagleviewPanel
       v-if="MapStore.eagleviewOn"
-      @toggle-eagleview="toggleEagleview"
     />
   </KeepAlive>
+  <!-- @toggle-eagleview="turnOnEagleview" -->
 </template>
 
 <style>
