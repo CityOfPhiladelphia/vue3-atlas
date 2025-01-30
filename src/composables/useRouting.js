@@ -7,6 +7,8 @@ export default function useRouting() {
     const MainStore = useMainStore();
     let startQuery = { ...route.query };
     delete startQuery['address'];
+    delete startQuery['lat'];
+    delete startQuery['lng'];
     if (!MainStore.currentAddress && MainStore.currentTopic == 'voting'){
       if (import.meta.env.VITE_DEBUG) console.log('routeApp routing to topic because MainStore.currentTopic:', MainStore.currentTopic);
       if (MainStore.currentLang) {
