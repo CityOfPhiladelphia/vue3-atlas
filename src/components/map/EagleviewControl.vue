@@ -5,7 +5,9 @@ const MainStore = useMainStore();
 import { useMapStore } from '@/stores/MapStore.js';
 const MapStore = useMapStore();
 
-defineEmits(['toggleEagleview']);
+import { useRouter, useRoute } from 'vue-router';
+const route = useRoute();
+const router = useRouter();
 
 const imgSrc = computed(() => {
   return MainStore.publicPath + 'images/eagleview.png';
@@ -14,6 +16,18 @@ const imgSrc = computed(() => {
 const eagleviewOn = computed(() => {
   return MapStore.eagleviewOn;
 });
+
+const toggleEagleview = () => {
+  let startQuery = { ...route.query };
+  if (import.meta.env.VITE_DEBUG) console.log('startQuery:', startQuery);
+  if (eagleviewOn.value) {
+    delete startQuery['obliqueview'];
+    router.push({ query: { ...startQuery }});
+  } else {
+    delete startQuery['streetview'];
+    router.push({ query: { ...startQuery, 'obliqueview': !eagleviewOn.value } });
+  }
+};
 
 </script>
 
@@ -25,8 +39,9 @@ const eagleviewOn = computed(() => {
   >
     <button
       type="button"
-      @click="$emit('toggleEagleview')"
+      @click="toggleEagleview"
     >
+    <!-- @click="$emit('toggleEagleview')" -->
       <img
         class="img-src"
         alt="oblique-view"

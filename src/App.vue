@@ -112,14 +112,16 @@ watch(
   () => locale.value,
   (newLocale, oldLocale) => {
     if (import.meta.env.VITE_DEBUG == 'true') console.log('watch locale:', newLocale, oldLocale);
+    let startQuery = { ...route.query };
     if (newLocale === MainStore.currentLang) {
       return;
     } else if (newLocale && newLocale != 'en-US') {
       MainStore.currentLang = newLocale;
-      router.push({ query: { 'lang': newLocale }});
+      router.push({ query: { ...startQuery, 'lang': newLocale }});
     } else {
       MainStore.currentLang = null;
-      router.push({ fullPath: route.path });
+      delete startQuery['lang'];
+      router.push({ query: { ...startQuery }});
     }
   }
 )

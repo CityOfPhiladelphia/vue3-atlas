@@ -9,7 +9,9 @@ import { useMapStore } from '@/stores/MapStore';
 // import { config } from 'maplibre-gl';
 const MapStore = useMapStore();
 
-const $emit = defineEmits(['toggleEagleview']);
+import { useRouter, useRoute } from 'vue-router';
+const route = useRoute();
+const router = useRouter();
 
 const clientId = import.meta.env.VITE_EAGLEVIEW_CLIENT_ID;
 const clientSecret = import.meta.env.VITE_EAGLEVIEW_CLIENT_SECRET;
@@ -94,7 +96,9 @@ onMounted( async() => {
 
 const popoutClicked = () => {
   window.open('//pictometry.phila.gov/?lat=' + MapStore.currentAddressCoords[1] + '&lng=' + MapStore.currentAddressCoords[0], '_blank');
-  $emit('toggleEagleview');
+  let startQuery = { ...route.query };
+  delete startQuery['obliqueview'];
+  router.push({ query: { ...startQuery }});
 }
 
 </script>

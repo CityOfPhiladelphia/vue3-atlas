@@ -5,6 +5,10 @@ const MapStore = useMapStore();
 import { useGeocodeStore } from '@/stores/GeocodeStore';
 const GeocodeStore = useGeocodeStore();
 
+import { useRouter, useRoute } from 'vue-router';
+const route = useRoute();
+const router = useRouter();
+
 import $config from '@/config';
 
 import { format, subYears } from 'date-fns';
@@ -15,7 +19,7 @@ const projection2272 = "+proj=lcc +lat_1=40.96666666666667 +lat_2=39.93333333333
 
 const cyclomediaInitialized = ref(false);
 
-const $emit = defineEmits(['updateCameraYaw', 'updateCameraLngLat', 'updateCameraHFov', 'toggleCyclomedia']);
+const $emit = defineEmits(['updateCameraYaw', 'updateCameraLngLat', 'updateCameraHFov']);
 
 watch(
   () => MapStore.currentAddressCoords,
@@ -181,7 +185,9 @@ onMounted( async() => {
 
 const popoutClicked = () => {
   window.open('//cyclomedia.phila.gov/?lat=' + MapStore.cyclomediaCameraLngLat[1] + '&lng=' + MapStore.cyclomediaCameraLngLat[0], '_blank');
-  $emit('toggleCyclomedia');
+  let startQuery = { ...route.query };
+  delete startQuery['streetview'];
+  router.push({ query: { ...startQuery }});
 }
 
 </script>
@@ -201,8 +207,6 @@ const popoutClicked = () => {
       class="panoramaViewerWindow"
     >
     </div>
-
-    
 
   </div>
 </template>
