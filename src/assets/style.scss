@@ -234,9 +234,9 @@ only screen and (max-width: 768px),
 
   @supports (-webkit-touch-callout: none) {
     /* CSS specific to iOS devices */ 
-    .main {
-      margin-top: 42px !important;
-    }
+    // .main {
+    //   margin-top: 42px !important;
+    // }
   }
   
   @supports not (-webkit-touch-callout: none) {
