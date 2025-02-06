@@ -26,6 +26,8 @@ export const useLiStore = defineStore('LiStore', {
       loadingLiViolations: true,
       liBusinessLicenses: {},
       loadingLiBusinessLicenses: true,
+      liLirbAppeals: {},
+      loadingLiLirbAppeals: false,
       loadingLiData: true,
     };
   },
@@ -41,6 +43,7 @@ export const useLiStore = defineStore('LiStore', {
       this.fillLiPermits();
       this.fillLiViolations();
       this.fillLiBusinessLicenses();
+      this.fillLiLirbAppeals();
     },
     async clearAllLiData() {
       this.loadingLiData = true;
@@ -61,6 +64,8 @@ export const useLiStore = defineStore('LiStore', {
       this.loadingLiViolations = true;
       this.liBusinessLicenses = {};
       this.loadingLiBusinessLicenses = true;
+      this.liLirbAppeals = {};
+      this.loadingLiLirbAppeals = true;
     },
     async fillLiBuildingFootprints() {
       // if (import.meta.env.VITE_DEBUG == 'true') console.log('fillLiBuildingFootprints is running');
@@ -452,7 +457,58 @@ export const useLiStore = defineStore('LiStore', {
         this.loadingLiBusinessLicenses = false;
         if (import.meta.env.VITE_DEBUG == 'true') console.error('liBusinessLicenses - await never resolved, failed to fetch address data')
       }
-    }
+    },
+    async fillLiLirbAppeals() {
+      if (import.meta.env.VITE_DEBUG == 'true') console.log('fillLiLirbAppeals is running');
+      try {
+        const GeocodeStore = useGeocodeStore();
+        const feature = GeocodeStore.aisData.features[0];
+        let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
+        const eclipse_location_id = feature.properties.eclipse_location_id.replace(/\|/g, "', '");
+        const streetaddress = feature.properties.street_address;
+        const opaQuery = feature.properties.opa_account_num ? ` OR opa_account_num IN ('${ feature.properties.opa_account_num}')` : ``;
+        const pwd_parcel_id = feature.properties.pwd_parcel_id;
+        const addressId = feature.properties.li_address_key.replace(/\|/g, "', '");
+
+        let query;
+        if (eclipse_location_id) {
+          query = `SELECT * FROM APPEALS
+          WHERE ( addressobjectid IN ('`+ eclipse_location_id +`') AND (appealtype like '%25LIRB%25' or appealtype like '%25BBS%25') \
+          OR address = '${streetaddress}' AND (appealtype like '%25LIRB%25' or appealtype like '%25BBS%25') \
+          OR addressobjectid IN ('${ addressId }') AND (appealtype like '%25LIRB%25' or appealtype like '%25BBS%25') \
+          OR parcel_id_num IN ('${ pwd_parcel_id }') AND (appealtype like '%25LIRB%25' or appealtype like '%25BBS%25') ) \
+          ${opaQuery } \
+          ORDER BY appealtype`;
+        } else {
+          query = `SELECT * FROM APPEALS
+          WHERE ( address = '${streetaddress}' AND (appealtype like '%25LIRB%25' or appealtype like '%25BBS%25') \
+          OR parcel_id_num IN ( '${ pwd_parcel_id }' ) AND (appealtype like '%25LIRB%25' or appealtype like '%25BBS%25') ) \
+          OR addressobjectid IN ('${ addressId }') AND (appealtype like '%25LIRB%25' or appealtype like '%25BBS%25') \
+          ${opaQuery } \
+          ORDER BY appealtype`;
+        }
+        const url = baseUrl += query;
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          data.rows.forEach((item) => {
+            let address = item.address;
+            if (item.unit_num && item.unit_num != null) {
+              address += ' Unit ' + item.unit_num;
+            }
+            item.link = "<a target='_blank' href='https://li.phila.gov/Property-History/search/appeal-detail?address="+encodeURIComponent(address)+"&Id="+item.appealnumber+"'>"+item.appealnumber+" <i class='fa fa-external-link-alt'></i></a>";
+          });
+          this.liLirbAppeals = data;
+          this.loadingLiLirbAppeals = false;
+        } else {
+          this.loadingLiLirbAppeals = false;
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('liLirbAppeals - await resolved but HTTP status was not successful')
+        }
+      } catch {
+        this.loadingLiLirbAppealss = false;
+        if (import.meta.env.VITE_DEBUG == 'true') console.error('liLirbAppeals - await never resolved, failed to fetch address data')
+      }
+    },
   },
   // keeping formatting getters here in the store only works if the data is not looped
   // through for a horizontal table

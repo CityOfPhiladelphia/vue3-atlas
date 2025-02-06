@@ -81,6 +81,7 @@ const nearbyVacantIndicatorsTableData = computed(() => {
 
 <template>
   <div class="mt-5">
+    <div class="topic-info">See all <a target="_blank" href="https://phl.maps.arcgis.com/apps/webappviewer/index.html?id=64ac160773d04952bc17ad895cc00680">vacant properties</a>.</div>
     <h2 class="subtitle mb-3 is-5">
       Likely Vacant Properties
       <font-awesome-icon

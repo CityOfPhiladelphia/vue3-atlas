@@ -101,6 +101,7 @@ const nearby311TableData = computed(() => {
 
 <template>
   <div class="mt-5">
+    <div class="topic-info">See all <a target="_blank" href="https://iframe.publicstuff.com/#?client_id=242">311 requests</a>.</div>
     <h2 class="subtitle mb-3 is-5">
       311 Requests
       <font-awesome-icon
