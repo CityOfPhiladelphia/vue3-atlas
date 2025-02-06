@@ -107,6 +107,7 @@ const nearbyUnsafeBuildingsTableData = computed(() => {
 
 <template>
   <div class="mt-5">
+    <div class="topic-info">311 link here?</div>
     <h2 class="subtitle mb-3 is-5">
       Unsafe Buildings
       <font-awesome-icon
