@@ -133,6 +133,11 @@ const nearbyCrimeIncidentsTableData = computed(() => {
         </template>
       </vue-good-table>
     </div>
+    <a
+      class="table-link"
+      target="_blank"
+      href="https://www.phillypolice.com/crime-data/crime-statistics/"
+    >See citywide crime statistics at PhillyPolice.com <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
   </div>
 </template>
 

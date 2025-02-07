@@ -185,6 +185,8 @@ const rcosTableData = computed(() => {
     class="topic-info"
   >
     Base district zoning maps, associated zoning overlays, and Registered Community Organizations applicable to your search address. If you notice a discrepancy, please contact <a href="mailto:planning@phila.gov">planning@phila.gov</a>. Source: Department of Planning and Development
+    <br><br>
+    A fuller summary of zoning for this address can be found on the <a target="_blank" :href="'https://www.phila.gov/zoning-summary-generator/?address='+MainStore.currentAddress">Zoning Summary Generator</a>.
   </div>
   <collection-summary
     :value="'STATUS'"
