@@ -320,14 +320,15 @@ const lirbAppealsTableData = computed(() => {
     columns: [
       {
         label: 'Date',
-        field: 'createddate',
-        type: 'date',
-        dateInputFormat: "yyyy-MM-dd'T'HH:mm:ssX",
-        dateOutputFormat: 'MM/dd/yyyy',
+        field: 'calendarlink',
+        html: true,
+        // type: 'date',
+        // dateInputFormat: "yyyy-MM-dd'T'HH:mm:ssX",
+        // dateOutputFormat: 'MM/dd/yyyy',
       },
       {
-        label: 'License Number',
-        field: 'link',
+        label: 'Appeal Number',
+        field: 'appeallink',
         html: true,
       },
       {
@@ -660,6 +661,58 @@ const lirbAppealsTableData = computed(() => {
       >See all violations at L&I Property History <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
     </div>
 
+    <!-- LIRB and BBS Appeals Table -->
+    <div class="data-section">
+      <h2 class="subtitle mb-3 is-5 table-title">
+        LIRB and BBS Appeals
+        <font-awesome-icon
+          v-if="LiStore.loadingLiLirbAppeals"
+          icon="fa-solid fa-spinner"
+          spin
+        />
+        <span v-else>({{ lirbAppealsLength }})</span>
+      </h2>
+      <div
+        v-if="lirbAppealsTableData"
+        class="horizontal-table"
+      >
+        <vue-good-table
+          id="lirb-appeals"
+          :columns="lirbAppealsTableData.columns"
+          :rows="lirbAppealsTableData.rows"
+          :pagination-options="paginationOptions(lirbAppealsTableData.rows.length)"
+          style-class="table"
+        >
+          <template #emptystate>
+            <div v-if="LiStore.loadingLiLirbAppeals">
+              Loading LIRB and BBS appeals... <font-awesome-icon
+                icon="fa-solid fa-spinner"
+                spin
+              />
+            </div>
+            <div v-else>
+              No LIRB and BBS appeals found
+            </div>
+          </template>
+          <template #pagination-top="props">
+            <custom-pagination-labels
+              :mode="'pages'"
+              :total="props.total"
+              :perPage="5"
+              @page-changed="props.pageChanged"
+              @per-page-changed="props.perPageChanged"
+            >
+            </custom-pagination-labels>
+          </template>
+        </vue-good-table>
+      </div>
+      <a
+        class="table-link"
+        target="_blank"
+        :href="`https://li.phila.gov/Property-History/search?address=${encodeURIComponent(MainStore.currentAddress)}`"
+      >See all appeals at L&I Property History <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
+    </div>
+
     <!-- Li Business Licenses Table -->
     <div class="data-section">
       <h2 class="subtitle mb-3 is-5 table-title">
@@ -712,57 +765,6 @@ const lirbAppealsTableData = computed(() => {
       >See all business licenses at L&I Property History <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
     </div>
 
-    <!-- LIRB and BBS Appeals Table -->
-    <div class="data-section">
-      <h2 class="subtitle mb-3 is-5 table-title">
-        LIRB and BBS Appeals
-        <font-awesome-icon
-          v-if="LiStore.loadingLiLirbAppeals"
-          icon="fa-solid fa-spinner"
-          spin
-        />
-        <span v-else>({{ lirbAppealsLength }})</span>
-      </h2>
-      <div
-        v-if="lirbAppealsTableData"
-        class="horizontal-table"
-      >
-        <vue-good-table
-          id="lirb-appeals"
-          :columns="lirbAppealsTableData.columns"
-          :rows="lirbAppealsTableData.rows"
-          :pagination-options="paginationOptions(lirbAppealsTableData.rows.length)"
-          style-class="table"
-        >
-          <template #emptystate>
-            <div v-if="LiStore.loadingLiLirbAppeals">
-              Loading LIRB and BBS appeals... <font-awesome-icon
-                icon="fa-solid fa-spinner"
-                spin
-              />
-            </div>
-            <div v-else>
-              No LIRB and BBS appeals found
-            </div>
-          </template>
-          <template #pagination-top="props">
-            <custom-pagination-labels
-              :mode="'pages'"
-              :total="props.total"
-              :perPage="5"
-              @page-changed="props.pageChanged"
-              @per-page-changed="props.perPageChanged"
-            >
-            </custom-pagination-labels>
-          </template>
-        </vue-good-table>
-      </div>
-      <a
-        class="table-link"
-        target="_blank"
-        :href="`https://li.phila.gov/Property-History/search?address=${encodeURIComponent(MainStore.currentAddress)}`"
-      >See all appeals at L&I Property History <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
-    </div>
   </section>
 </template>
 

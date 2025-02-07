@@ -99,7 +99,6 @@ const nearbyCrimeIncidentsTableData = computed(() => {
 
 <template>
   <div class="mt-5">
-    <div class="topic-info">See all <a target="_blank" href="https://www.phillypolice.com/crime-data/crime-statistics/">crime statistics</a>.</div>
     <h2 class="subtitle mb-3 is-5">
       Crime Incidents
       <font-awesome-icon
@@ -134,6 +133,11 @@ const nearbyCrimeIncidentsTableData = computed(() => {
         </template>
       </vue-good-table>
     </div>
+    <a
+      class="table-link"
+      target="_blank"
+      href="https://www.phillypolice.com/crime-data/crime-statistics/"
+    >See citywide crime statistics at PhillyPolice.com <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
   </div>
 </template>
 

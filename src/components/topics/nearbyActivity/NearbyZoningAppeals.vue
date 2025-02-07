@@ -117,7 +117,6 @@ const nearbyZoningAppealsTableData = computed(() => {
 
 <template>
   <div class="mt-5">
-    <div class="topic-info">See all at the <a target="_blank" href="https://li.phila.gov/zba-appeals-calendar">Zoning Board of Adjustment (ZBA) appeals calendar</a>.</div>
     <h2 class="subtitle mb-3 is-5">
       Zoning Appeals
       <font-awesome-icon
@@ -152,6 +151,11 @@ const nearbyZoningAppealsTableData = computed(() => {
         </template>
       </vue-good-table>
     </div>
+    <a
+      class="table-link"
+      target="_blank"
+      href="https://li.phila.gov/zba-appeals-calendar"
+    >See zoning appeals citywide at the Zoning Board of Adjustment (ZBA) Appeals Calendar <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
   </div>
 </template>
 

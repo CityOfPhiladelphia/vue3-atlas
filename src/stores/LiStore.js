@@ -477,14 +477,14 @@ export const useLiStore = defineStore('LiStore', {
           OR address = '${streetaddress}' AND (appealtype like '%25LIRB%25' or appealtype like '%25BBS%25') \
           OR addressobjectid IN ('${ addressId }') AND (appealtype like '%25LIRB%25' or appealtype like '%25BBS%25') \
           OR parcel_id_num IN ('${ pwd_parcel_id }') AND (appealtype like '%25LIRB%25' or appealtype like '%25BBS%25') ) \
-          ${opaQuery } \
+          ${opaQuery } AND (appealtype like '%25LIRB%25' or appealtype like '%25BBS%25') \
           ORDER BY appealtype`;
         } else {
           query = `SELECT * FROM APPEALS
           WHERE ( address = '${streetaddress}' AND (appealtype like '%25LIRB%25' or appealtype like '%25BBS%25') \
           OR parcel_id_num IN ( '${ pwd_parcel_id }' ) AND (appealtype like '%25LIRB%25' or appealtype like '%25BBS%25') ) \
           OR addressobjectid IN ('${ addressId }') AND (appealtype like '%25LIRB%25' or appealtype like '%25BBS%25') \
-          ${opaQuery } \
+          ${opaQuery } AND (appealtype like '%25LIRB%25' or appealtype like '%25BBS%25') \
           ORDER BY appealtype`;
         }
         const url = baseUrl += query;
@@ -496,7 +496,9 @@ export const useLiStore = defineStore('LiStore', {
             if (item.unit_num && item.unit_num != null) {
               address += ' Unit ' + item.unit_num;
             }
-            item.link = "<a target='_blank' href='https://li.phila.gov/Property-History/search/appeal-detail?address="+encodeURIComponent(address)+"&Id="+item.appealnumber+"'>"+item.appealnumber+" <i class='fa fa-external-link-alt'></i></a>";
+            item.appeallink = "<a target='_blank' href='https://li.phila.gov/Property-History/search/appeal-detail?address="+encodeURIComponent(address)+"&Id="+item.appealnumber+"'>"+item.appealnumber+" <i class='fa fa-external-link-alt'></i></a>";
+            // item.calendarlink = "<a target='_blank' href='https://li.phila.gov/appeals-calendar/appeal?from=2-7-2010&to=4-7-2025&region=all&Id="+item.appealnumber+"'>"+date(item.createddate, 'MM/dd/yyyy')+" <i class='fa fa-external-link-alt'></i></a>";
+            item.calendarlink = date(item.createddate, 'MM/dd/yyyy');
           });
           this.liLirbAppeals = data;
           this.loadingLiLirbAppeals = false;

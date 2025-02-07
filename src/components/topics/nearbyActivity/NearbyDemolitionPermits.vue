@@ -101,7 +101,6 @@ const nearbyDemolitionPermitsTableData = computed(() => {
 
 <template>
   <div class="mt-5">
-    <div class="topic-info">311 link here?</div>
     <h2 class="subtitle mb-3 is-5">
       Demolition Permits
       <font-awesome-icon
@@ -136,6 +135,11 @@ const nearbyDemolitionPermitsTableData = computed(() => {
         </template>
       </vue-good-table>
     </div>
+    <a
+      class="table-link"
+      target="_blank"
+      href="https://iframe.publicstuff.com/#?client_id=242"
+    >Report complaints about construction or demolition activity to Philly311 <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
   </div>
 </template>
 
