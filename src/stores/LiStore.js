@@ -497,7 +497,7 @@ export const useLiStore = defineStore('LiStore', {
               address += ' Unit ' + item.unit_num;
             }
             item.appeallink = "<a target='_blank' href='https://li.phila.gov/Property-History/search/appeal-detail?address="+encodeURIComponent(address)+"&Id="+item.appealnumber+"'>"+item.appealnumber+" <i class='fa fa-external-link-alt'></i></a>";
-            item.calendarlink = "<a target='_blank' href='https://li.phila.gov/appeals-calendar/appeal?from=2-7-2010&to=4-7-2025&region=all&Id="+item.appealnumber+"'>"+date(item.scheduleddate, 'MM/dd/yyyy')+" <i class='fa fa-external-link-alt'></i></a>";
+            item.calendarlink = "<a target='_blank' href='https://li.phila.gov/appeals-calendar/appeal?from=2-7-2000&to=4-7-2050&region=all&Id="+item.appealnumber+"'>"+date(item.scheduleddate, 'MM/dd/yyyy')+" <i class='fa fa-external-link-alt'></i></a>";
             // item.calendarlink = date(item.scheduleddate, 'MM/dd/yyyy');
           });
           this.liLirbAppeals = data;
