@@ -195,11 +195,15 @@ export const useZoningStore = defineStore('ZoningStore', {
         const pwd_parcel_id = feature.properties.pwd_parcel_id;
         const addressId = feature.properties.li_address_key.replace(/\|/g, "', '");
         
-        const query = `SELECT * FROM APPEALS WHERE ( address = '${ streetaddress }' \
-          OR addressobjectid IN ('${ addressId }') OR parcel_id_num IN ( '${ pwd_parcel_id }' ) ) ${ opaQuery } \
+        const query = `SELECT * FROM APPEALS WHERE ( address = '${ streetaddress }' AND applicationtype = 'Zoning Board of Adjustment' \
+          OR addressobjectid IN ('${ addressId }') AND applicationtype = 'Zoning Board of Adjustment' \
+          OR parcel_id_num IN ('${ pwd_parcel_id }') AND applicationtype = 'Zoning Board of Adjustment' ) \
+          ${ opaQuery } AND applicationtype = 'Zoning Board of Adjustment' \
           AND systemofrecord IN ('HANSEN') \
-          UNION SELECT * FROM APPEALS WHERE ( addressobjectid IN ('${ eclipse_location_id }') \
-          OR parcel_id_num IN ( '${ pwd_parcel_id }' ) ) ${ opaQuery } AND systemofrecord IN ('ECLIPSE') \
+          UNION SELECT * FROM APPEALS WHERE ( addressobjectid IN ('${ eclipse_location_id }') AND applicationtype = 'Zoning Board of Adjustment'  \
+          OR parcel_id_num IN ('${ pwd_parcel_id }') AND applicationtype = 'Zoning Board of Adjustment' ) \
+          ${ opaQuery } AND applicationtype = 'Zoning Board of Adjustment' \
+          AND systemofrecord IN ('ECLIPSE') \
           ORDER BY scheduleddate DESC`;
         
         const url = baseUrl += query;
