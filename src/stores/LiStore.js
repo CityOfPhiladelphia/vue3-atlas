@@ -417,22 +417,22 @@ export const useLiStore = defineStore('LiStore', {
         let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
         const eclipse_location_id = feature.properties.eclipse_location_id.replace(/\|/g, "', '");
         const streetaddress = feature.properties.street_address;
-        const opaQuery = feature.properties.opa_account_num ? ` OR opa_account_num IN ('${ feature.properties.opa_account_num}')` : ``;
+        const opaQuery = feature.properties.opa_account_num ? ` OR opa_account_num IN ('${ feature.properties.opa_account_num}')` : '';
         const pwd_parcel_id = feature.properties.pwd_parcel_id;
-        const addressId = feature.properties.li_address_key.replace(/\|/g, "', '");
+        const addressId = feature.properties.li_address_key ? feature.properties.li_address_key.replace(/\|/g, "', '") : null;
 
         let query;
         if (eclipse_location_id) {
-          query = `SELECT * FROM BUSINESS_LICENSES WHERE ( addressobjectid IN ('`+ eclipse_location_id +`') AND addressed_license = 'Yes' \
+          query = `SELECT * FROM BUSINESS_LICENSES WHERE ( addressobjectid IN ('${eclipse_location_id}') AND addressed_license = 'Yes' \
           OR address = '${streetaddress}' AND addressed_license = 'Yes' \
-          OR addressobjectid IN ('${ addressId }') AND addressed_license = 'Yes' \
-          OR parcel_id_num IN ( '${ pwd_parcel_id }' ) AND addressed_license = 'Yes'  ) \
+          OR addressobjectid IN (${addressId}) AND addressed_license = 'Yes' \
+          OR parcel_id_num IN ('${ pwd_parcel_id }') AND addressed_license = 'Yes' ) \
           ${opaQuery } \
           ORDER BY licensetype`;
         } else {
-          query = `SELECT * FROM BUSINESS_LICENSES WHERE ( address = '${streetaddress}' AND addressed_license = 'Yes'  \
-          OR parcel_id_num IN ( '${ pwd_parcel_id }' ) AND addressed_license = 'Yes' ) \
-          OR addressobjectid IN ('${ addressId }') AND addressed_license = 'Yes' \
+          query = `SELECT * FROM BUSINESS_LICENSES WHERE ( address = '${streetaddress}' AND addressed_license = 'Yes' \
+          OR addressobjectid IN (${addressId}) AND addressed_license = 'Yes' \
+          OR parcel_id_num IN ('${ pwd_parcel_id }') AND addressed_license = 'Yes' ) \
           ${opaQuery } \
           ORDER BY licensetype`;
         }
@@ -482,8 +482,8 @@ export const useLiStore = defineStore('LiStore', {
         } else {
           query = `SELECT * FROM APPEALS
           WHERE ( address = '${streetaddress}' AND (appealtype like '%25LIRB%25' or appealtype like '%25BBS%25') \
-          OR parcel_id_num IN ( '${ pwd_parcel_id }' ) AND (appealtype like '%25LIRB%25' or appealtype like '%25BBS%25') ) \
           OR addressobjectid IN ('${ addressId }') AND (appealtype like '%25LIRB%25' or appealtype like '%25BBS%25') \
+          OR parcel_id_num IN ( '${ pwd_parcel_id }' ) AND (appealtype like '%25LIRB%25' or appealtype like '%25BBS%25') ) \
           ${opaQuery } AND (appealtype like '%25LIRB%25' or appealtype like '%25BBS%25') \
           ORDER BY appealtype`;
         }
