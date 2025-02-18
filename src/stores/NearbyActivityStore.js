@@ -276,6 +276,7 @@ export const useNearbyActivityStore = defineStore('NearbyActivityStore', {
             dateMinNum: 1,
             dateMinType: 'year',
             dateField: 'scheduleddate',
+            where: "appealtype like '%ZBA%' OR appealtype = 'Zoning Board of Adjustment'",
           },
         };
         let params = fetchNearby(feature, dataSource);
@@ -284,6 +285,7 @@ export const useNearbyActivityStore = defineStore('NearbyActivityStore', {
           const data = response.data;
           data.rows.forEach(row => {
             row.distance_ft = (row.distance * 3.28084).toFixed(0) + ' ft';
+            row.link = `<a target="blank" href="https://li.phila.gov/zba-appeals-calendar/appeal?from=2-6-2000&to=4-6-2050&region=all&Id=${row.appealnumber}">${row.appealnumber}</a>`;
           });
           this.nearbyZoningAppeals = data;
           this.setLoadingData(false);

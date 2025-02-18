@@ -107,6 +107,11 @@ const businessLicensesCompareFn = (a, b) => new Date(b.initialissuedate) - new D
 const businessLicenses = computed(() => { if (LiStore.liBusinessLicenses.rows) return [ ...LiStore.liBusinessLicenses.rows ].sort(businessLicensesCompareFn) });
 const businessLicensesLength = computed(() => businessLicenses.value && businessLicenses.value.length ? businessLicenses.value.length : 0);
 
+// LIRB and BBS Appeals
+const lirbAppealsCompareFn = (a, b) => new Date(b.createddate) - new Date(a.createddate);
+const lirbAppeals = computed(() => { if (LiStore.liLirbAppeals.rows) return [ ...LiStore.liLirbAppeals.rows ].sort(lirbAppealsCompareFn) });
+const lirbAppealsLength = computed(() => lirbAppeals.value && lirbAppeals.value.length ? lirbAppeals.value.length : 0);
+
 // TABLES
 
 const buildingData = computed(() => {
@@ -307,6 +312,39 @@ const businessLicensesTableData = computed(() => {
       }
     ],
     rows: businessLicenses.value || [],
+  }
+});
+
+const lirbAppealsTableData = computed(() => {
+  return {
+    columns: [
+      {
+        label: 'Date',
+        field: 'calendarlink',
+        html: true,
+        // type: 'date',
+        // dateInputFormat: "yyyy-MM-dd'T'HH:mm:ssX",
+        // dateOutputFormat: 'MM/dd/yyyy',
+      },
+      {
+        label: 'Appeal Number',
+        field: 'appeallink',
+        html: true,
+      },
+      {
+        label: 'Appeal Grounds',
+        field: 'appealgrounds',
+      },
+      {
+        label: 'Type',
+        field: 'appealtype',
+      },
+      {
+        label: 'Status',
+        field: 'appealstatus',
+      }
+    ],
+    rows: lirbAppeals.value || [],
   }
 });
 
@@ -623,6 +661,58 @@ const businessLicensesTableData = computed(() => {
       >See all violations at L&I Property History <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
     </div>
 
+    <!-- LIRB and BBS Appeals Table -->
+    <div class="data-section">
+      <h2 class="subtitle mb-3 is-5 table-title">
+        LIRB and BBS Appeals
+        <font-awesome-icon
+          v-if="LiStore.loadingLiLirbAppeals"
+          icon="fa-solid fa-spinner"
+          spin
+        />
+        <span v-else>({{ lirbAppealsLength }})</span>
+      </h2>
+      <div
+        v-if="lirbAppealsTableData"
+        class="horizontal-table"
+      >
+        <vue-good-table
+          id="lirb-appeals"
+          :columns="lirbAppealsTableData.columns"
+          :rows="lirbAppealsTableData.rows"
+          :pagination-options="paginationOptions(lirbAppealsTableData.rows.length)"
+          style-class="table"
+        >
+          <template #emptystate>
+            <div v-if="LiStore.loadingLiLirbAppeals">
+              Loading LIRB and BBS appeals... <font-awesome-icon
+                icon="fa-solid fa-spinner"
+                spin
+              />
+            </div>
+            <div v-else>
+              No LIRB and BBS appeals found
+            </div>
+          </template>
+          <template #pagination-top="props">
+            <custom-pagination-labels
+              :mode="'pages'"
+              :total="props.total"
+              :perPage="5"
+              @page-changed="props.pageChanged"
+              @per-page-changed="props.perPageChanged"
+            >
+            </custom-pagination-labels>
+          </template>
+        </vue-good-table>
+      </div>
+      <a
+        class="table-link"
+        target="_blank"
+        :href="`https://li.phila.gov/Property-History/search?address=${encodeURIComponent(MainStore.currentAddress)}`"
+      >See all appeals at L&I Property History <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
+    </div>
+
     <!-- Li Business Licenses Table -->
     <div class="data-section">
       <h2 class="subtitle mb-3 is-5 table-title">
@@ -674,6 +764,7 @@ const businessLicensesTableData = computed(() => {
         :href="`https://li.phila.gov/Property-History/search?address=${encodeURIComponent(MainStore.currentAddress)}`"
       >See all business licenses at L&I Property History <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
     </div>
+
   </section>
 </template>
 
@@ -756,6 +847,18 @@ only screen and (max-width: 768px),
     td:nth-of-type(1):before { content: "Date"; }
     td:nth-of-type(2):before { content: "License Number"; }
     td:nth-of-type(3):before { content: "Name"; }
+    td:nth-of-type(4):before { content: "Type"; }
+    td:nth-of-type(5):before { content: "Status"; }
+  }
+
+  #lirb-appeals {
+    td:nth-of-type(2) {
+      min-height: 60px;
+    }
+
+    td:nth-of-type(1):before { content: "Date"; }
+    td:nth-of-type(2):before { content: "Appeal Number"; }
+    td:nth-of-type(3):before { content: "Appeal Grounds"; }
     td:nth-of-type(4):before { content: "Type"; }
     td:nth-of-type(5):before { content: "Status"; }
   }

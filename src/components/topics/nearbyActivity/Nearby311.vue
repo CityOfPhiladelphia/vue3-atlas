@@ -138,6 +138,11 @@ const nearby311TableData = computed(() => {
         </template>
       </vue-good-table>
     </div>
+    <a
+      class="table-link"
+      target="_blank"
+      href="https://iframe.publicstuff.com/#?client_id=242"
+    >See citywide 311 requests submitted online or submit a service request at Philly311 <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
   </div>
 </template>
 

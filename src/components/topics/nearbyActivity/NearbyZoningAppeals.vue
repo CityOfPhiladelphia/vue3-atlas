@@ -103,6 +103,11 @@ const nearbyZoningAppealsTableData = computed(() => {
           return (xSplit < ySplit ? -1 : (xSplit > ySplit ? 1 : 0));
         },
       },
+      {
+        label: 'Link',
+        field: 'link',
+        html: true,
+      }
     ],
     rows: nearbyZoningAppeals.value || [],
   }
@@ -146,6 +151,11 @@ const nearbyZoningAppealsTableData = computed(() => {
         </template>
       </vue-good-table>
     </div>
+    <a
+      class="table-link"
+      target="_blank"
+      href="https://li.phila.gov/zba-appeals-calendar"
+    >See zoning appeals citywide at the Zoning Board of Adjustment (ZBA) Appeals Calendar <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
   </div>
 </template>
 
@@ -160,6 +170,7 @@ only screen and (max-width: 768px){
     td:nth-of-type(2):before { content: "Location"; }
     td:nth-of-type(3):before { content: "Description"; }
     td:nth-of-type(4):before { content: "Distance"; }
+    td:nth-of-type(5):before { content: "Link"; }
   }
 }
 
