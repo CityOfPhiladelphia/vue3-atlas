@@ -121,14 +121,17 @@ const appealsTableData = computed(() => {
     columns: [
       {
         label: 'Processed Date',
-        field: 'createddate',
-        type: 'date',
-        dateInputFormat: "yyyy-MM-dd'T'HH:mm:ssX",
-        dateOutputFormat: 'MM/dd/yyyy',
+        field: 'calendarlink',
+        html: true,
+        // label: 'Processed Date',
+        // field: 'createddate',
+        // type: 'date',
+        // dateInputFormat: "yyyy-MM-dd'T'HH:mm:ssX",
+        // dateOutputFormat: 'MM/dd/yyyy',
       },
       {
         label: 'Id',
-        field: 'link',
+        field: 'appeallink',
         html: true,
       },
       {
@@ -346,7 +349,7 @@ const rcosTableData = computed(() => {
 
   <div class="data-section">
     <h2 class="subtitle mb-3 is-5 table-title">
-      Appeals
+      Zoning Appeals
       <font-awesome-icon
         v-if="ZoningStore.loadingZoningAppeals"
         icon="fa-solid fa-spinner"
@@ -364,13 +367,13 @@ const rcosTableData = computed(() => {
       >
         <template #emptystate>
           <div v-if="ZoningStore.loadingZoningAppeals">
-            Loading appeals... <font-awesome-icon
+            Loading zoning appeals... <font-awesome-icon
               icon="fa-solid fa-spinner"
               spin
             />
           </div>
           <div v-else>
-            No appeals found
+            No zoning appeals found
           </div>
         </template>
         <template #pagination-top="props">
