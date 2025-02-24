@@ -5,7 +5,7 @@ import { useParcelsStore } from './ParcelsStore';
 import { useGeocodeStore } from '@/stores/GeocodeStore.js'
 
 import useTransforms from '@/composables/useTransforms';
-const { rcoPrimaryContact, phoneNumber } = useTransforms();
+const { rcoPrimaryContact, phoneNumber, date } = useTransforms();
 
 export const useZoningStore = defineStore('ZoningStore', {
   state: () => {
@@ -189,25 +189,40 @@ export const useZoningStore = defineStore('ZoningStore', {
         const GeocodeStore = useGeocodeStore();
         const feature = GeocodeStore.aisData.features[0];
         let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
-        const eclipse_location_id = feature.properties.eclipse_location_id.replace(/\|/g, "', '");
         const streetaddress = feature.properties.street_address;
-        const opaQuery = feature.properties.opa_account_num ? ` AND opa_account_num IN ('${ feature.properties.opa_account_num}')` : ``;
         const pwd_parcel_id = feature.properties.pwd_parcel_id;
         const addressId = feature.properties.li_address_key.replace(/\|/g, "', '");
+        const eclipseLocationId = feature.properties.eclipse_location_id.replace(/\|/g, "', '");
+        const eclipseQuery = feature.properties.eclipse_location_id ? `addressobjectid IN ('${eclipseLocationId}')` : ``;
+        const zoningQuery = `applicationtype in ('Zoning Board of Adjustment', 'RB_ZBA') AND applicationtype is not null`
+        const opaQuery = feature.properties.opa_account_num ? ` AND opa_account_num IN ('${ feature.properties.opa_account_num}')` : ``;
         
-        const query = `SELECT * FROM APPEALS WHERE ( address = '${ streetaddress }' \
-          OR addressobjectid IN ('${ addressId }') OR parcel_id_num IN ( '${ pwd_parcel_id }' ) ) ${ opaQuery } \
+        const query = `SELECT * FROM APPEALS WHERE (address = '${ streetaddress }' AND ${zoningQuery} \
+          OR addressobjectid IN ('${ addressId }') AND ${zoningQuery} \
+          OR parcel_id_num IN ('${ pwd_parcel_id }') AND ${zoningQuery}) \
+          ${ opaQuery } AND ${zoningQuery} \
           AND systemofrecord IN ('HANSEN') \
-          UNION SELECT * FROM APPEALS WHERE ( addressobjectid IN ('${ eclipse_location_id }') \
-          OR parcel_id_num IN ( '${ pwd_parcel_id }' ) ) ${ opaQuery } AND systemofrecord IN ('ECLIPSE') \
+          UNION SELECT * FROM APPEALS WHERE (${eclipseQuery} AND ${zoningQuery}  \
+          OR parcel_id_num IN ('${ pwd_parcel_id }') AND ${zoningQuery}) \
+          ${ opaQuery } AND ${zoningQuery} \
+          AND systemofrecord IN ('ECLIPSE') \
           ORDER BY scheduleddate DESC`;
         
         const url = baseUrl += query;
         const response = await fetch(url);
         if (response.ok) {
           let data = await response.json();
-          data.rows.forEach(row => {
-            row.link = `<a target='_blank' href='https://li.phila.gov/Property-History/search/Appeal-Detail?address=${row.address}&Id=${row.appealnumber}'>${row.appealnumber}<i class='fas fa-external-link-alt'></i></a>`
+          console.log('response ok, response:', response, 'data:', data);
+          data.rows.forEach((row) => {
+            console.log('in loop, row:', row);
+            let address = row.address;
+            if (row.unit_num && row.unit_num != null) {
+              address += ' Unit ' + row.unit_num;
+            }
+            console.log('in loop, row:', row);
+            row.appeallink = `<a target='_blank' href='https://li.phila.gov/Property-History/search/Appeal-Detail?address=${row.address}&Id=${row.appealnumber}'>${row.appealnumber}<i class='fas fa-external-link-alt'></i></a>`
+            row.calendarlink = "<a target='_blank' href='https://li.phila.gov/zba-appeals-calendar/appeal?from=2-7-2000&to=4-7-2050&region=all&Id="+row.appealnumber+"'>"+date(row.scheduleddate, 'MM/dd/yyyy')+" <i class='fa fa-external-link-alt'></i></a>";
+            console.log('in loop, row:', row);
           });
           this.zoningAppeals = data;
           this.loadingZoningAppeals = false;

@@ -107,10 +107,10 @@ const businessLicensesCompareFn = (a, b) => new Date(b.initialissuedate) - new D
 const businessLicenses = computed(() => { if (LiStore.liBusinessLicenses.rows) return [ ...LiStore.liBusinessLicenses.rows ].sort(businessLicensesCompareFn) });
 const businessLicensesLength = computed(() => businessLicenses.value && businessLicenses.value.length ? businessLicenses.value.length : 0);
 
-// LIRB and BBS Appeals
-const lirbAppealsCompareFn = (a, b) => new Date(b.createddate) - new Date(a.createddate);
-const lirbAppeals = computed(() => { if (LiStore.liLirbAppeals.rows) return [ ...LiStore.liLirbAppeals.rows ].sort(lirbAppealsCompareFn) });
-const lirbAppealsLength = computed(() => lirbAppeals.value && lirbAppeals.value.length ? lirbAppeals.value.length : 0);
+// L&I Appeals
+const liAppealsCompareFn = (a, b) => new Date(b.createddate) - new Date(a.createddate);
+const liAppeals = computed(() => { if (LiStore.liAppeals.rows) return [ ...LiStore.liAppeals.rows ].sort(liAppealsCompareFn) });
+const liAppealsLength = computed(() => liAppeals.value && liAppeals.value.length ? liAppeals.value.length : 0);
 
 // TABLES
 
@@ -315,7 +315,7 @@ const businessLicensesTableData = computed(() => {
   }
 });
 
-const lirbAppealsTableData = computed(() => {
+const liAppealsTableData = computed(() => {
   return {
     columns: [
       {
@@ -344,7 +344,7 @@ const lirbAppealsTableData = computed(() => {
         field: 'appealstatus',
       }
     ],
-    rows: lirbAppeals.value || [],
+    rows: liAppeals.value || [],
   }
 });
 
@@ -661,37 +661,37 @@ const lirbAppealsTableData = computed(() => {
       >See all violations at L&I Property History <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
     </div>
 
-    <!-- LIRB and BBS Appeals Table -->
+    <!-- L&I Appeals Table -->
     <div class="data-section">
       <h2 class="subtitle mb-3 is-5 table-title">
-        LIRB and BBS Appeals
+        L&I Appeals
         <font-awesome-icon
-          v-if="LiStore.loadingLiLirbAppeals"
+          v-if="LiStore.loadingLiAppeals"
           icon="fa-solid fa-spinner"
           spin
         />
-        <span v-else>({{ lirbAppealsLength }})</span>
+        <span v-else>({{ liAppealsLength }})</span>
       </h2>
       <div
-        v-if="lirbAppealsTableData"
+        v-if="liAppealsTableData"
         class="horizontal-table"
       >
         <vue-good-table
-          id="lirb-appeals"
-          :columns="lirbAppealsTableData.columns"
-          :rows="lirbAppealsTableData.rows"
-          :pagination-options="paginationOptions(lirbAppealsTableData.rows.length)"
+          id="li-appeals"
+          :columns="liAppealsTableData.columns"
+          :rows="liAppealsTableData.rows"
+          :pagination-options="paginationOptions(liAppealsTableData.rows.length)"
           style-class="table"
         >
           <template #emptystate>
-            <div v-if="LiStore.loadingLiLirbAppeals">
-              Loading LIRB and BBS appeals... <font-awesome-icon
+            <div v-if="LiStore.loadingLiAppeals">
+              Loading L&I appeals... <font-awesome-icon
                 icon="fa-solid fa-spinner"
                 spin
               />
             </div>
             <div v-else>
-              No LIRB and BBS appeals found
+              No L&I appeals found
             </div>
           </template>
           <template #pagination-top="props">
@@ -851,7 +851,7 @@ only screen and (max-width: 768px),
     td:nth-of-type(5):before { content: "Status"; }
   }
 
-  #lirb-appeals {
+  #li-appeals {
     td:nth-of-type(2) {
       min-height: 60px;
     }
