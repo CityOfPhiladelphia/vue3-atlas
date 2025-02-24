@@ -26,8 +26,8 @@ export const useLiStore = defineStore('LiStore', {
       loadingLiViolations: true,
       liBusinessLicenses: {},
       loadingLiBusinessLicenses: true,
-      liLirbAppeals: {},
-      loadingLiLirbAppeals: false,
+      liAppeals: {},
+      loadingLiAppeals: false,
       loadingLiData: true,
     };
   },
@@ -43,7 +43,7 @@ export const useLiStore = defineStore('LiStore', {
       this.fillLiPermits();
       this.fillLiViolations();
       this.fillLiBusinessLicenses();
-      this.fillLiLirbAppeals();
+      this.fillLiAppeals();
     },
     async clearAllLiData() {
       this.loadingLiData = true;
@@ -64,8 +64,8 @@ export const useLiStore = defineStore('LiStore', {
       this.loadingLiViolations = true;
       this.liBusinessLicenses = {};
       this.loadingLiBusinessLicenses = true;
-      this.liLirbAppeals = {};
-      this.loadingLiLirbAppeals = true;
+      this.liAppeals = {};
+      this.loadingLiAppeals = true;
     },
     async fillLiBuildingFootprints() {
       // if (import.meta.env.VITE_DEBUG == 'true') console.log('fillLiBuildingFootprints is running');
@@ -458,35 +458,29 @@ export const useLiStore = defineStore('LiStore', {
         if (import.meta.env.VITE_DEBUG == 'true') console.error('liBusinessLicenses - await never resolved, failed to fetch address data')
       }
     },
-    async fillLiLirbAppeals() {
-      if (import.meta.env.VITE_DEBUG == 'true') console.log('fillLiLirbAppeals is running');
+    async fillLiAppeals() {
+      if (import.meta.env.VITE_DEBUG == 'true') console.log('fillLiAppeals is running');
       try {
         const GeocodeStore = useGeocodeStore();
         const feature = GeocodeStore.aisData.features[0];
         let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
-        const eclipse_location_id = feature.properties.eclipse_location_id.replace(/\|/g, "', '");
         const streetaddress = feature.properties.street_address;
-        const opaQuery = feature.properties.opa_account_num ? ` OR opa_account_num IN ('${ feature.properties.opa_account_num}')` : ``;
         const pwd_parcel_id = feature.properties.pwd_parcel_id;
         const addressId = feature.properties.li_address_key.replace(/\|/g, "', '");
+        const eclipseLocationId = feature.properties.eclipse_location_id.replace(/\|/g, "', '");
+        // console.log('eclipseLocationId:', eclipseLocationId);
+        const eclipseQuery = feature.properties.eclipse_location_id ? `addressobjectid IN ('${eclipseLocationId}')` : ``;
+        const opaQuery = feature.properties.opa_account_num ? `opa_account_num IN ('${feature.properties.opa_account_num}')` : ``;
+        const liQuery = `applicationtype not in ('Zoning Board of Adjustment', 'RB_ZBA') and applicationtype is not null`;
 
-        let query;
-        if (eclipse_location_id) {
-          query = `SELECT * FROM APPEALS
-          WHERE ( addressobjectid IN ('`+ eclipse_location_id +`') AND (appealtype like '%25LIRB%25' or appealtype like '%25BBS%25') \
-          OR address = '${streetaddress}' AND (appealtype like '%25LIRB%25' or appealtype like '%25BBS%25') \
-          OR addressobjectid IN ('${ addressId }') AND (appealtype like '%25LIRB%25' or appealtype like '%25BBS%25') \
-          OR parcel_id_num IN ('${ pwd_parcel_id }') AND (appealtype like '%25LIRB%25' or appealtype like '%25BBS%25') ) \
-          ${opaQuery } AND (appealtype like '%25LIRB%25' or appealtype like '%25BBS%25') \
-          ORDER BY appealtype`;
-        } else {
-          query = `SELECT * FROM APPEALS
-          WHERE ( address = '${streetaddress}' AND (appealtype like '%25LIRB%25' or appealtype like '%25BBS%25') \
-          OR addressobjectid IN ('${ addressId }') AND (appealtype like '%25LIRB%25' or appealtype like '%25BBS%25') \
-          OR parcel_id_num IN ( '${ pwd_parcel_id }' ) AND (appealtype like '%25LIRB%25' or appealtype like '%25BBS%25') ) \
-          ${opaQuery } AND (appealtype like '%25LIRB%25' or appealtype like '%25BBS%25') \
-          ORDER BY appealtype`;
-        }
+        let query = `SELECT * FROM APPEALS \
+        WHERE (address = '${streetaddress}' AND ${liQuery} \
+        OR addressobjectid IN ('${addressId}') AND ${liQuery} \
+        OR parcel_id_num IN ('${pwd_parcel_id}') AND ${liQuery} \
+        OR ${eclipseQuery} AND ${liQuery}) \
+        OR ${opaQuery} AND ${liQuery} \
+        ORDER BY appealtype`;
+
         const url = baseUrl += query;
         const response = await fetch(url);
         if (response.ok) {
@@ -500,15 +494,15 @@ export const useLiStore = defineStore('LiStore', {
             item.calendarlink = "<a target='_blank' href='https://li.phila.gov/appeals-calendar/appeal?from=2-7-2000&to=4-7-2050&region=all&Id="+item.appealnumber+"'>"+date(item.scheduleddate, 'MM/dd/yyyy')+" <i class='fa fa-external-link-alt'></i></a>";
             // item.calendarlink = date(item.scheduleddate, 'MM/dd/yyyy');
           });
-          this.liLirbAppeals = data;
-          this.loadingLiLirbAppeals = false;
+          this.liAppeals = data;
+          this.loadingLiAppeals = false;
         } else {
-          this.loadingLiLirbAppeals = false;
-          if (import.meta.env.VITE_DEBUG == 'true') console.warn('liLirbAppeals - await resolved but HTTP status was not successful')
+          this.loadingLiAppeals = false;
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('liAppeals - await resolved but HTTP status was not successful')
         }
       } catch {
-        this.loadingLiLirbAppealss = false;
-        if (import.meta.env.VITE_DEBUG == 'true') console.error('liLirbAppeals - await never resolved, failed to fetch address data')
+        this.loadingLiAppealss = false;
+        if (import.meta.env.VITE_DEBUG == 'true') console.error('liAppeals - await never resolved, failed to fetch address data')
       }
     },
   },
