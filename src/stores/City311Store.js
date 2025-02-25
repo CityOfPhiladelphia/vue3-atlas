@@ -35,7 +35,8 @@ export const useCity311Store = defineStore('City311Store', {
         'f': 'json',
         'username': import.meta.env.VITE_AGO_USERNAME,
         'password': import.meta.env.VITE_AGO_PASSWORD,
-        'referer': 'https://www.mydomain.com' 
+        'referer': 'https://www.mydomain.com',
+        'expiration': 1,
       });
   
       let config = {

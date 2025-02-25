@@ -6,7 +6,7 @@ name: dev Push to S3 dev bucket
 on:
   push:
     branches:
-      - main
+      - test/expiration
 jobs:
   build:
 
@@ -27,7 +27,7 @@ jobs:
         npm ci
         npm run build-dev
       env:
-        VITE_VERSION: 'atlas'
+        VITE_VERSION: 'cityatlas'
         FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FA_AUTH_TOKEN }}
         VITE_GATEKEEPER_KEY: ${{ secrets.VITE_GATEKEEPER_KEY }}
         VITE_CYCLOMEDIA_API_KEY: ${{ secrets.VITE_CYCLOMEDIA_API_KEY }}
