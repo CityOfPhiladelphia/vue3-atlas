@@ -35,6 +35,8 @@ jobs:
         VITE_CYCLOMEDIA_USERNAME: ${{ secrets.VITE_CYCLOMEDIA_USERNAME }}
         VITE_EAGLEVIEW_CLIENT_ID: ${{ secrets.VITE_EAGLEVIEW_CLIENT_ID }}
         VITE_EAGLEVIEW_CLIENT_SECRET: ${{ secrets.VITE_EAGLEVIEW_CLIENT_SECRET }}
+        VITE_AGO_USERNAME: ${{ secrets.VITE_AGO_USERNAME }}
+        VITE_AGO_PASSWORD: ${{ secrets.VITE_AGO_PASSWORD }}
 
     - name: Deploy to Dev s3, Set index headers, and Invalidate Cloudfront
       env:
