@@ -65,7 +65,7 @@ module.exports = {
   condoAddressData,
   pwdAddressData,
   dorAddressData,
-  URL:"https://d1dycpzd1ntl2z.cloudfront.net/",
+  URL:"https://atlas-dev.phila.gov/",
   HEADLESS_MODE: true,
   BROWSER:"chrome",
 };
