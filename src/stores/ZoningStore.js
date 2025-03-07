@@ -257,6 +257,17 @@ export const useZoningStore = defineStore('ZoningStore', {
         const response = await axios.get(url, { params });
         if (response.status === 200) {
           let data = await response.data;
+
+          data.features.sort((a, b) => {
+            if (a.properties.ORGANIZATION_NAME < b.properties.ORGANIZATION_NAME) {
+              return -1;
+            }
+            if (a.properties.ORGANIZATION_NAME > b.properties.ORGANIZATION_NAME) {
+              return 1;
+            }
+            return 0;
+          });
+
           data.features.forEach(item => {
             item.properties.rco = `<b>${item.properties.ORGANIZATION_NAME}</b><br>${item.properties.ORGANIZATION_ADDRESS}`;
             item.properties.contact = `${rcoPrimaryContact(item.properties.PRIMARY_NAME)}<br>${phoneNumber(item.properties.PRIMARY_PHONE)}<br><a target='_blank' href='mailto:${item.properties.PRIMARY_EMAIL}'>${item.properties.PRIMARY_EMAIL}</a>`;
