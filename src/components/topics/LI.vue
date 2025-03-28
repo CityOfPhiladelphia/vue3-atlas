@@ -186,6 +186,9 @@ const leadCertificationData = computed(() => {
       statusAndUnits += ' - ' + feature.attributes.lhhp_certified_units + ' units';
     }
     statusAndUnits += ')';
+  } else {
+    certificationStatus = 'N/A'
+    statusAndUnits = '';
   }
 
   let certificationDate;
