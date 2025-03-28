@@ -176,6 +176,14 @@ const leadCertificationData = computed(() => {
   if (childCareString) finalString += childCareString + '<br>';
   if (lodgingString) finalString += lodgingString;
 
+  let certificationStatus, units;
+  if (feature.attributes.lhhp_status_type && feature.attributes.lhhp_status_type != 'None') {
+    certificationStatus = feature.attributes.lhhp_certification_status;
+    if (feature.attributes.lhhp_certified_units && feature.attributes.lhhp_certified_units != 0) {
+      units = ' (' + feature.attributes.lhhp_certified_units + ')';
+    }
+  }
+
   return [
     {
       label: 'OPA account',
@@ -183,7 +191,7 @@ const leadCertificationData = computed(() => {
     },
     {
       label: 'Certification status',
-      value: feature.attributes.lhhp_certification_status,
+      value: certificationStatus + units,
     },
     {
       label: 'Certification details',
@@ -194,7 +202,7 @@ const leadCertificationData = computed(() => {
       value: feature.attributes.lhhp_cert_date || 'N/A',
     },
     {
-      label: 'License',
+      label: 'Licenses',
       value: finalString,
     },
   ]
