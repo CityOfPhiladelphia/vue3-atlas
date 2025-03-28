@@ -847,11 +847,19 @@ const liAppealsTableData = computed(() => {
           spin
         />
       </h2>
+      <div class="topic-info mt-2">
+        City law requires that property owners must test and certify rental properties as lead-safe or lead-free in order to execute a new or renewed lease or to get or renew a rental license or operate a child care facility. Check the status of this property here.  Source: Lead and Healthy Homes Program, Department of Public Health
+      </div>
       <vertical-table
         table-id="leadCertificationTable"
         :data="leadCertificationData"
         :no-data-message="'No lead certification details found for the selected property'"
       />
+      <a
+        class="table-link"
+        target="_blank"
+        href="https://www.phila.gov/documents/lead-paint-regulations/"
+      >Learn more about this regulation <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
     </div>
 
   </section>
