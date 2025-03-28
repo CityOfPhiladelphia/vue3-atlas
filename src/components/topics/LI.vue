@@ -176,12 +176,16 @@ const leadCertificationData = computed(() => {
   if (childCareString) finalString += childCareString + '<br>';
   if (lodgingString) finalString += lodgingString;
 
-  let certificationStatus, units;
+  let certificationStatus, statusAndUnits;
   if (feature.attributes.lhhp_status_type && feature.attributes.lhhp_status_type != 'None') {
     certificationStatus = feature.attributes.lhhp_certification_status;
-    if (feature.attributes.lhhp_certified_units && feature.attributes.lhhp_certified_units != 0) {
-      units = ' (' + feature.attributes.lhhp_certified_units + ')';
+    statusAndUnits = ' (' + feature.attributes.lhhp_status_type;
+    if (feature.attributes.lhhp_certified_units && feature.attributes.lhhp_certified_units == 1) {
+      statusAndUnits += ' - ' + feature.attributes.lhhp_certified_units + ' unit';
+    } else if (feature.attributes.lhhp_certified_units && feature.attributes.lhhp_certified_units > 1) {
+      statusAndUnits += ' - ' + feature.attributes.lhhp_certified_units + ' units';
     }
+    statusAndUnits += ')';
   }
 
   return [
@@ -191,7 +195,7 @@ const leadCertificationData = computed(() => {
     },
     {
       label: 'Certification status',
-      value: certificationStatus + units,
+      value: certificationStatus + statusAndUnits,
     },
     {
       label: 'Certification details',
