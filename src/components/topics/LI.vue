@@ -151,22 +151,25 @@ const leadCertificationData = computed(() => {
   if (!feature) return []; // Return empty array if no features are available
 
   const rentalLicense = feature.attributes.li_rl_status;
-  const rentalExpiration = format(feature.attributes.li_rl_expiration_date, 'MM/dd/yyyy');
+  let rentalExpiration;
+  if (feature.attributes.li_rl_expiration_date) rentalExpiration = format(feature.attributes.li_rl_expiration_date, 'MM/dd/yyyy');
   let rentalString;
   if (rentalLicense) rentalString = 'Rental - ' + rentalLicense;
-  if (rentalExpiration) rentalString += ` (${rentalExpiration})`;
+  if (rentalExpiration) rentalString += ` (expiration ${rentalExpiration})`;
   
   const childCareLicense = feature.attributes.li_cc_status;
-  const childCareExpiration = feature.attributes.li_cc_expiration_date;
+  let childCareExpiration;
+  if (feature.attributes.li_cc_expiration_date) childCareExpiration = format(feature.attributes.li_cc_expiration_date, 'MM/dd/yyyy');
   let childCareString = null;
   if (childCareLicense) childCareString = 'Child Care Facility - ' + childCareLicense;
-  if (childCareExpiration) childCareString += ` (${childCareExpiration})`;
+  if (childCareExpiration) childCareString += ` (expiration ${childCareExpiration})`;
 
   const lodgingLicense = feature.attributes.li_llo_status;
-  const lodgingExpiration = feature.attributes.li_llo_expiration_date;
+  let lodgingExpiration
+  if (feature.attributes.li_llo_expiration_date) lodgingExpiration = format(feature.attributes.li_llo_expiration_date, 'MM/dd/yyyy');
   let lodgingString = null;
   if (lodgingLicense) lodgingString = 'Limited Lodging Operator - ' + lodgingLicense;
-  if (lodgingExpiration) lodgingString += ` (${lodgingExpiration})`;
+  if (lodgingExpiration) lodgingString += ` (expiration ${lodgingExpiration})`;
 
   let finalString = '';
   if (rentalString) finalString += rentalString + '<br>';
