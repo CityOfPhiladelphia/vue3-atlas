@@ -183,11 +183,15 @@ const leadCertificationData = computed(() => {
     },
     {
       label: 'Certification status',
-      value: feature.attributes.lhhp_certification_status + ' - ' + feature.attributes.lhhp_status_details,
+      value: feature.attributes.lhhp_certification_status,
+    },
+    {
+      label: 'Certification details',
+      value: feature.attributes.lhhp_status_details || 'N/A',
     },
     {
       label: 'Certification date',
-      value: feature.attributes.lhhp_cert_date,
+      value: feature.attributes.lhhp_cert_date || 'N/A',
     },
     {
       label: 'License',
