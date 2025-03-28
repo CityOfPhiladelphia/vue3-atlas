@@ -176,19 +176,18 @@ const leadCertificationData = computed(() => {
   if (childCareString) finalString += childCareString + '<br>';
   if (lodgingString) finalString += lodgingString;
 
-  let certificationStatus, statusAndUnits;
+  let certificationStatus = feature.attributes.lhhp_certification_status || 'N/A';
+  let typeAndUnits;
   if (feature.attributes.lhhp_status_type && feature.attributes.lhhp_status_type != 'None') {
-    certificationStatus = feature.attributes.lhhp_certification_status;
-    statusAndUnits = ' (' + feature.attributes.lhhp_status_type;
+    typeAndUnits = ' (' + feature.attributes.lhhp_status_type;
     if (feature.attributes.lhhp_certified_units && feature.attributes.lhhp_certified_units == 1) {
-      statusAndUnits += ' - ' + feature.attributes.lhhp_certified_units + ' unit';
+      typeAndUnits += ' - ' + feature.attributes.lhhp_certified_units + ' unit';
     } else if (feature.attributes.lhhp_certified_units && feature.attributes.lhhp_certified_units > 1) {
-      statusAndUnits += ' - ' + feature.attributes.lhhp_certified_units + ' units';
+      typeAndUnits += ' - ' + feature.attributes.lhhp_certified_units + ' units';
     }
-    statusAndUnits += ')';
+    typeAndUnits += ')';
   } else {
-    certificationStatus = 'N/A'
-    statusAndUnits = '';
+    typeAndUnits = '';
   }
 
   let certificationDate;
@@ -205,7 +204,7 @@ const leadCertificationData = computed(() => {
     },
     {
       label: 'Certification status',
-      value: certificationStatus + statusAndUnits,
+      value: certificationStatus + typeAndUnits,
     },
     {
       label: 'Certification details',
