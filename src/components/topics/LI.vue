@@ -188,6 +188,13 @@ const leadCertificationData = computed(() => {
     statusAndUnits += ')';
   }
 
+  let certificationDate;
+  if (feature.attributes.lhhp_cert_date) {
+    certificationDate = format(feature.attributes.lhhp_cert_date, 'MM/dd/yyyy');
+  } else {
+    certificationDate = 'N/A';
+  }
+
   return [
     {
       label: 'OPA account',
@@ -203,7 +210,7 @@ const leadCertificationData = computed(() => {
     },
     {
       label: 'Certification date',
-      value: feature.attributes.lhhp_cert_date || 'N/A',
+      value: certificationDate,
     },
     {
       label: 'Licenses',
