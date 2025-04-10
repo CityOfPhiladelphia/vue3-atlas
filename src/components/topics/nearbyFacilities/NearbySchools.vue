@@ -36,7 +36,7 @@ const elementarySchool = computed(() => {
   if (NearbyFacilitiesStore.allSchools && NearbyFacilitiesStore.allSchools.features) {
     value = NearbyFacilitiesStore.allSchools.features.find(school => {
       if (school.properties.SCHOOL_NAME && geocodeElementarySchool.value) {
-        return school.properties.SCHOOL_NAME.toLowerCase().includes(geocodeElementarySchool.value.toLowerCase())
+        return school.properties.SCHOOL_NAME_LABEL.toLowerCase().includes(geocodeElementarySchool.value.toLowerCase())
       } else {
         return false;
       }
@@ -53,12 +53,14 @@ const middleSchool = computed(() => {
     if (NearbyFacilitiesStore.allSchools && NearbyFacilitiesStore.allSchools.features) {
       value = NearbyFacilitiesStore.allSchools.features.find(school => {
         if (school.properties.SCHOOL_NAME && geocodeMiddleSchool.value) {
-          return school.properties.SCHOOL_NAME.toLowerCase().includes(geocodeMiddleSchool.value.toLowerCase());
+          console.log('geocodeMiddleSchool.value:', geocodeMiddleSchool.value.toLowerCase(), 'school.properties.SCHOOL_NAME_LABEL:', school.properties.SCHOOL_NAME_LABEL.toLowerCase());
+          return school.properties.SCHOOL_NAME_LABEL.toLowerCase().includes(geocodeMiddleSchool.value.toLowerCase());
         } else {
           return false;
         }
       });
     };
+    return value;
   };
 });
 
@@ -67,7 +69,7 @@ const highSchool = computed(() => {
   if (NearbyFacilitiesStore.allSchools && NearbyFacilitiesStore.allSchools.features) {
     value = NearbyFacilitiesStore.allSchools.features.find(school => {
       if (school.properties.SCHOOL_NAME && geocodeHighSchool.value) {
-        return school.properties.SCHOOL_NAME.toLowerCase().includes(geocodeHighSchool.value.toLowerCase())
+        return school.properties.SCHOOL_NAME_LABEL.toLowerCase().includes(geocodeHighSchool.value.toLowerCase())
       } else {
         return false;
       }

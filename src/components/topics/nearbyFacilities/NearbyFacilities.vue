@@ -27,10 +27,10 @@ watch(() => selectedDataType.value, (newDataType) => {
   if (MainStore.currentAddress) {
     setDataTypeInRouter(newDataType);
     MainStore.currentNearbyFacilitiesDataType = newDataType;
-    // const popup = document.getElementsByClassName('maplibregl-popup');
-    // if (popup.length) {
-    //   popup[0].remove();
-    // }
+    const popup = document.getElementsByClassName('maplibregl-popup');
+    if (popup.length) {
+      popup[0].remove();
+    }
   }
 })
 
