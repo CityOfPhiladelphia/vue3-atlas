@@ -160,7 +160,7 @@ export const useNearbyFacilitiesStore = defineStore('NearbyFacilitiesStore', {
         const GeocodeStore = useGeocodeStore();
         const coordinates = GeocodeStore.aisData.features[0].geometry.coordinates;
         const MapStore = useMapStore();
-        await MapStore.fillBufferForAddress(coordinates[0], coordinates[1]);
+        await MapStore.fillBufferForAddress(coordinates[0], coordinates[1], 5820);
         const buffer = MapStore.bufferForAddress;
         if (import.meta.env.VITE_DEBUG == 'true') console.log('fillNearbySchools, buffer:', buffer);
 
@@ -205,6 +205,7 @@ export const useNearbyFacilitiesStore = defineStore('NearbyFacilitiesStore', {
             }
             const distFeet = parseInt(dist * 5280);
             feature.properties.distance_ft = distFeet + ' ft';
+            feature.properties.schoolInfo = '<b>' + feature.properties.SCHOOL_NAME_LABEL + '</b><br>' + feature.properties.STREET_ADDRESS + '<br>Philadelphia, PA ' + feature.properties.ZIP_CODE + '<br>' + feature.properties.PHONE_NUMBER;
             return feature;
           });
 

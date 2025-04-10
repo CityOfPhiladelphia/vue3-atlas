@@ -8,7 +8,8 @@ import { useNearbyFacilitiesStore } from '@/stores/NearbyFacilitiesStore';
 const NearbyFacilitiesStore = useNearbyFacilitiesStore();
 
 import VerticalTable from '@/components/VerticalTable.vue';
-import NearbyActivity from '../nearbyActivity/NearbyActivity.vue';
+
+const loadingData = computed(() => NearbyFacilitiesStore.loadingData );
 
 const geocodeElementarySchool = computed(() => {
   let value = null;
@@ -136,7 +137,8 @@ const nearbySchoolsTableData = computed(() => {
     columns: [
       {
         label: 'School Name',
-        field: 'properties.SCHOOL_NAME_LABEL',
+        field: 'properties.schoolInfo',
+        html: true,
       },
       {
         label: 'Grades',
@@ -194,7 +196,7 @@ const nearbySchoolsTableData = computed(() => {
     :columns="nearbySchoolsTableData.columns"
     :rows="nearbySchoolsTableData.rows"
     style-class="table nearby-table"
-    :sort-options="{ initialSortBy: {field: 'distance_ft', type: 'asc'}}"
+    :sort-options="{ initialSortBy: {field: 'properties.distance_ft', type: 'asc'}}"
   >
   <!-- @row-mouseenter="handleRowMouseover($event, 'service_request_id')"
   @row-mouseleave="handleRowMouseleave"
