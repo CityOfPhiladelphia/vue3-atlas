@@ -215,6 +215,55 @@ onMounted(async () => {
     }
   });
 
+  // if a nearby circle marker is clicked or hovered on, set its id in the MainStore as the hoveredStateId
+  map.on('click', 'nearby-facilities', (e) => {
+    const properties = e.features[0].properties;
+    let idField, infoField, row;
+    if (MainStore.currentTopic == 'nearby-activity') {
+      idField = NearbyActivityStore.dataFields[properties.type].id_field;
+      infoField = NearbyActivityStore.dataFields[properties.type].info_field;
+      row = NearbyActivityStore[properties.type].rows.filter(row => row[idField] === properties.id)[0];
+    } else if (MainStore.currentTopic == '311') {
+      idField = City311Store.dataFields[properties.type].id_field;
+      infoField = City311Store.dataFields[properties.type].info_field;
+      row = City311Store[properties.type].rows.filter(row => row[idField] === properties.id)[0];
+    }
+    if (import.meta.env.VITE_DEBUG == 'true') console.log('nearby-activity click, e:', e, 'properties:', properties, 'idField:', idField, 'infoField:', infoField, 'e.features[0]:', e.features[0], 'row:', row);
+    // if (import.meta.env.VITE_DEBUG == 'true') console.log('nearby-activity click, e:', e, 'properties:', properties, 'idField:', idField, 'e.features[0]:', e.features[0], 'type:', type, 'row:', row);
+    e.clickOnLayer = true;
+    MainStore.clickedMarkerId = e.features[0].properties.id;
+    MainStore.hoveredStateId = e.features[0].properties.id;
+    if (row.properties) {
+      row[infoField] = row.properties[infoField];
+    }
+
+    const popup = document.getElementsByClassName('maplibregl-popup');
+    if (popup.length) {
+      popup[0].remove();
+    }
+    new maplibregl.Popup({ className: 'my-class' })
+      .setLngLat(e.lngLat)
+      .setHTML(row[infoField])
+      .setMaxWidth("300px")
+      .addTo(map);
+  });
+
+  map.on('mouseenter', 'nearby-facilities', (e) => {
+    // if (import.meta.env.VITE_DEBUG == 'true') console.log('mouseenter, e:', e);
+    if (e.features.length > 0) {
+      // if (import.meta.env.VITE_DEBUG == 'true') console.log('map.getSource(nearby):', map.getSource('nearby'), 'map.getStyle().sources:', map.getStyle().sources);
+      map.getCanvas().style.cursor = 'pointer'
+      MainStore.hoveredStateId = e.features[0].properties.id;
+    }
+  });
+
+  map.on('mouseleave', 'nearby-facilities', () => {
+    if (hoveredStateId.value) {
+      map.getCanvas().style.cursor = ''
+      MainStore.hoveredStateId = null;
+    }
+  });
+
   // if the map is clicked (not on the layers above), if in draw mode, a polygon is drawn, otherwise, the lngLat is pushed to the app route
   map.on('click', (e) => {
     if (e.clickOnLayer) {

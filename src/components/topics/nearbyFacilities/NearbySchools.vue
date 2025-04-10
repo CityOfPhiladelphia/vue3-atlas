@@ -1,11 +1,16 @@
 <script setup>
 
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
+import { point, featureCollection } from '@turf/helpers';
 
 import { useGeocodeStore } from '@/stores/GeocodeStore';
 const GeocodeStore = useGeocodeStore();
 import { useNearbyFacilitiesStore } from '@/stores/NearbyFacilitiesStore';
 const NearbyFacilitiesStore = useNearbyFacilitiesStore();
+import { useMapStore } from '@/stores/MapStore';
+const MapStore = useMapStore();
+import { useMainStore } from '@/stores/MainStore';
+const MainStore = useMainStore();
 
 import VerticalTable from '@/components/VerticalTable.vue';
 
@@ -132,6 +137,26 @@ const nearbySchools = computed(() => {
   return NearbyFacilitiesStore.nearbySchools;
 })
 
+const nearbySchoolsGeojson = computed(() => {
+  if (!nearbySchools.value) return null;
+  nearbySchools.value.map(item => {
+    if (import.meta.env.VITE_DEBUG) console.log('item:', item);
+    item.properties.id = item.properties.AUN;
+    item.properties.type = 'nearbySchools';
+  });
+  // if (import.meta.env.VITE_DEBUG) console.log('nearbySchoolsAdded:', nearbySchoolsAdded);
+  return nearbySchools;
+})
+
+watch (() => nearbySchoolsGeojson.value, async(newGeojson) => {
+  if (import.meta.env.VITE_DEBUG == 'true') console.log('watch nearbySchoolsGeojson.value, newGeojson:', newGeojson);
+  if (!newGeojson) return;
+  const map = MapStore.map;
+  if (map.getSource) map.getSource('nearbyFacilities').setData(featureCollection(newGeojson));
+});
+
+const hoveredStateId = computed(() => { return MainStore.hoveredStateId; });
+
 const nearbySchoolsTableData = computed(() => {
   return {
     columns: [
@@ -200,7 +225,7 @@ const nearbySchoolsTableData = computed(() => {
   >
   <!-- @row-mouseenter="handleRowMouseover($event, 'service_request_id')"
   @row-mouseleave="handleRowMouseleave"
-  @row-click="handleRowClick($event, 'service_request_id', 'nearby311')" -->
+  @row-click="handleRowClick($event, 'service_request_id', 'nearbySchools')" -->
     <template #emptystate>
       <div v-if="loadingData">
         Loading nearby schools... <font-awesome-icon

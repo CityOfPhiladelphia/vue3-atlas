@@ -1158,7 +1158,7 @@ const nearbyFacilitiesDrawnMapStyle = mergeDeep(imageryInfo,{
         'circle-color': [
           'match',
           ['get', 'type'],
-          'nearby311',
+          'nearbySchools',
           '#FF0000',
           'city311',
           '#FF0000',
