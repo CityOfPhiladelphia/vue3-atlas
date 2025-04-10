@@ -8,6 +8,7 @@ import { useNearbyFacilitiesStore } from '@/stores/NearbyFacilitiesStore';
 const NearbyFacilitiesStore = useNearbyFacilitiesStore();
 
 import VerticalTable from '@/components/VerticalTable.vue';
+import NearbyActivity from '../nearbyActivity/NearbyActivity.vue';
 
 const geocodeElementarySchool = computed(() => {
   let value = null;
@@ -124,7 +125,35 @@ const schoolsVertTableData = computed(() => {
       },
     ];
   }
-  
+});
+
+const nearbySchools = computed(() => {
+  return NearbyFacilitiesStore.nearbySchools;
+})
+
+const nearbySchoolsTableData = computed(() => {
+  return {
+    columns: [
+      {
+        label: 'School Name',
+        field: 'properties.SCHOOL_NAME_LABEL',
+      },
+      {
+        label: 'Grades',
+        field: 'properties.GRADE_ORG',
+      },
+      {
+        label: 'Distance',
+        field: 'properties.distance_ft',
+        sortFn: (x, y) => {
+          const xSplit = parseInt(x.split(' ')[0]);
+          const ySplit = parseInt(y.split(' ')[0]);
+          return (xSplit < ySplit ? -1 : (xSplit > ySplit ? 1 : 0));
+        },
+      },
+    ],
+    rows: nearbySchools.value || [],
+  }
 });
 
 </script>
@@ -146,6 +175,45 @@ const schoolsVertTableData = computed(() => {
     table-id="assigned-schools"
     :data="schoolsVertTableData"
   />
+
+  <div class="mt-5">
+    <h2 class="subtitle mb-3 is-5">
+      Nearby Citywide, Special Admission, and Charter Schools
+      <font-awesome-icon
+        v-if="loadingData"
+        icon="fa-solid fa-spinner"
+        spin
+      />
+      <span v-else>({{ nearbySchoolsTableData.rows.length }})</span>
+    </h2>
+  </div>
+
+  <!-- :row-style-class="row => hoveredStateId === row.service_request_id ? 'active-hover ' + row.service_request_id : 'inactive ' + row.service_request_id" -->
+  <vue-good-table
+    id="nearbySchools"
+    :columns="nearbySchoolsTableData.columns"
+    :rows="nearbySchoolsTableData.rows"
+    style-class="table nearby-table"
+    :sort-options="{ initialSortBy: {field: 'distance_ft', type: 'asc'}}"
+  >
+  <!-- @row-mouseenter="handleRowMouseover($event, 'service_request_id')"
+  @row-mouseleave="handleRowMouseleave"
+  @row-click="handleRowClick($event, 'service_request_id', 'nearby311')" -->
+    <template #emptystate>
+      <div v-if="loadingData">
+        Loading nearby schools... <font-awesome-icon
+          icon="fa-solid fa-spinner"
+          spin
+        />
+      </div>
+      <div v-else-if="NearbyFacilitiesStore.dataError">
+        Data loading error - try refreshing the page
+      </div>
+      <div v-else>
+        No nearby schools found
+      </div>
+    </template>
+  </vue-good-table>
 
 
 </template>

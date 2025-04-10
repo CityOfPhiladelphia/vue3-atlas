@@ -3,6 +3,106 @@ import { useGeocodeStore } from '@/stores/GeocodeStore.js'
 import { useMapStore } from '@/stores/MapStore.js'
 
 import axios from 'axios';
+import { point, polygon, lineString } from '@turf/helpers';
+import distance from '@turf/distance';
+import explode from '@turf/explode';
+import nearest from '@turf/nearest-point';
+
+const evaluateParams = (feature, dataSource) => {
+  const params = {};
+  if (!dataSource.options.params) {
+    return params; 
+  }
+  // if (import.meta.env.VITE_DEBUG == 'true') console.log("dataSource: ", dataSource);
+  const paramEntries = Object.entries(dataSource.options.params);
+
+  for (let [ key, valOrGetter ] of paramEntries) {
+    let val;
+
+    if (typeof valOrGetter === 'function') {
+      val = valOrGetter(feature);
+    } else {
+      val = valOrGetter;
+    }
+    params[key] = val;
+  }
+  // if (import.meta.env.VITE_DEBUG == 'true') console.log("params: ", params)
+  return params;
+}
+
+// this was the fetch function from @phila/vue-datafetch http-client.js
+const fetchNearby = (feature, dataSource) => {
+  const params = evaluateParams(feature, dataSource);
+  const options = dataSource.options;
+  // const srid = options.srid || 4326;
+  const table = options.table;
+  // TODO generalize these options into something like a `sql` param that
+  // returns a sql statement
+  const dateMinNum = options.dateMinNum || null;
+  const dateMinType = options.dateMinType || null;
+  // if (import.meta.env.VITE_DEBUG == 'true') console.log('dateMinType:', dateMinType);
+  const dateField = options.dateField || null;
+  const distances = options.distances || 250;
+  if (import.meta.env.VITE_DEBUG == 'true') console.log('fetchNearby options:', options, 'distances:', distances);
+  const extraWhere = options.where || null;
+
+  const groupby = options.groupby || null;
+
+  const distQuery = "(ST_Distance(the_geom::geography, ST_SetSRID(ST_Point("
+                  + feature.geometry.coordinates[0]
+                  + "," + feature.geometry.coordinates[1]
+                  + "),4326)::geography))";
+
+  const latQuery = "ST_Y(the_geom)";
+  const lngQuery = "ST_X(the_geom)";
+
+  let select;
+  
+  if (!groupby) {
+    select = '*';
+  } else {
+    select = groupby + ', the_geom';
+  }
+  // if (calculateDistance) {
+  select = select + ", " + distQuery + 'as distance,' + latQuery + 'as lat, ' + lngQuery + 'as lng';
+  // }
+
+  params['q'] = "select " + select + " from " + table + " where " + distQuery + " < " + distances;
+
+  let subFn;
+  if (dateMinNum) {
+    // let subFn, addFn;
+    switch (dateMinType) {
+    case 'hour':
+      subFn = subHours;
+      break;
+    case 'day':
+      subFn = subDays;
+      break;
+    case 'week':
+      subFn = subWeeks;
+      break;
+    case 'month':
+      subFn = subMonths;
+      break;
+    case 'year':
+      subFn = subYears;
+      break;
+    }
+
+    // let test = format(subFn(new Date(), dateMinNum), 'YYYY-MM-DD');
+    params['q'] = params['q'] + " and " + dateField + " > '" + format(subFn(new Date(), dateMinNum), 'yyyy-MM-dd') + "'";
+  }
+
+  if (extraWhere) {
+    params['q'] = params['q'] + " and " + extraWhere;
+  }
+
+  if (groupby) {
+    params['q'] = params['q'] + " group by " + groupby + ", the_geom";
+  }
+  return params
+}
 
 export const useNearbyFacilitiesStore = defineStore('NearbyFacilitiesStore', {
   state: () => {
@@ -55,7 +155,67 @@ export const useNearbyFacilitiesStore = defineStore('NearbyFacilitiesStore', {
       }
     },
     async fillNearbySchools() {
-      if (import.meta.env.VITE_DEBUG) console.log('fillNearbySchools is running');
-    }
+      try {
+        this.setLoadingData(true);
+        const GeocodeStore = useGeocodeStore();
+        const coordinates = GeocodeStore.aisData.features[0].geometry.coordinates;
+        const MapStore = useMapStore();
+        await MapStore.fillBufferForAddress(coordinates[0], coordinates[1]);
+        const buffer = MapStore.bufferForAddress;
+        if (import.meta.env.VITE_DEBUG == 'true') console.log('fillNearbySchools, buffer:', buffer);
+
+        const url = 'https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/Schools/FeatureServer/0/query?';
+
+        const params = {
+          'returnGeometry': true,
+          'where': '1=1',
+          'outSR': 4326,
+          'outFields': '*',
+          'inSr': 4326,
+          'geometryType': 'esriGeometryPolygon',
+          'spatialRel': 'esriSpatialRelContains',
+          'f': 'geojson',
+          'geometry': JSON.stringify({ "rings": buffer, "spatialReference": { "wkid": 4326 }}),
+        };
+
+        const response = await axios.get(url, { params });
+        if (response.status === 200) {
+          const data = await response.data;
+
+          let features = (data || {}).features;
+          const feature = GeocodeStore.aisData.features[0];
+          const from = point(feature.geometry.coordinates);
+
+          features = features.map(feature => {
+            const featureCoords = feature.geometry.coordinates;
+            let dist;
+            if (Array.isArray(featureCoords[0])) {
+              let instance;
+              if (feature.geometry.type === 'LineString') {
+                instance = lineString([ featureCoords[0], featureCoords[1] ], { name: 'line 1' });
+              } else {
+                instance = polygon([ featureCoords[0] ]);
+              }
+              const vertices = explode(instance);
+              const closestVertex = nearest(from, vertices);
+              dist = distance(from, closestVertex, { units: 'miles' });
+            } else {
+              const to = point(featureCoords);
+              dist = distance(from, to, { units: 'miles' });
+            }
+            const distFeet = parseInt(dist * 5280);
+            feature.properties.distance_ft = distFeet + ' ft';
+            return feature;
+          });
+
+          this.nearbySchools = features;
+          this.setLoadingData(false);
+        } else {
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('nearbySchools - await resolved but HTTP status was not successful');
+        }
+      } catch {
+        if (import.meta.env.VITE_DEBUG == 'true') console.error('nearbySchools - await never resolved, failed to fetch address data');
+      }
+    },
   },
 });
