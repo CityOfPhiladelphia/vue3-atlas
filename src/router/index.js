@@ -198,12 +198,18 @@ const dataFetch = async(to, from) => {
       await ParcelsStore.fillDorParcelData();
     }
 
-  } else if (to.params.topic !== 'nearby-activity' && dataSourcesLoadedArray.includes(topic)) {
+  } else if (to.params.topic !== 'nearby-activity' && to.params.topic !== 'nearby-facilities' && dataSourcesLoadedArray.includes(topic)) {
     MainStore.datafetchRunning = false;
     return;
   } else if (to.params.topic === 'nearby-activity' && dataSourcesLoadedArray.includes(to.params.data)) {
-    MainStore.currentNearbyDataType = to.params.data;
-    if (import.meta.env.VITE_DEBUG == 'true') console.log('dataFetch is still going, MainStore.currentNearbyDataType:', MainStore.currentNearbyDataType, 'to.params.data:', to.params.data);
+    MainStore.currentNearbyActivityDataType = to.params.data;
+    if (import.meta.env.VITE_DEBUG == 'true') console.log('dataFetch is still going, MainStore.currentNearbyActivityDataType:', MainStore.currentNearbyActivityDataType, 'to.params.data:', to.params.data);
+    MainStore.datafetchRunning = false;
+    return;
+  // } else if (to.params.topic === 'nearby-facilities' && dataSourcesLoadedArray.includes(to.params.data)) {
+  } else if (to.params.topic === 'nearby-facilities') {
+    MainStore.currentNearbyFacilitiesDataType = to.params.data;
+    if (import.meta.env.VITE_DEBUG == 'true') console.log('dataFetch is still going, MainStore.currentNearbyFacilitiesDataType:', MainStore.currentNearbyFacilitiesDataType, 'to.params.data:', to.params.data);
     MainStore.datafetchRunning = false;
     return;
   }
@@ -232,7 +238,7 @@ const dataFetch = async(to, from) => {
     if (!MainStore.dataSourcesLoadedArray.includes('nearby-activity')) {
       MainStore.addToDataSourcesLoadedArray('nearby-activity');
     }
-    MainStore.addToDataSourcesLoadedArray(MainStore.currentNearbyDataType);
+    MainStore.addToDataSourcesLoadedArray(MainStore.currentNearbyActivityDataType);
   }
 }
 
@@ -297,7 +303,7 @@ const topicDataFetch = async (topic, data) => {
     await NearbyActivityStore.fetchData(data);
   }
 
-  if (topic === 'nearby-faclilities') {
+  if (topic === 'nearby-facilities') {
     const NearbyFacilitiesStore = useNearbyFacilitiesStore();
     await NearbyFacilitiesStore.fetchData(data);
   }

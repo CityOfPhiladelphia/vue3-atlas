@@ -42,8 +42,8 @@ const shortDataTypes = {
   unsafeBuildings: 'Buildings',
 }
 
-const currentNearbyDataType = computed(() => {
-  return MainStore.currentNearbyDataType;
+const currentNearbyActivityDataType = computed(() => {
+  return MainStore.currentNearbyActivityDataType;
 });
 
 const setDataTypeInRouter = (newDataType) => {
@@ -56,18 +56,18 @@ const selectedDataType = ref('nearby311');
 const timeIntervalSelected = ref('30');
 const timeIntervals = computed(() => {
   let values;
-  if (['311', 'constructionPermits', 'demolitionPermits'].includes(currentNearbyDataType.value)) {
+  if (['311', 'constructionPermits', 'demolitionPermits'].includes(currentNearbyActivityDataType.value)) {
     values = {
       30: 'last 30 days',
       90: 'last 90 days',
       365: 'last 1 year',
     };
-  } else if (currentNearbyDataType.value == 'crimeIncidents') {
+  } else if (currentNearbyActivityDataType.value == 'crimeIncidents') {
     values = {
       30: 'last 30 days',
       90: 'last 90 days',
     };
-  } else if (currentNearbyDataType.value == 'zoningAppeals') {
+  } else if (currentNearbyActivityDataType.value == 'zoningAppeals') {
     values = {
       '0': 'any time',
       '-90': 'last 90 days',
@@ -85,7 +85,7 @@ watch(() => selectedDataType.value, (newDataType) => {
   if (import.meta.env.VITE_DEBUG == 'true') console.log('watch selectedDataType.value, newDataType:', newDataType);
   if (MainStore.currentAddress) {
     setDataTypeInRouter(newDataType);
-    MainStore.currentNearbyDataType = newDataType;
+    MainStore.currentNearbyActivityDataType = newDataType;
     const popup = document.getElementsByClassName('maplibregl-popup');
     if (popup.length) {
       popup[0].remove();
@@ -111,8 +111,8 @@ watch(() => clickedMarkerId.value, (newClickedMarkerId) => {
 onMounted( () => {
   if (import.meta.env.VITE_DEBUG == 'true') console.log('NearbyActivity.vue onMounted is running, route.params.data:', route.params.data);
   selectedDataType.value = route.params.data;
-  if (!currentNearbyDataType.value) {
-    MainStore.currentNearbyDataType = selectedDataType.value;
+  if (!currentNearbyActivityDataType.value) {
+    MainStore.currentNearbyActivityDataType = selectedDataType.value;
   }
   // const topic = document.getElementById('Property-topic');
   // topic.scrollIntoView();
@@ -158,19 +158,19 @@ onMounted( () => {
       <div class="column is-4 is-12-mobile">
         <TextFilter
           v-model="textSearch"
-          :search-label="`Search ${ shortDataTypes[currentNearbyDataType] }`"
-          :placeholder="`Search ${ shortDataTypes[currentNearbyDataType] }`"
+          :search-label="`Search ${ shortDataTypes[currentNearbyActivityDataType] }`"
+          :placeholder="`Search ${ shortDataTypes[currentNearbyActivityDataType] }`"
         />
       </div>
     </div>
 
-    <Nearby311 v-if="currentNearbyDataType == '311'" :time-interval-selected="timeIntervalSelected" :text-search="textSearch" />
-    <NearbyCrimeIncidents v-if="currentNearbyDataType == 'crimeIncidents'" :time-interval-selected="timeIntervalSelected" :text-search="textSearch" />
-    <NearbyZoningAppeals v-if="currentNearbyDataType == 'zoningAppeals'" :time-interval-selected="timeIntervalSelected" :text-search="textSearch" />
-    <NearbyVacantIndicatorPoints v-if="currentNearbyDataType == 'vacantIndicatorPoints'" :time-interval-selected="timeIntervalSelected" :text-search="textSearch" />
-    <NearbyConstructionPermits v-if="currentNearbyDataType == 'constructionPermits'" :time-interval-selected="timeIntervalSelected" :text-search="textSearch" />
-    <NearbyDemolitionPermits v-if="currentNearbyDataType == 'demolitionPermits'" :time-interval-selected="timeIntervalSelected" :text-search="textSearch" />
-    <NearbyUnsafeBuildings v-if="currentNearbyDataType == 'unsafeBuildings'" :time-interval-selected="timeIntervalSelected" :text-search="textSearch" />
+    <Nearby311 v-if="currentNearbyActivityDataType == '311'" :time-interval-selected="timeIntervalSelected" :text-search="textSearch" />
+    <NearbyCrimeIncidents v-if="currentNearbyActivityDataType == 'crimeIncidents'" :time-interval-selected="timeIntervalSelected" :text-search="textSearch" />
+    <NearbyZoningAppeals v-if="currentNearbyActivityDataType == 'zoningAppeals'" :time-interval-selected="timeIntervalSelected" :text-search="textSearch" />
+    <NearbyVacantIndicatorPoints v-if="currentNearbyActivityDataType == 'vacantIndicatorPoints'" :time-interval-selected="timeIntervalSelected" :text-search="textSearch" />
+    <NearbyConstructionPermits v-if="currentNearbyActivityDataType == 'constructionPermits'" :time-interval-selected="timeIntervalSelected" :text-search="textSearch" />
+    <NearbyDemolitionPermits v-if="currentNearbyActivityDataType == 'demolitionPermits'" :time-interval-selected="timeIntervalSelected" :text-search="textSearch" />
+    <NearbyUnsafeBuildings v-if="currentNearbyActivityDataType == 'unsafeBuildings'" :time-interval-selected="timeIntervalSelected" :text-search="textSearch" />
   </section>
 </template>
 

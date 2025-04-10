@@ -1079,6 +1079,145 @@ const nearbyActivityDrawnMapStyle = mergeDeep(imageryInfo,{
   ],
 });
 
+const nearbyFacilitiesDrawnMapStyle = mergeDeep(imageryInfo,{
+  version: 8,
+  name: 'nearbyFacilitiesDrawnMap',
+  glyphs: '//fonts.openmaptiles.org/{fontstack}/{range}.pbf',
+  sources: {
+    pwd: {
+      tiles: [
+        'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/CityBasemap/MapServer/tile/{z}/{y}/{x}',
+      ],
+      type: 'raster',
+      tileSize: 256,
+    },
+    pwdLabels: {
+      tiles: [
+        'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/CityBasemap_Labels/MapServer/tile/{z}/{y}/{x}',
+      ],
+      type: 'raster',
+      tileSize: 256,
+    },
+    addressMarker: {
+      type: 'geojson',
+      data: {
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: [],
+        },
+      }
+    },
+    dorParcel: {
+      type: 'geojson',
+      data: {
+        type: 'Feature',
+        geometry: {
+          type: 'Polygon',
+          coordinates: [[[]]],
+        }
+      }
+    },
+    nearbyFacilities: {
+      type: 'geojson',
+      data: {
+        type: 'FeatureCollection',
+        features: []
+      },
+    },
+  },
+  layers: [
+    {
+      id: 'pwd',
+      source: 'pwd',
+      type: 'raster',
+    },
+    {
+      id: 'pwdLabels',
+      source: 'pwdLabels',
+      type: 'raster',
+    },
+    {
+      id: 'cyclomediaRecordings',
+      source: 'cyclomediaRecordings',
+      type: 'circle',
+      paint: {
+        'circle-radius': 6,
+        'circle-color': '#5b94c6',
+        'circle-stroke-width': 1,
+        'circle-stroke-color': '#a1a1a1',
+        'circle-opacity': 0.5,
+      }
+    },
+    {
+      id: 'nearbyFacilities',
+      source: 'nearbyFacilities',
+      type: 'circle',
+      paint: {
+        'circle-radius': 7,
+        'circle-color': [
+          'match',
+          ['get', 'type'],
+          'nearby311',
+          '#FF0000',
+          'city311',
+          '#FF0000',
+          'nearbyCrimeIncidents',
+          '#0096FF',
+          'nearbyZoningAppeals',
+          '#009900',
+          'nearbyVacantIndicatorPoints',
+          '#9400c6',
+          'nearbyConstructionPermits',
+          '#FF0000',
+          'nearbyDemolitionPermits',
+          '#0096FF',
+          'nearbyUnsafeBuildings',
+          '#009900',
+          /* other */ '#000000'
+        ],
+        'circle-stroke-width': 1,
+        'circle-stroke-color': 'white',
+      },
+    },
+    {
+      id: 'cyclomediaCamera',
+      source: 'cyclomediaCamera',
+      type: 'symbol',
+      layout: {
+        'icon-image': 'camera-icon',
+        'icon-anchor' : 'center',
+        'icon-size': 0.09,
+        'icon-rotate': 0,
+        'icon-rotation-alignment': 'map',
+        "icon-allow-overlap" : true,
+        "text-allow-overlap": true,
+      },
+    },
+    {
+      'id': 'cyclomediaViewcone',
+      'type': 'fill',
+      'source': 'cyclomediaViewcone',
+      'layout': {},
+      'paint': {
+        'fill-color': 'rgb(0,102,255)',
+        'fill-opacity': 0.2,
+      },
+    },
+    {
+      id: 'addressMarker',
+      source: 'addressMarker',
+      type: 'symbol',
+      layout: {
+        'icon-image': 'marker-blue',
+        'icon-rotate': 180,
+        'icon-anchor': 'bottom',
+        'icon-size': .05,
+      }
+    },
+  ],
+});
+
 const $config = {
   topicStyles: {
     property: 'pwdDrawnMapStyle',
@@ -1470,6 +1609,7 @@ $config['zoningDrawnMapStyle'] = zoningDrawnMapStyle;
 $config['votingDrawnMapStyle'] = votingDrawnMapStyle;
 $config['stormwaterDrawnMapStyle'] = stormwaterDrawnMapStyle;
 $config['nearbyActivityDrawnMapStyle'] = nearbyActivityDrawnMapStyle;
+$config['nearbyFacilitiesDrawnMapStyle'] = nearbyFacilitiesDrawnMapStyle;
 $config['ZONING_CODE_MAP'] = ZONING_CODE_MAP;
 $config['dorLegendData'] = dorLegendData;
 $config['stormwaterLegendData'] = stormwaterLegendData;

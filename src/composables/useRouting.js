@@ -20,7 +20,11 @@ export default function useRouting() {
     } else if (MainStore.currentAddress && MainStore.currentTopic == 'nearby-activity') {
       if (import.meta.env.VITE_DEBUG) console.log('routeApp routing to address-topic-and-data');
       // router.push({ name: 'address-topic-and-data', params: { address: MainStore.currentAddress, topic: "nearbyActivity", data: '311' }, query: { ...startQuery } });
-      router.push({ name: 'address-topic-and-data', params: { address: MainStore.currentAddress, topic: "nearby-activity", data: MainStore.currentNearbyDataType || '311' }, query: { ...startQuery } });
+      router.push({ name: 'address-topic-and-data', params: { address: MainStore.currentAddress, topic: MainStore.currentTopic, data: MainStore.currentNearbyActivityDataType || '311' }, query: { ...startQuery } });
+    } else if (MainStore.currentAddress && MainStore.currentTopic == 'nearby-facilities') {
+      if (import.meta.env.VITE_DEBUG) console.log('routeApp routing to address-topic-and-data');
+      // router.push({ name: 'address-topic-and-data', params: { address: MainStore.currentAddress, topic: "nearbyActivity", data: '311' }, query: { ...startQuery } });
+      router.push({ name: 'address-topic-and-data', params: { address: MainStore.currentAddress, topic: MainStore.currentTopic, data: MainStore.currentNearbyFacilitiesDataType || 'publicSchools' }, query: { ...startQuery } });
     } else if (MainStore.currentAddress && MainStore.currentTopic) {
       if (import.meta.env.VITE_DEBUG) console.log('routeApp routing to address-and-topic because MainStore has address and topic');
       router.push({ name: 'address-and-topic', params: { address: MainStore.currentAddress, topic: MainStore.currentTopic }, query: { ...startQuery } });

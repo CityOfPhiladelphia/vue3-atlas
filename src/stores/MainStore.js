@@ -19,8 +19,9 @@ export const useMainStore = defineStore("MainStore", {
       otherParcelAddress:'',
       currentAddress: '',
       currentLang: null,
-      currentNearbyDataType: null,
+      currentNearbyActivityDataType: null,
       currentNearbyTimeInterval: {},
+      currentNearbyFacilitiesDataType: null,
       dataSourcesLoadedArray: [],
       clickedRow: [],
       clickedMarkerId: null,
@@ -45,8 +46,8 @@ export const useMainStore = defineStore("MainStore", {
     setLastSearchMethod(searchMethod) {
       this.lastSearchMethod = searchMethod;
     },
-    setCurrentNearbyDataType(data) {
-      this.currentNearbyDataType = data;
+    setcurrentNearbyActivityDataType(data) {
+      this.currentNearbyActivityDataType = data;
     },
     clearDataSourcesLoadedArray() {
       this.dataSourcesLoadedArray = [];
