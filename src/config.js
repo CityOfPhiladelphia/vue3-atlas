@@ -940,9 +940,9 @@ const votingDrawnMapStyle = mergeDeep(imageryInfo,{
   ],
 });
 
-const nearbyDrawnMapStyle = mergeDeep(imageryInfo,{
+const nearbyActivityDrawnMapStyle = mergeDeep(imageryInfo,{
   version: 8,
-  name: 'nearbyDrawnMap',
+  name: 'nearbyActivityDrawnMap',
   glyphs: '//fonts.openmaptiles.org/{fontstack}/{range}.pbf',
   sources: {
     pwd: {
@@ -979,7 +979,7 @@ const nearbyDrawnMapStyle = mergeDeep(imageryInfo,{
         }
       }
     },
-    nearby: {
+    nearbyActivity: {
       type: 'geojson',
       data: {
         type: 'FeatureCollection',
@@ -1011,8 +1011,8 @@ const nearbyDrawnMapStyle = mergeDeep(imageryInfo,{
       }
     },
     {
-      id: 'nearby',
-      source: 'nearby',
+      id: 'nearbyActivity',
+      source: 'nearbyActivity',
       type: 'circle',
       paint: {
         'circle-radius': 7,
@@ -1087,9 +1087,10 @@ const $config = {
     li: 'liDrawnMapStyle',
     zoning: 'zoningDrawnMapStyle',
     voting: 'votingDrawnMapStyle',
-    city311: 'nearbyDrawnMapStyle',
+    city311: 'nearbyActivityDrawnMapStyle',
     stormwater: 'stormwaterDrawnMapStyle',
-    nearby: 'nearbyDrawnMapStyle',
+    'nearby-activity': 'nearbyActivityDrawnMapStyle',
+    'nearby-facilities': 'nearbyFacilitiesDrawnMapStyle',
     districts: 'pwdDrawnMapStyle',
   },
   parcelLayerForTopic: {
@@ -1102,7 +1103,8 @@ const $config = {
     voting: 'pwd',
     city311: 'pwd',
     stormwater: 'pwd',
-    nearby: 'pwd',
+    'nearby-activity': 'pwd',
+    'nearby-facilities': 'pwd',
     districts: 'pwd',
   },
   mapLayers: {
@@ -1467,7 +1469,7 @@ $config['liDrawnMapStyle'] = liDrawnMapStyle;
 $config['zoningDrawnMapStyle'] = zoningDrawnMapStyle;
 $config['votingDrawnMapStyle'] = votingDrawnMapStyle;
 $config['stormwaterDrawnMapStyle'] = stormwaterDrawnMapStyle;
-$config['nearbyDrawnMapStyle'] = nearbyDrawnMapStyle;
+$config['nearbyActivityDrawnMapStyle'] = nearbyActivityDrawnMapStyle;
 $config['ZONING_CODE_MAP'] = ZONING_CODE_MAP;
 $config['dorLegendData'] = dorLegendData;
 $config['stormwaterLegendData'] = stormwaterLegendData;

@@ -62,18 +62,18 @@ const nearbyZoningAppealsGeojson = computed(() => {
 })
 watch (() => nearbyZoningAppealsGeojson.value, (newGeojson) => {
   const map = MapStore.map;
-  if (map.getSource) map.getSource('nearby').setData(featureCollection(newGeojson));
+  if (map.getSource) map.getSource('nearbyActivity').setData(featureCollection(newGeojson));
 });
 
 const hoveredStateId = computed(() => { return MainStore.hoveredStateId; });
 
 onMounted(() => {
   const map = MapStore.map;
-  if (!NearbyActivityStore.loadingData && nearbyZoningAppealsGeojson.value.length > 0) { map.getSource('nearby').setData(featureCollection(nearbyZoningAppealsGeojson.value)) }
+  if (!NearbyActivityStore.loadingData && nearbyZoningAppealsGeojson.value.length > 0) { map.getSource('nearbyActivity').setData(featureCollection(nearbyZoningAppealsGeojson.value)) }
 });
 onBeforeUnmount(() => {
   const map = MapStore.map;
-  if (map.getSource('nearby')) { map.getSource('nearby').setData(featureCollection([point([0,0])])) }
+  if (map.getSource('nearbyActivity')) { map.getSource('nearbyActivity').setData(featureCollection([point([0,0])])) }
 });
 
 const nearbyZoningAppealsTableData = computed(() => {

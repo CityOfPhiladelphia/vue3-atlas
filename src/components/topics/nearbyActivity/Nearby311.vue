@@ -50,18 +50,18 @@ const nearby311Geojson = computed(() => {
 })
 watch (() => nearby311Geojson.value, async(newGeojson) => {
   const map = MapStore.map;
-  if (map.getSource) map.getSource('nearby').setData(featureCollection(newGeojson));
+  if (map.getSource) map.getSource('nearbyActivity').setData(featureCollection(newGeojson));
 });
 
 const hoveredStateId = computed(() => { return MainStore.hoveredStateId; });
 
 onMounted(() => {
   const map = MapStore.map;
-  if (!NearbyActivityStore.loadingData && nearby311Geojson.value.length > 0) { map.getSource('nearby').setData(featureCollection(nearby311Geojson.value)) }
+  if (!NearbyActivityStore.loadingData && nearby311Geojson.value.length > 0) { map.getSource('nearbyActivity').setData(featureCollection(nearby311Geojson.value)) }
 });
 onBeforeUnmount(() => {
   const map = MapStore.map;
-  if (map.getSource('nearby')) { map.getSource('nearby').setData(featureCollection([point([0,0])])) }
+  if (map.getSource('nearbyActivity')) { map.getSource('nearbyActivity').setData(featureCollection([point([0,0])])) }
 });
 
 const nearby311TableData = computed(() => {
