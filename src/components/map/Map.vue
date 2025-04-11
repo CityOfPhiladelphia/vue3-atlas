@@ -693,13 +693,19 @@ const pollingPlaceCoordinates = computed(() => {
     }
   }
 });
+
 watchEffect(() => {
   if (NearbyFacilitiesStore.nearbySchools) {
-    const feat = featureCollection([NearbyFacilitiesStore.elementarySchool, NearbyFacilitiesStore.middleSchool, NearbyFacilitiesStore.highSchool]);
-    map.getSource('schoolMarkers').setData(feat);
     const feat2 = featureCollection(NearbyFacilitiesStore.nearbySchools);
     const bounds = bbox(buffer(feat2, 2000, {units: 'feet'}));
     map.fitBounds(bounds);
+  }
+});
+
+watchEffect(() => {
+  if (NearbyFacilitiesStore.elementarySchool && NearbyFacilitiesStore.highSchool) {
+    const feat = featureCollection([NearbyFacilitiesStore.elementarySchool, NearbyFacilitiesStore.middleSchool, NearbyFacilitiesStore.highSchool]);
+    map.getSource('schoolMarkers').setData(feat);
   }
 });
 

@@ -93,46 +93,56 @@ const elementarySchool = computed(() => {
     });
   };
   if (import.meta.env.VITE_DEBUG) console.log('school:', school);
-  NearbyFacilitiesStore.elementarySchool = school;
   return school;
+});
+
+watch(() => elementarySchool.value, (newElementarySchool) => {
+  // if (import.meta.env.VITE_DEBUG) console.log('watch ElementarySchool.value:', newElementarySchool);
+  if (newElementarySchool && newElementarySchool.properties) {
+    NearbyFacilitiesStore.elementarySchool = newElementarySchool;
+  }
 });
 
 const middleSchool = computed(() => {
   let school = null;
-  if (geocodeElementarySchool.value == geocodeMiddleSchool.value) {
-    school = { ...elementarySchool.value };
-  } else if (msCatchment.value && msCatchment.value.properties) {
-    if (NearbyFacilitiesStore.allSchools && NearbyFacilitiesStore.allSchools.features) {
-      school = NearbyFacilitiesStore.allSchools.features.find(school => {
-        if (school.properties.LOCATION_ID) {
-          return school.properties.LOCATION_ID == msCatchment.value.properties.MS_ID.toString();
-        } else {
-          return false;
-        }
-      });
-    };
-  }
-  NearbyFacilitiesStore.middleSchool = school;
+  if (NearbyFacilitiesStore.allSchools && NearbyFacilitiesStore.allSchools.features && msCatchment.value && msCatchment.value.properties) {
+    school = NearbyFacilitiesStore.allSchools.features.find(school => {
+      if (school.properties.LOCATION_ID) {
+        return school.properties.LOCATION_ID == msCatchment.value.properties.MS_ID.toString();
+      } else {
+        return false;
+      }
+    });
+  };
   return school;
 });
 
+watch(() => middleSchool.value, (newMiddleSchool) => {
+  // if (import.meta.env.VITE_DEBUG) console.log('watch middleSchool.value:', newMiddleSchool);
+  if (newMiddleSchool && newMiddleSchool.properties) {
+    NearbyFacilitiesStore.middleSchool = newMiddleSchool;
+  }
+});
+
 const highSchool = computed(() => {
-  if (geocodeMiddleSchool.value == geocodeHighSchool.value) {
-    return middleSchool.value;
-  } else if (hsCatchment.value && hsCatchment.value.properties) {
-    let school = null;
-    if (NearbyFacilitiesStore.allSchools && NearbyFacilitiesStore.allSchools.features) {
-      school = NearbyFacilitiesStore.allSchools.features.find(school => {
-        if (school.properties.LOCATION_ID && hsCatchment.value && hsCatchment.value.properties) {
-          return school.properties.LOCATION_ID == hsCatchment.value.properties.HS_ID.toString();
-        } else {
-          return false;
-        }
-      });
-    };
-    NearbyFacilitiesStore.highSchool = school;
-    return school;
+  let school = null;
+  if (NearbyFacilitiesStore.allSchools && NearbyFacilitiesStore.allSchools.features && hsCatchment.value && hsCatchment.value.properties) {
+    school = NearbyFacilitiesStore.allSchools.features.find(school => {
+      if (school.properties.LOCATION_ID && hsCatchment.value && hsCatchment.value.properties) {
+        return school.properties.LOCATION_ID == hsCatchment.value.properties.HS_ID.toString();
+      } else {
+        return false;
+      }
+    });
   };
+  return school;
+});
+
+watch(() => highSchool.value, (newHighSchool) => {
+  // if (import.meta.env.VITE_DEBUG) console.log('watch highSchool.value:', newHighSchool);
+  if (newHighSchool && newHighSchool.properties) {
+    NearbyFacilitiesStore.highSchool = newHighSchool;
+  }
 });
 
 const elementarySchoolData = computed(() => {
