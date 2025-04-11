@@ -703,7 +703,7 @@ watchEffect(() => {
 });
 
 watchEffect(() => {
-  if (NearbyFacilitiesStore.elementarySchool && NearbyFacilitiesStore.highSchool) {
+  if (NearbyFacilitiesStore.elementarySchool && NearbyFacilitiesStore.middleSchool && NearbyFacilitiesStore.highSchool) {
     const feat = featureCollection([NearbyFacilitiesStore.elementarySchool, NearbyFacilitiesStore.middleSchool, NearbyFacilitiesStore.highSchool]);
     map.getSource('schoolMarkers').setData(feat);
   }

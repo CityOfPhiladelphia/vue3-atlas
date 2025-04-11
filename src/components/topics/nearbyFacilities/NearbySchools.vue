@@ -210,8 +210,9 @@ const nearbySchoolsGeojson = computed(() => {
 
 watch (() => nearbySchoolsGeojson.value, async(newGeojson) => {
   if (import.meta.env.VITE_DEBUG == 'true') console.log('watch nearbySchoolsGeojson.value, newGeojson:', newGeojson);
-  if (!newGeojson) return;
+  // if (!newGeojson) return;
   const map = MapStore.map;
+  if (import.meta.env.VITE_DEBUG == 'true') console.log('watch, map:', map);
   if (map.getSource) map.getSource('nearbyFacilities').setData(featureCollection(newGeojson));
 });
 
