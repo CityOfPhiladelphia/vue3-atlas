@@ -61,6 +61,27 @@ let map;
 const markerSrc = computed(() => {
   return MainStore.publicPath + 'images/marker_blue_base_5.png';
 })
+const pinkSchoolSrc = computed(() => {
+  return MainStore.publicPath + 'images/pink-school-solid.png';
+})
+const redSchoolSrc = computed(() => {
+  return MainStore.publicPath + 'images/red-school-solid.png';
+})
+const orangeSchoolSrc = computed(() => {
+  return MainStore.publicPath + 'images/orange-school-solid.png';
+})
+const yellowSchoolSrc = computed(() => {
+  return MainStore.publicPath + 'images/yellow-school-solid.png';
+})
+const greenSchoolSrc = computed(() => {
+  return MainStore.publicPath + 'images/green-school-solid.png';
+})
+const blueSchoolSrc = computed(() => {
+  return MainStore.publicPath + 'images/blue-school-solid.png';
+})
+const purpleSchoolSrc = computed(() => {
+  return MainStore.publicPath + 'images/purple-school-solid.png';
+})
 const buildingColumnsSrc = computed(() => {
   return MainStore.publicPath + 'images/building-columns-solid.png';
 })
@@ -102,6 +123,20 @@ onMounted(async () => {
   const markerImage = await map.loadImage(markerSrc.value)
   if (import.meta.env.VITE_DEBUG == 'true') console.log('markerImage:', markerImage);
   map.addImage('marker-blue', markerImage.data);
+  const pinkSchoolImage = await map.loadImage(pinkSchoolSrc.value)
+  map.addImage('pink-school-solid', pinkSchoolImage.data);
+  const redSchoolImage = await map.loadImage(redSchoolSrc.value)
+  map.addImage('red-school-solid', redSchoolImage.data);
+  const orangeSchoolImage = await map.loadImage(orangeSchoolSrc.value)
+  map.addImage('orange-school-solid', orangeSchoolImage.data);
+  const yellowSchoolImage = await map.loadImage(yellowSchoolSrc.value)
+  map.addImage('yellow-school-solid', yellowSchoolImage.data);
+  const greenSchoolImage = await map.loadImage(greenSchoolSrc.value)
+  map.addImage('green-school-solid', greenSchoolImage.data);
+  const blueSchoolImage = await map.loadImage(blueSchoolSrc.value)
+  map.addImage('blue-school-solid', blueSchoolImage.data);
+  const purpleSchoolImage = await map.loadImage(purpleSchoolSrc.value)
+  map.addImage('purple-school-solid', purpleSchoolImage.data);
   const buildingColumnsImage = await map.loadImage(buildingColumnsSrc.value)
   map.addImage('building-columns-solid', buildingColumnsImage.data);
   const cameraImage = await map.loadImage(cameraSrc.value)
@@ -658,6 +693,16 @@ const pollingPlaceCoordinates = computed(() => {
     }
   }
 });
+watchEffect(() => {
+  if (NearbyFacilitiesStore.nearbySchools) {
+    const feat = featureCollection([NearbyFacilitiesStore.elementarySchool, NearbyFacilitiesStore.highSchool]);
+    map.getSource('schoolMarkers').setData(feat);
+    const feat2 = featureCollection(NearbyFacilitiesStore.nearbySchools);
+    const bounds = bbox(buffer(feat2, 2000, {units: 'feet'}));
+    map.fitBounds(bounds);
+  }
+});
+
 watchEffect(() => {
   if (VotingStore.divisions.rows && VotingStore.pollingPlaces.rows) {
     const newDivision = feature(votingDivision.value);

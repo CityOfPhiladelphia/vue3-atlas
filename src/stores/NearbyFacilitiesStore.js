@@ -114,6 +114,9 @@ export const useNearbyFacilitiesStore = defineStore('NearbyFacilitiesStore', {
       hsCatchments: null,
       allSchools: null,
       nearbySchools: null,
+      elementarySchool: null,
+      middleSchool: null,
+      highSchool: null,
     }
   },
   actions: {

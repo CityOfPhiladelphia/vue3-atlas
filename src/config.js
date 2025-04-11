@@ -1098,6 +1098,23 @@ const nearbyFacilitiesDrawnMapStyle = mergeDeep(imageryInfo,{
       type: 'raster',
       tileSize: 256,
     },
+    // schoolMarker: {
+    //   type: 'geojson',
+    //   data: {
+    //     type: 'Feature',
+    //     geometry: {
+    //       type: 'Point',
+    //       coordinates: [],
+    //     }
+    //   }
+    // },
+    schoolMarkers: {
+      type: 'geojson',
+      data: {
+        type: 'FeatureCollection',
+        features: []
+      },
+    },
     addressMarker: {
       type: 'geojson',
       data: {
@@ -1202,6 +1219,37 @@ const nearbyFacilitiesDrawnMapStyle = mergeDeep(imageryInfo,{
       'paint': {
         'fill-color': 'rgb(0,102,255)',
         'fill-opacity': 0.2,
+      },
+    },
+    {
+      id: 'schoolMarkers',
+      source: 'schoolMarkers',
+      type: 'symbol',
+      layout: {
+        // 'icon-image': 'school-solid',
+        'icon-image': [
+          'match',
+          ['get', 'GRADE_LEVEL'],
+          'PRE-K/KINDERGARTEN',
+          'pink-school-solid',
+          'ELEMENTARY SCHOOL',
+          'red-school-solid',
+          'ELEMENTARY/MIDDLE',
+          'orange-school-solid',
+          'MIDDLE SCHOOL',
+          'yellow-school-solid',
+          'MIDDLE/HIGH',
+          'green-school-solid',
+          'HIGH SCHOOL',
+          'blue-school-solid',
+          'ELEMENTARY/MIDDLE/HIGH',
+          'purple-school-solid',
+          'red-school-solid',
+        ],
+        'icon-anchor' : 'bottom',
+        'icon-size': .05,
+        "icon-allow-overlap" : true,
+        "text-allow-overlap": true,
       },
     },
     {

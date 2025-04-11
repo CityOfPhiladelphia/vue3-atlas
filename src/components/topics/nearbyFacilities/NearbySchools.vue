@@ -93,14 +93,15 @@ const elementarySchool = computed(() => {
     });
   };
   if (import.meta.env.VITE_DEBUG) console.log('school:', school);
+  NearbyFacilitiesStore.elementarySchool = school;
   return school;
 });
 
 const middleSchool = computed(() => {
+  let school = null;
   if (geocodeElementarySchool.value == geocodeMiddleSchool.value) {
-    return elementarySchool.value;
+    school = { ...elementarySchool.value };
   } else {
-    let school = null;
     if (NearbyFacilitiesStore.allSchools && NearbyFacilitiesStore.allSchools.features) {
       school = NearbyFacilitiesStore.allSchools.features.find(school => {
         if (school.properties.LOCATION_ID) {
@@ -110,8 +111,9 @@ const middleSchool = computed(() => {
         }
       });
     };
-    return school;
-  };
+  }
+  NearbyFacilitiesStore.middleSchool = school;
+  return school;
 });
 
 const highSchool = computed(() => {
@@ -121,31 +123,32 @@ const highSchool = computed(() => {
     let school = null;
     if (NearbyFacilitiesStore.allSchools && NearbyFacilitiesStore.allSchools.features) {
       school = NearbyFacilitiesStore.allSchools.features.find(school => {
-        if (school.properties.LOCATION_ID) {
+        if (school.properties.LOCATION_ID && hsCatchment.value && hsCatchment.value.properties) {
           return school.properties.LOCATION_ID == hsCatchment.value.properties.HS_ID.toString();
         } else {
           return false;
         }
       });
     };
+    NearbyFacilitiesStore.highSchool = school;
     return school;
   };
 });
 
 const elementarySchoolData = computed(() => {
-  if (elementarySchool.value.properties) {
+  if (elementarySchool.value && elementarySchool.value.properties) {
     return '<b>' + elementarySchool.value.properties.SCHOOL_NAME_LABEL + '</b><br>' + elementarySchool.value.properties.STREET_ADDRESS + '<br>Philadelphia, PA ' + elementarySchool.value.properties.ZIP_CODE + '<br>' + elementarySchool.value.properties.PHONE_NUMBER + '<br>' + elementarySchool.value.properties.GRADE_ORG;
   }
 });
 
 const middleSchoolData = computed(() => {
-  if (middleSchool.value) {
+  if (middleSchool.value && middleSchool.value.properties) {
     return '<b>' + middleSchool.value.properties.SCHOOL_NAME_LABEL + '</b><br>' + middleSchool.value.properties.STREET_ADDRESS + '<br>Philadelphia, PA ' + middleSchool.value.properties.ZIP_CODE + '<br>' + middleSchool.value.properties.PHONE_NUMBER + '<br>' + middleSchool.value.properties.GRADE_ORG;
   }
 });
 
 const highSchoolData = computed(() => {
-  if (highSchool.value) {
+  if (highSchool.value && highSchool.value.properties) {
     return '<b>' + highSchool.value.properties.SCHOOL_NAME_LABEL + '</b><br>' + highSchool.value.properties.STREET_ADDRESS + '<br>Philadelphia, PA ' + highSchool.value.properties.ZIP_CODE + '<br>' + highSchool.value.properties.PHONE_NUMBER + '<br>' + highSchool.value.properties.GRADE_ORG;
   }
 });
