@@ -19,21 +19,21 @@ const loadingData = computed(() => NearbyFacilitiesStore.loadingData );
 const geocodeElementarySchool = computed(() => {
   let value = null;
   if (GeocodeStore.aisData.features) {
-    value = GeocodeStore.aisData.features[0].properties.elementary_school.split(',')[0];
+    value = GeocodeStore.aisData.features[0].properties.elementary_school;
   }
   return value;
 });
 const geocodeMiddleSchool = computed(() => {
   let value = null;
   if (GeocodeStore.aisData.features) {
-    value = GeocodeStore.aisData.features[0].properties.middle_school.split(',')[0];
+    value = GeocodeStore.aisData.features[0].properties.middle_school;
   }
   return value;
 });
 const geocodeHighSchool = computed(() => {
   let value = null;
   if (GeocodeStore.aisData.features) {
-    value = GeocodeStore.aisData.features[0].properties.high_school.split(',')[0];
+    value = GeocodeStore.aisData.features[0].properties.high_school;
   }
   return value;
 });
@@ -101,7 +101,7 @@ const middleSchool = computed(() => {
   let school = null;
   if (geocodeElementarySchool.value == geocodeMiddleSchool.value) {
     school = { ...elementarySchool.value };
-  } else {
+  } else if (msCatchment.value && msCatchment.value.properties) {
     if (NearbyFacilitiesStore.allSchools && NearbyFacilitiesStore.allSchools.features) {
       school = NearbyFacilitiesStore.allSchools.features.find(school => {
         if (school.properties.LOCATION_ID) {
@@ -119,7 +119,7 @@ const middleSchool = computed(() => {
 const highSchool = computed(() => {
   if (geocodeMiddleSchool.value == geocodeHighSchool.value) {
     return middleSchool.value;
-  } else {
+  } else if (hsCatchment.value && hsCatchment.value.properties) {
     let school = null;
     if (NearbyFacilitiesStore.allSchools && NearbyFacilitiesStore.allSchools.features) {
       school = NearbyFacilitiesStore.allSchools.features.find(school => {
