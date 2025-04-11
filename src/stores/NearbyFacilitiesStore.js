@@ -109,6 +109,9 @@ export const useNearbyFacilitiesStore = defineStore('NearbyFacilitiesStore', {
     return {
       dataError: false,
       loadingData: true,
+      esCatchments: null,
+      msCatchments: null,
+      hsCatchments: null,
       allSchools: null,
       nearbySchools: null,
     }
@@ -129,6 +132,52 @@ export const useNearbyFacilitiesStore = defineStore('NearbyFacilitiesStore', {
       this.setLoadingData(false);
       if (dataType === 'publicSchools') {
         await this.fillNearbySchools();
+      }
+    },
+    async fillAllCatchments() {
+      try {
+        const params = {
+          where: '1=1',
+          outFields: '*',
+          f: 'geojson',
+        }
+        const esResponse = await axios.get('https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/SchoolDist_Catchments_ES/FeatureServer/0/query?', { params });
+        if (esResponse.status === 200) {
+          const data = esResponse.data;
+          this.esCatchments = data;
+          this.setLoadingData(false);
+        } else {
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('nearbyCatchments - await resolved but HTTP status was not successful');
+          this.setLoadingData(false);
+          this.setDataError(true);
+        }
+
+        const msResponse = await axios.get('https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/SchoolDist_Catchments_ES/FeatureServer/0/query?', { params });
+        if (msResponse.status === 200) {
+          const data = msResponse.data;
+          this.msCatchments = data;
+          this.setLoadingData(false);
+        } else {
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('nearbyCatchments - await resolved but HTTP status was not successful');
+          this.setLoadingData(false);
+          this.setDataError(true);
+        }
+
+        const hsResponse = await axios.get('https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/SchoolDist_Catchments_ES/FeatureServer/0/query?', { params });
+        if (hsResponse.status === 200) {
+          const data = hsResponse.data;
+          this.hsCatchments = data;
+          this.setLoadingData(false);
+        } else {
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('nearbyCatchments - await resolved but HTTP status was not successful');
+          this.setLoadingData(false);
+          this.setDataError(true);
+        }
+
+      } catch {
+        if (import.meta.env.VITE_DEBUG == 'true') console.error('nearbyCatchments - await never resolved, failed to fetch address data');
+        this.setLoadingData(false);
+        this.setDataError(true);
       }
     },
     async fillAllSchools() {

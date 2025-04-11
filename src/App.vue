@@ -48,6 +48,8 @@ onMounted(async () => {
   if (route.params.topic) {
     MainStore.currentTopic = route.params.topic;
   }
+
+  NearbyFacilitiesStore.fillAllCatchments();
   NearbyFacilitiesStore.fillAllSchools();
 
   const main = document.getElementById('main');

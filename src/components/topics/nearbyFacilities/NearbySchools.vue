@@ -38,55 +38,102 @@ const geocodeHighSchool = computed(() => {
   return value;
 });
 
-const elementarySchool = computed(() => {
-  let value = null;
-  if (NearbyFacilitiesStore.allSchools && NearbyFacilitiesStore.allSchools.features) {
-    value = NearbyFacilitiesStore.allSchools.features.find(school => {
-      if (school.properties.SCHOOL_NAME && geocodeElementarySchool.value) {
-        return school.properties.SCHOOL_NAME_LABEL.toLowerCase().includes(geocodeElementarySchool.value.toLowerCase())
+const esCatchment = computed(() => {
+  let catchment = {};
+  if (NearbyFacilitiesStore.esCatchments && NearbyFacilitiesStore.esCatchments.features) {
+    catchment = NearbyFacilitiesStore.esCatchments.features.find(catchment => {
+      if (catchment.properties.ES_NAME && geocodeElementarySchool.value) {
+        return catchment.properties.ES_NAME == geocodeElementarySchool.value;
       } else {
         return false;
       }
     });
   };
-  return value;
+  return catchment;
+});
+
+const msCatchment = computed(() => {
+  let catchment = {};
+  if (NearbyFacilitiesStore.msCatchments && NearbyFacilitiesStore.msCatchments.features) {
+    catchment = NearbyFacilitiesStore.msCatchments.features.find(catchment => {
+      if (catchment.properties.ES_NAME && geocodeElementarySchool.value) {
+        return catchment.properties.ES_NAME == geocodeElementarySchool.value;
+      } else {
+        return false;
+      }
+    });
+  };
+  return catchment;
+});
+
+const hsCatchment = computed(() => {
+  let catchment = {};
+  if (NearbyFacilitiesStore.hsCatchments && NearbyFacilitiesStore.hsCatchments.features) {
+    catchment = NearbyFacilitiesStore.hsCatchments.features.find(catchment => {
+      if (catchment.properties.ES_NAME && geocodeElementarySchool.value) {
+        return catchment.properties.ES_NAME == geocodeElementarySchool.value;
+      } else {
+        return false;
+      }
+    });
+  };
+  return catchment;
+});
+
+const elementarySchool = computed(() => {
+  let school = {};
+  if (NearbyFacilitiesStore.allSchools && NearbyFacilitiesStore.allSchools.features && esCatchment.value && esCatchment.value.properties) {
+    if (import.meta.env.VITE_DEBUG) console.log('inside if');
+    school = NearbyFacilitiesStore.allSchools.features.find(school => {
+      if (school.properties.LOCATION_ID) {
+        return school.properties.LOCATION_ID == esCatchment.value.properties.ES_ID.toString();
+      } else {
+        return false;
+      }
+    });
+  };
+  if (import.meta.env.VITE_DEBUG) console.log('school:', school);
+  return school;
 });
 
 const middleSchool = computed(() => {
   if (geocodeElementarySchool.value == geocodeMiddleSchool.value) {
     return elementarySchool.value;
   } else {
-    let value = null;
+    let school = null;
     if (NearbyFacilitiesStore.allSchools && NearbyFacilitiesStore.allSchools.features) {
-      value = NearbyFacilitiesStore.allSchools.features.find(school => {
-        if (school.properties.SCHOOL_NAME && geocodeMiddleSchool.value) {
-          console.log('geocodeMiddleSchool.value:', geocodeMiddleSchool.value.toLowerCase(), 'school.properties.SCHOOL_NAME_LABEL:', school.properties.SCHOOL_NAME_LABEL.toLowerCase());
-          return school.properties.SCHOOL_NAME_LABEL.toLowerCase().includes(geocodeMiddleSchool.value.toLowerCase());
+      school = NearbyFacilitiesStore.allSchools.features.find(school => {
+        if (school.properties.LOCATION_ID) {
+          return school.properties.LOCATION_ID == msCatchment.value.properties.MS_ID.toString();
         } else {
           return false;
         }
       });
     };
-    return value;
+    return school;
   };
 });
 
 const highSchool = computed(() => {
-  let value = null;
-  if (NearbyFacilitiesStore.allSchools && NearbyFacilitiesStore.allSchools.features) {
-    value = NearbyFacilitiesStore.allSchools.features.find(school => {
-      if (school.properties.SCHOOL_NAME && geocodeHighSchool.value) {
-        return school.properties.SCHOOL_NAME_LABEL.toLowerCase().includes(geocodeHighSchool.value.toLowerCase())
-      } else {
-        return false;
-      }
-    });
+  if (geocodeMiddleSchool.value == geocodeHighSchool.value) {
+    return middleSchool.value;
+  } else {
+    let school = null;
+    if (NearbyFacilitiesStore.allSchools && NearbyFacilitiesStore.allSchools.features) {
+      school = NearbyFacilitiesStore.allSchools.features.find(school => {
+        if (school.properties.LOCATION_ID) {
+          return school.properties.LOCATION_ID == hsCatchment.value.properties.HS_ID.toString();
+        } else {
+          return false;
+        }
+      });
+    };
+    return school;
   };
-  return value;
 });
 
 const elementarySchoolData = computed(() => {
-  if (elementarySchool.value) {
+  if (elementarySchool.value.properties) {
     return '<b>' + elementarySchool.value.properties.SCHOOL_NAME_LABEL + '</b><br>' + elementarySchool.value.properties.STREET_ADDRESS + '<br>Philadelphia, PA ' + elementarySchool.value.properties.ZIP_CODE + '<br>' + elementarySchool.value.properties.PHONE_NUMBER + '<br>' + elementarySchool.value.properties.GRADE_ORG;
   }
 });
@@ -140,7 +187,7 @@ const nearbySchools = computed(() => {
 const nearbySchoolsGeojson = computed(() => {
   if (!nearbySchools.value) return null;
   nearbySchools.value.map(item => {
-    if (import.meta.env.VITE_DEBUG) console.log('item:', item);
+    // if (import.meta.env.VITE_DEBUG) console.log('item:', item);
     item.properties.id = item.properties.AUN;
     item.properties.type = 'nearbySchools';
   });
