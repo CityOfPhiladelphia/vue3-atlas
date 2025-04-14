@@ -37,6 +37,7 @@ const nearbyVacantIndicatorPointsGeojson = computed(() => {
   return nearbyVacantIndicatorPoints.value.map(item => point(item.geometry.coordinates, { id: item.id, type: 'nearbyVacantIndicatorPoints' }));
 })
 watch (() => nearbyVacantIndicatorPointsGeojson.value, (newGeojson) => {
+  if (import.meta.env.VITE_DEBUG == 'true') console.log('watch nearbySchoolsGeojson.value, newGeojson:', newGeojson);
   const map = MapStore.map;
   if (map.getSource) map.getSource('nearbyActivity').setData(featureCollection(newGeojson));
 });

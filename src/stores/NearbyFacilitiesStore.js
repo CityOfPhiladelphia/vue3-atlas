@@ -117,6 +117,13 @@ export const useNearbyFacilitiesStore = defineStore('NearbyFacilitiesStore', {
       elementarySchool: null,
       middleSchool: null,
       highSchool: null,
+      dataFields: {
+        nearbySchools: {
+          title: 'Nearby Schools',
+          id_field: 'id',
+          info_field: 'SCHOOL_NAME_LABEL',
+        }
+      }
     }
   },
   actions: {

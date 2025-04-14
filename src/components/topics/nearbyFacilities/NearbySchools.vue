@@ -12,6 +12,9 @@ const MapStore = useMapStore();
 import { useMainStore } from '@/stores/MainStore';
 const MainStore = useMainStore();
 
+import useScrolling from '@/composables/useScrolling';
+const { handleRowClick, handleRowMouseover, handleRowMouseleave } = useScrolling();
+
 import VerticalTable from '@/components/VerticalTable.vue';
 
 const loadingData = computed(() => NearbyFacilitiesStore.loadingData );
@@ -199,16 +202,18 @@ const nearbySchools = computed(() => {
 
 const nearbySchoolsGeojson = computed(() => {
   if (!nearbySchools.value) return null;
-  nearbySchools.value.map(item => {
-    // if (import.meta.env.VITE_DEBUG) console.log('item:', item);
-    item.properties.id = item.properties.AUN;
-    item.properties.type = 'nearbySchools';
-  });
+  // nearbySchools.value.map(item => {
+  //   // if (import.meta.env.VITE_DEBUG) console.log('item:', item);
+  //   item.properties.id = item.properties.AUN;
+  //   item.properties.type = 'nearbySchools';
+  // });
   // if (import.meta.env.VITE_DEBUG) console.log('nearbySchoolsAdded:', nearbySchoolsAdded);
-  return nearbySchools;
+  
+  return nearbySchools.value.map(item => point(item.geometry.coordinates, { id: item.id, type: 'nearbySchools' }));
+
 })
 
-watch (() => nearbySchoolsGeojson.value, async(newGeojson) => {
+watch (() => nearbySchoolsGeojson.value, (newGeojson) => {
   if (import.meta.env.VITE_DEBUG == 'true') console.log('watch nearbySchoolsGeojson.value, newGeojson:', newGeojson);
   // if (!newGeojson) return;
   const map = MapStore.map;
@@ -276,17 +281,17 @@ const nearbySchoolsTableData = computed(() => {
     </h2>
   </div>
 
-  <!-- :row-style-class="row => hoveredStateId === row.service_request_id ? 'active-hover ' + row.service_request_id : 'inactive ' + row.service_request_id" -->
   <vue-good-table
     id="nearbySchools"
     :columns="nearbySchoolsTableData.columns"
     :rows="nearbySchoolsTableData.rows"
+    :row-style-class="row => hoveredStateId === row.id ? 'active-hover ' + row.id : 'inactive ' + row.id"
     style-class="table nearby-table"
     :sort-options="{ initialSortBy: {field: 'properties.distance_ft', type: 'asc'}}"
+    @row-mouseenter="handleRowMouseover($event, 'id')"
+    @row-mouseleave="handleRowMouseleave"
+    @row-click="handleRowClick($event, 'id', 'nearbySchools')"
   >
-  <!-- @row-mouseenter="handleRowMouseover($event, 'service_request_id')"
-  @row-mouseleave="handleRowMouseleave"
-  @row-click="handleRowClick($event, 'service_request_id', 'nearbySchools')" -->
     <template #emptystate>
       <div v-if="loadingData">
         Loading nearby schools... <font-awesome-icon
@@ -303,5 +308,21 @@ const nearbySchoolsTableData = computed(() => {
     </template>
   </vue-good-table>
 
-
 </template>
+
+<style>
+
+@media 
+only screen and (max-width: 768px) {
+
+  #nearbyVacantIndicators {
+    td:nth-of-type(2) { min-height: 60px; }
+
+    /*Label the data*/
+    td:nth-of-type(1):before { content: "Address"; }
+    td:nth-of-type(2):before { content: "Property Type"; }
+    td:nth-of-type(3):before { content: "Distance"; }
+  }
+}
+
+</style>

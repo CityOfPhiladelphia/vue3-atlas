@@ -202,7 +202,7 @@ onMounted(async () => {
   });
 
   // if a nearby circle marker is clicked or hovered on, set its id in the MainStore as the hoveredStateId
-  map.on('click', 'nearby-activity', (e) => {
+  map.on('click', 'nearbyActivity', (e) => {
     const properties = e.features[0].properties;
     let idField, infoField, row;
     if (MainStore.currentTopic == 'nearby-activity') {
@@ -234,7 +234,7 @@ onMounted(async () => {
       .addTo(map);
   });
 
-  map.on('mouseenter', 'nearby-activity', (e) => {
+  map.on('mouseenter', 'nearbyActivity', (e) => {
     // if (import.meta.env.VITE_DEBUG == 'true') console.log('mouseenter, e:', e);
     if (e.features.length > 0) {
       // if (import.meta.env.VITE_DEBUG == 'true') console.log('map.getSource(nearby):', map.getSource('nearby'), 'map.getStyle().sources:', map.getStyle().sources);
@@ -243,7 +243,7 @@ onMounted(async () => {
     }
   });
 
-  map.on('mouseleave', 'nearby-activity', () => {
+  map.on('mouseleave', 'nearbyActivity', () => {
     if (hoveredStateId.value) {
       map.getCanvas().style.cursor = ''
       MainStore.hoveredStateId = null;
@@ -251,19 +251,16 @@ onMounted(async () => {
   });
 
   // if a nearby circle marker is clicked or hovered on, set its id in the MainStore as the hoveredStateId
-  map.on('click', 'nearby-facilities', (e) => {
+  map.on('click', 'nearbyFacilities', (e) => {
     const properties = e.features[0].properties;
+    if (import.meta.env.VITE_DEBUG) console.log('click nearbyFacilities, properties:', properties);
     let idField, infoField, row;
-    if (MainStore.currentTopic == 'nearby-activity') {
-      idField = NearbyActivityStore.dataFields[properties.type].id_field;
-      infoField = NearbyActivityStore.dataFields[properties.type].info_field;
-      row = NearbyActivityStore[properties.type].rows.filter(row => row[idField] === properties.id)[0];
-    } else if (MainStore.currentTopic == '311') {
-      idField = City311Store.dataFields[properties.type].id_field;
-      infoField = City311Store.dataFields[properties.type].info_field;
-      row = City311Store[properties.type].rows.filter(row => row[idField] === properties.id)[0];
+    if (MainStore.currentTopic == 'nearby-facilities') {
+      idField = NearbyFacilitiesStore.dataFields[properties.type].id_field;
+      infoField = NearbyFacilitiesStore.dataFields[properties.type].info_field;
+      row = NearbyFacilitiesStore[properties.type].filter(row => row[idField] === properties.id)[0];
     }
-    if (import.meta.env.VITE_DEBUG == 'true') console.log('nearby-activity click, e:', e, 'properties:', properties, 'idField:', idField, 'infoField:', infoField, 'e.features[0]:', e.features[0], 'row:', row);
+    if (import.meta.env.VITE_DEBUG == 'true') console.log('nearby-facilities click, e:', e, 'properties:', properties, 'idField:', idField, 'infoField:', infoField, 'e.features[0]:', e.features[0], 'row:', row);
     // if (import.meta.env.VITE_DEBUG == 'true') console.log('nearby-activity click, e:', e, 'properties:', properties, 'idField:', idField, 'e.features[0]:', e.features[0], 'type:', type, 'row:', row);
     e.clickOnLayer = true;
     MainStore.clickedMarkerId = e.features[0].properties.id;
@@ -283,7 +280,7 @@ onMounted(async () => {
       .addTo(map);
   });
 
-  map.on('mouseenter', 'nearby-facilities', (e) => {
+  map.on('mouseenter', 'nearbyFacilities', (e) => {
     // if (import.meta.env.VITE_DEBUG == 'true') console.log('mouseenter, e:', e);
     if (e.features.length > 0) {
       // if (import.meta.env.VITE_DEBUG == 'true') console.log('map.getSource(nearby):', map.getSource('nearby'), 'map.getStyle().sources:', map.getStyle().sources);
@@ -292,7 +289,7 @@ onMounted(async () => {
     }
   });
 
-  map.on('mouseleave', 'nearby-facilities', () => {
+  map.on('mouseleave', 'nearbyFacilities', () => {
     if (hoveredStateId.value) {
       map.getCanvas().style.cursor = ''
       MainStore.hoveredStateId = null;
@@ -751,6 +748,10 @@ watch(
       idField = NearbyActivityStore.dataFields[newClickedRow.type].id_field;
       infoField = NearbyActivityStore.dataFields[newClickedRow.type].info_field;
       row = NearbyActivityStore[newClickedRow.type].rows.filter(row => row[idField] === newClickedRow.id)[0];
+    } else if (MainStore.currentTopic == 'nearby-facilities') {
+      idField = NearbyFacilitiesStore.dataFields[newClickedRow.type].id_field;
+      infoField = NearbyFacilitiesStore.dataFields[newClickedRow.type].info_field;
+      row = NearbyFacilitiesStore[newClickedRow.type].filter(row => row[idField] === newClickedRow.id)[0];
     } else if (MainStore.currentTopic == 'city311') {
       idField = City311Store.dataFields.city311.id_field;
       infoField = City311Store.dataFields.city311.info_field;
@@ -777,84 +778,140 @@ watch(
   newHoveredStateId => {
     // if (import.meta.env.VITE_DEBUG == 'true') console.log('Map.vue hoveredStateId watch, newHoveredStateId:', newHoveredStateId, 'map.getStyle().sources.nearby.data.features:', map.getStyle().sources.nearby.data.features);
     if (newHoveredStateId) {
-      if (import.meta.env.VITE_DEBUG == 'true') console.log('map.getStyle().sources.nearbyActivity.data.features', map.getStyle().sources.nearbyActivity.data.features, 'newHoveredStateId:', newHoveredStateId);
-      const feature = map.getStyle().sources.nearbyActivity.data.features.filter(feature => feature.properties.id === newHoveredStateId)[0];
-      const index = map.getStyle().sources.nearbyActivity.data.features.indexOf(feature);
-      if (import.meta.env.VITE_DEBUG == 'true') console.log('feature:', feature, 'index:', index, 'map.getStyle().sources.nearbyActivity.data.features:', map.getStyle().sources.nearbyActivity.data.features.filter(feature => feature.properties.id === newHoveredStateId)[0]);
-      map.getStyle().sources.nearbyActivity.data.features.splice(index, 1);
-      map.getStyle().sources.nearbyActivity.data.features.push(feature);
-      console.log("map.getSource('nearbyActivity'):", map.getSource('nearbyActivity'), "map.getStyle().sources.nearbyActivity.data:", map.getStyle().sources.nearbyActivity.data);
-      map.getSource('nearbyActivity').setData(map.getStyle().sources.nearbyActivity.data);
-      // if (import.meta.env.VITE_DEBUG == 'true') console.log('map.getStyle().sources:', map.getStyle().sources.filter(source => source.id === 'nearby')[0]);
-      map.setPaintProperty(
-        'nearbyActivity',
-        'circle-stroke-color',
-        ['match',
-        ['get', 'id'],
-        newHoveredStateId,
-        'black',
-        'white',
+      if (MainStore.currentTopic == 'nearby-activity') {
+        if (import.meta.env.VITE_DEBUG == 'true') console.log('map.getStyle().sources.nearbyActivity.data.features', map.getStyle().sources.nearbyActivity.data.features, 'newHoveredStateId:', newHoveredStateId);
+        const feature = map.getStyle().sources.nearbyActivity.data.features.filter(feature => feature.properties.id === newHoveredStateId)[0];
+        const index = map.getStyle().sources.nearbyActivity.data.features.indexOf(feature);
+        if (import.meta.env.VITE_DEBUG == 'true') console.log('feature:', feature, 'index:', index, 'map.getStyle().sources.nearbyActivity.data.features:', map.getStyle().sources.nearbyActivity.data.features.filter(feature => feature.properties.id === newHoveredStateId)[0]);
+        map.getStyle().sources.nearbyActivity.data.features.splice(index, 1);
+        map.getStyle().sources.nearbyActivity.data.features.push(feature);
+        console.log("map.getSource('nearbyActivity'):", map.getSource('nearbyActivity'), "map.getStyle().sources.nearbyActivity.data:", map.getStyle().sources.nearbyActivity.data);
+        map.getSource('nearbyActivity').setData(map.getStyle().sources.nearbyActivity.data);
+        // if (import.meta.env.VITE_DEBUG == 'true') console.log('map.getStyle().sources:', map.getStyle().sources.filter(source => source.id === 'nearby')[0]);
+        map.setPaintProperty(
+          'nearbyActivity',
+          'circle-stroke-color',
+          ['match',
+          ['get', 'id'],
+          newHoveredStateId,
+          'black',
+          'white',
+          ]
+        )
+        map.setPaintProperty(
+          'nearbyActivity', 
+          'circle-color',
+          ['match',
+          ['get', 'id'],
+          newHoveredStateId,
+          "#F3D661",
+          ['match',
+          ['get', 'type'],
+          'nearby311',
+          '#FF0000',
+          'city311',
+          '#FF0000',
+          'nearbyCrimeIncidents',
+          '#0096FF',
+          'nearbyZoningAppeals',
+          '#009900',
+          'nearbyVacantIndicatorPoints',
+          '#9400c6',
+          'nearbyConstructionPermits',
+          '#FF0000',
+          'nearbyDemolitionPermits',
+          '#0096FF',
+          'nearbyUnsafeBuildings',
+          '#009900',
+          /* other */ '#000000'
+          ]
         ]
-      )
-      map.setPaintProperty(
-        'nearbyActivity', 
-        'circle-color',
-        ['match',
-        ['get', 'id'],
-        newHoveredStateId,
-        "#F3D661",
-        ['match',
-        ['get', 'type'],
-        'nearby311',
-        '#FF0000',
-        'city311',
-        '#FF0000',
-        'nearbyCrimeIncidents',
-        '#0096FF',
-        'nearbyZoningAppeals',
-        '#009900',
-        'nearbyVacantIndicatorPoints',
-        '#9400c6',
-        'nearbyConstructionPermits',
-        '#FF0000',
-        'nearbyDemolitionPermits',
-        '#0096FF',
-        'nearbyUnsafeBuildings',
-        '#009900',
-        /* other */ '#000000'
+        );
+      } else if (MainStore.currentTopic == 'nearby-facilities') {
+        if (import.meta.env.VITE_DEBUG) console.log('map.getStyle().sources.nearbyFacilities.data.features:', map.getStyle().sources.nearbyFacilities.data.features);
+        const feature = map.getStyle().sources.nearbyFacilities.data.features.filter(feature => feature.properties.id === newHoveredStateId)[0];
+        const index = map.getStyle().sources.nearbyFacilities.data.features.indexOf(feature);
+        if (import.meta.env.VITE_DEBUG == 'true') console.log('feature:', feature, 'index:', index, 'map.getStyle().sources.nearbyFacilities.data.features:', map.getStyle().sources.nearbyFacilities.data.features.filter(feature => feature.properties.id === newHoveredStateId)[0]);
+        map.getStyle().sources.nearbyFacilities.data.features.splice(index, 1);
+        map.getStyle().sources.nearbyFacilities.data.features.push(feature);
+        console.log("map.getSource('nearbyFacilities'):", map.getSource('nearbyFacilities'), "map.getStyle().sources.nearbyFacilities.data:", map.getStyle().sources.nearbyFacilities.data);
+        map.getSource('nearbyFacilities').setData(map.getStyle().sources.nearbyFacilities.data);
+        map.setPaintProperty(
+          'nearbyFacilities',
+          'circle-stroke-color',
+          ['match',
+          ['get', 'id'],
+          newHoveredStateId,
+          'black',
+          'white',
+          ]
+        )
+        map.setPaintProperty(
+          'nearbyFacilities', 
+          'circle-color',
+          ['match',
+          ['get', 'id'],
+          newHoveredStateId,
+          "#F3D661",
+          ['match',
+          ['get', 'type'],
+          'nearbySchools',
+          '#FF0000',
+          /* other */ '#000000'
+          ]
         ]
-      ]
-      );
+        );
+      }
+
     } else {
-      map.setPaintProperty(
-        'nearbyActivity',
-        'circle-stroke-color',
-        'white',
-      )
-      map.setPaintProperty(
-        'nearbyActivity', 
-        'circle-color', 
-        ['match',
-        ['get', 'type'],
-        'nearby311',
-        '#FF0000',
-        'city311',
-        '#FF0000',
-        'nearbyCrimeIncidents',
-        '#0096FF',
-        'nearbyZoningAppeals',
-        '#009900',
-        'nearbyVacantIndicatorPoints',
-        '#9400c6',
-        'nearbyConstructionPermits',
-        '#FF0000',
-        'nearbyDemolitionPermits',
-        '#0096FF',
-        'nearbyUnsafeBuildings',
-        '#009900',
-        /* other */ '#000000'
-        ]
-      );
+
+      if (MainStore.currentTopic == 'nearby-activity') {
+        map.setPaintProperty(
+          'nearbyActivity',
+          'circle-stroke-color',
+          'white',
+        )
+        map.setPaintProperty(
+          'nearbyActivity', 
+          'circle-color', 
+          ['match',
+          ['get', 'type'],
+          'nearby311',
+          '#FF0000',
+          'city311',
+          '#FF0000',
+          'nearbyCrimeIncidents',
+          '#0096FF',
+          'nearbyZoningAppeals',
+          '#009900',
+          'nearbyVacantIndicatorPoints',
+          '#9400c6',
+          'nearbyConstructionPermits',
+          '#FF0000',
+          'nearbyDemolitionPermits',
+          '#0096FF',
+          'nearbyUnsafeBuildings',
+          '#009900',
+          /* other */ '#000000'
+          ]
+        );
+      } else if (MainStore.currentTopic == 'nearby-facilities') {
+        map.setPaintProperty(
+          'nearbyFacilities',
+          'circle-stroke-color',
+          'white',
+        )
+        map.setPaintProperty(
+          'nearbyFacilities', 
+          'circle-color', 
+          ['match',
+          ['get', 'type'],
+          'nearbySchools',
+          '#FF0000',
+          /* other */ '#000000'
+          ]
+        );
+      }
     }
   }
 )

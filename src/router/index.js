@@ -207,7 +207,7 @@ const dataFetch = async(to, from) => {
     MainStore.datafetchRunning = false;
     return;
   // } else if (to.params.topic === 'nearby-facilities' && dataSourcesLoadedArray.includes(to.params.data)) {
-  } else if (to.params.topic === 'nearby-facilities') {
+  } else if (to.params.topic === 'nearby-facilities' && dataSourcesLoadedArray.includes(to.params.data)) {
     MainStore.currentNearbyFacilitiesDataType = to.params.data;
     if (import.meta.env.VITE_DEBUG == 'true') console.log('dataFetch is still going, MainStore.currentNearbyFacilitiesDataType:', MainStore.currentNearbyFacilitiesDataType, 'to.params.data:', to.params.data);
     MainStore.datafetchRunning = false;
