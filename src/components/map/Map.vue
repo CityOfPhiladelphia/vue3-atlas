@@ -817,14 +817,14 @@ watch(
         ['get', 'SCHOOL_NUM'],
         parseInt(newHoveredSchoolId),
         0.09,
-        0.051,
+        0.050,
         ]
       )
     } else {
       map.setLayoutProperty(
         'schoolMarkers',
         'icon-size',
-        0.051,
+        0.050,
       )
     }
   }
