@@ -89,6 +89,8 @@ const cameraSrc = computed(() => {
   return MainStore.publicPath + 'images/camera.png';
 })
 
+const hoveredSchoolId = computed(() => { return MainStore.hoveredSchoolId; })
+
 onMounted(async () => {
   // if (import.meta.env.VITE_DEBUG == 'true') console.log('Map.vue onMounted route.params.topic:', route.params.topic, 'route.params.address:', route.params.address);
   
@@ -250,19 +252,50 @@ onMounted(async () => {
     }
   });
 
+  map.on('mouseenter', 'schoolMarkers', (e) => {
+    // if (import.meta.env.VITE_DEBUG == 'true') console.log('mouseenter, e:', e);
+    if (e.features.length > 0) {
+      // if (import.meta.env.VITE_DEBUG == 'true') console.log('map.getSource(nearby):', map.getSource('nearby'), 'map.getStyle().sources:', map.getStyle().sources);
+      map.getCanvas().style.cursor = 'pointer'
+      MainStore.hoveredSchoolId = e.features[0].properties.SCHOOL_NUM.toString();
+    }
+  });
+
+  map.on('mouseleave', 'schoolMarkers', () => {
+    if (hoveredSchoolId.value) {
+      map.getCanvas().style.cursor = ''
+      MainStore.hoveredSchoolId = null;
+    }
+  });
+
+  map.on('click', 'schoolMarkers', (e) => {
+    e.clickOnLayer = true;
+    const properties = e.features[0].properties;
+    if (import.meta.env.VITE_DEBUG) console.log('click schoolMarkers, properties:', properties);
+
+    MainStore.clickedMarkerId = properties.SCHOOL_NUM;
+
+    const popup = document.getElementsByClassName('maplibregl-popup');
+    if (popup.length) {
+      popup[0].remove();
+    }
+    new maplibregl.Popup({ className: 'my-class' })
+      .setLngLat(e.lngLat)
+      .setHTML(properties.SCHOOL_NAME_LABEL)
+      .setMaxWidth("300px")
+      .addTo(map);
+  });
+
   // if a nearby circle marker is clicked or hovered on, set its id in the MainStore as the hoveredStateId
   map.on('click', 'nearbyFacilities', (e) => {
+    e.clickOnLayer = true;
     const properties = e.features[0].properties;
     if (import.meta.env.VITE_DEBUG) console.log('click nearbyFacilities, properties:', properties);
-    let idField, infoField, row;
-    if (MainStore.currentTopic == 'nearby-facilities') {
-      idField = NearbyFacilitiesStore.dataFields[properties.type].id_field;
-      infoField = NearbyFacilitiesStore.dataFields[properties.type].info_field;
-      row = NearbyFacilitiesStore[properties.type].filter(row => row[idField] === properties.id)[0];
-    }
-    if (import.meta.env.VITE_DEBUG == 'true') console.log('nearby-facilities click, e:', e, 'properties:', properties, 'idField:', idField, 'infoField:', infoField, 'e.features[0]:', e.features[0], 'row:', row);
-    // if (import.meta.env.VITE_DEBUG == 'true') console.log('nearby-activity click, e:', e, 'properties:', properties, 'idField:', idField, 'e.features[0]:', e.features[0], 'type:', type, 'row:', row);
-    e.clickOnLayer = true;
+
+    const idField = NearbyFacilitiesStore.dataFields[properties.type].id_field;
+    const infoField = NearbyFacilitiesStore.dataFields[properties.type].info_field;
+    const row = NearbyFacilitiesStore[properties.type].filter(row => row[idField] === properties.id)[0];
+    
     MainStore.clickedMarkerId = e.features[0].properties.id;
     MainStore.hoveredStateId = e.features[0].properties.id;
     if (row.properties) {
@@ -770,6 +803,32 @@ watch(
       .addTo(map);
   }
 );
+
+watch(
+  () => hoveredSchoolId.value,
+  newHoveredSchoolId => {
+    const style = map.getStyle().layers.filter(layer => layer.id === 'schoolMarkers')[0].layout['icon-size'];
+    if (import.meta.env.VITE_DEBUG) console.log('Map.vue hoveredSchoolId watch, newHoveredSchoolId:', newHoveredSchoolId, 'style:', style, 'map.getStyle().sources.schoolMarkers.data.features:', map.getStyle().sources.schoolMarkers.data.features);
+    if (newHoveredSchoolId) {
+      map.setLayoutProperty(
+        'schoolMarkers',
+        'icon-size',
+        ['match',
+        ['get', 'SCHOOL_NUM'],
+        parseInt(newHoveredSchoolId),
+        0.09,
+        0.051,
+        ]
+      )
+    } else {
+      map.setLayoutProperty(
+        'schoolMarkers',
+        'icon-size',
+        0.051,
+      )
+    }
+  }
+)
 
 // for Nearby topic, watch the id of the circle marker that is hovered on to change the color of the circle
 const hoveredStateId = computed(() => { return MainStore.hoveredStateId; })

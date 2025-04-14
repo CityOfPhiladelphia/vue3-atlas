@@ -167,32 +167,39 @@ const highSchoolData = computed(() => {
 });
 
 const schoolsVertTableData = computed(() => {
-  if (geocodeElementarySchool.value == geocodeMiddleSchool.value) {
-    return [
-      {
-        label: 'Elementary & Middle School',
-        value: elementarySchoolData.value,
-      },
-      {
-        label: 'High School',
-        value: highSchoolData.value,
-      },
-    ];
-  } else {
-    return [
-      {
-        label: 'Elementary School',
-        value: elementarySchoolData.value,
-      },
-      {
-        label: 'Middle School',
-        value: middleSchoolData.value,
-      },
-      {
-        label: 'High School',
-        value: highSchoolData.value,
-      },
-    ];
+  if (elementarySchool.value && elementarySchool.value.properties && middleSchool.value && middleSchool.value.properties && highSchool.value && highSchool.value.properties) {
+    if (geocodeElementarySchool.value == geocodeMiddleSchool.value) {
+      return [
+        {
+          label: 'Elementary & Middle School',
+          value: elementarySchoolData.value,
+          class: elementarySchool.value.properties.SCHOOL_NUM,
+        },
+        {
+          label: 'High School',
+          value: highSchoolData.value,
+          class: highSchool.value.properties.SCHOOL_NUM,
+        },
+      ];
+    } else {
+      return [
+        {
+          label: 'Elementary School',
+          value: elementarySchoolData.value,
+          class: elementarySchool.value.properties.SCHOOL_NUM,
+        },
+        {
+          label: 'Middle School',
+          value: middleSchoolData.value,
+          class: middleSchool.value.properties.SCHOOL_NUM,
+        },
+        {
+          label: 'High School',
+          value: highSchoolData.value,
+          class: highSchool.value.properties.SCHOOL_NUM,
+        },
+      ];
+    }
   }
 });
 
@@ -222,6 +229,7 @@ watch (() => nearbySchoolsGeojson.value, (newGeojson) => {
 });
 
 const hoveredStateId = computed(() => { return MainStore.hoveredStateId; });
+const hoveredSchoolId = computed(() => { return MainStore.hoveredSchoolId; });
 
 const nearbySchoolsTableData = computed(() => {
   return {
@@ -249,6 +257,20 @@ const nearbySchoolsTableData = computed(() => {
   }
 });
 
+const handleCellClick = (e) => {
+  if (import.meta.env.VITE_DEBUG) console.log('handleCellClick is running, e:', e);
+};
+
+const handleCellMouseover = (e) => {
+  if (import.meta.env.VITE_DEBUG) console.log('handleCellMouseover is running, e:', e);
+  MainStore.hoveredSchoolId = e.toString();
+};
+
+const handleCellMouseleave = (e) => {
+  if (import.meta.env.VITE_DEBUG) console.log('handleCellMouseleave is running, e:', e);
+  MainStore.hoveredSchoolId = null;
+};
+
 </script>
 
 <template>
@@ -267,6 +289,10 @@ const nearbySchoolsTableData = computed(() => {
   <vertical-table
     table-id="assigned-schools"
     :data="schoolsVertTableData"
+    :hovered-id="hoveredSchoolId"
+    @clicked-cell="handleCellClick"
+    @hovered-cell="handleCellMouseover"
+    @unhovered-cell="handleCellMouseleave"
   />
 
   <div class="mt-5">

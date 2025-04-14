@@ -1098,16 +1098,6 @@ const nearbyFacilitiesDrawnMapStyle = mergeDeep(imageryInfo,{
       type: 'raster',
       tileSize: 256,
     },
-    // schoolMarker: {
-    //   type: 'geojson',
-    //   data: {
-    //     type: 'Feature',
-    //     geometry: {
-    //       type: 'Point',
-    //       coordinates: [],
-    //     }
-    //   }
-    // },
     schoolMarkers: {
       type: 'geojson',
       data: {

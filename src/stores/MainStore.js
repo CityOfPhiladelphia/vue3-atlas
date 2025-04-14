@@ -26,6 +26,7 @@ export const useMainStore = defineStore("MainStore", {
       clickedRow: [],
       clickedMarkerId: null,
       hoveredStateId: null,
+      hoveredSchoolId: null,
       selectedParcelId: null,
       fullScreenMapEnabled: false,
       fullScreenTopicsEnabled: false,

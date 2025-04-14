@@ -5,6 +5,9 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { useMainStore } from '@/stores/MainStore';
 const MainStore = useMainStore();
 
+import useScrolling from '@/composables/useScrolling';
+const { isElementInViewport } = useScrolling();
+
 import { useRouter, useRoute } from 'vue-router';
 const route = useRoute();
 const router = useRouter();
@@ -38,6 +41,19 @@ const setDataTypeInRouter = (newDataType) => {
   let startQuery = { ...route.query };
   router.push({ name: 'address-topic-and-data', params: { address: MainStore.currentAddress, topic: route.params.topic, data: newDataType }, query: { ...startQuery }});
 }
+
+const clickedMarkerId = computed(() => { return MainStore.clickedMarkerId; });
+
+watch(() => clickedMarkerId.value, (newClickedMarkerId) => {
+  if (newClickedMarkerId) {
+    if (import.meta.env.VITE_DEBUG) console.log('watch clickedMarkerId.value, newClickedMarkerId:', newClickedMarkerId);
+    const el = document.getElementsByClassName(newClickedMarkerId)[0];
+    const visible = isElementInViewport(el);
+    if (!visible && !MainStore.isMobileDevice) {
+      el.scrollIntoView({ block: 'center' });
+    }
+  }
+});
 
 onMounted( () => {
   if (import.meta.env.VITE_DEBUG == 'true') console.log('NearbyFacilities.vue onMounted is running, route.params.data:', route.params.data);
