@@ -140,7 +140,7 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
     async fetchData(dataType) {
       if (import.meta.env.VITE_DEBUG) console.log('fetchData is running, dataType:', dataType);
       this.setLoadingData(false);
-      if (dataType === 'publicSchools') {
+      if (dataType === 'public-schools') {
         await this.fillNearbySchools();
       }
     },
@@ -239,13 +239,16 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
 
         const response = await axios.get(url, { params });
         if (response.status === 200) {
+          if (import.meta.env.VITE_DEBUG) console.log('this.elementarySchool:', this.elementarySchool.id, 'this.middleSchool:', this.middleSchool.id, 'this.highSchool:', this.highSchool.id);
+          const designatedSchools = [this.elementarySchool.id, this.middleSchool.id, this.highSchool.id];
           const data = await response.data;
 
           let features = (data || {}).features;
           const feature = GeocodeStore.aisData.features[0];
           const from = point(feature.geometry.coordinates);
 
-          features = features.map(feature => {
+          features = features.filter(feature => !designatedSchools.includes(feature.id)).map(feature => {
+            if (import.meta.env.VITE_DEBUG) console.log('feature:', feature);
             const featureCoords = feature.geometry.coordinates;
             let dist;
             if (Array.isArray(featureCoords[0])) {

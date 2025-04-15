@@ -1222,7 +1222,7 @@ const cityServicesDrawnMapStyle = mergeDeep(imageryInfo,{
           'purple-school-solid',
           'red-school-solid',
         ],
-        'icon-anchor' : 'bottom',
+        'icon-anchor' : 'center',
         'icon-size': .05,
         "icon-allow-overlap" : true,
         "text-allow-overlap": true,

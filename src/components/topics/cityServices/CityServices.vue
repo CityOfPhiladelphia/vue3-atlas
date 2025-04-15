@@ -14,11 +14,11 @@ const router = useRouter();
 
 import NearbySchools from '@/components/topics/cityServices/NearbySchools.vue';
 
-const selectedDataType = ref('publicSchools');
+const selectedDataType = ref('public-schools');
 const dataTypes = {
-  publicSafety: 'Public Safety',
-  publicSchools: 'Public Schools',
-  recreationFacilities: 'Recreation Facilities',
+  'public-safety': 'Public Safety',
+  'public-schools': 'Public Schools',
+  'recreation-facilities': 'Recreation Facilities',
 };
 
 const currentCityServicesDataType = computed(() => {
@@ -91,7 +91,7 @@ onMounted( () => {
       </div>
     </div>
 
-    <NearbySchools v-if="currentCityServicesDataType == 'publicSchools'" />
+    <NearbySchools v-if="currentCityServicesDataType == 'public-schools'" />
 
   </section>
 </template>
