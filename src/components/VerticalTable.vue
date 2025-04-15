@@ -34,10 +34,10 @@ defineProps({
         <th>{{ field.label }}</th>
         <td
           v-html="field.value"
-          :class="hoveredId == field.class ? 'active-hover ' + field.class.toString() : 'inactive ' + field.class.toString()"
+          :class="hoveredId == field.class ? 'active-hover ' + field.class : 'inactive ' + field.class"
           @mouseenter="$emit('hoveredCell', field.class)"
           @mouseleave="$emit('unhoveredCell', field.class)"
-          @click="$emit('clickedCell', field.class)"
+          @click="$emit('clickedCell', field.label)"
         />
       </tr>
     </tbody>

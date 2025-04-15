@@ -3,7 +3,8 @@ import { useMainStore } from '@/stores/MainStore';
 export default function useScrolling() {
 
   const handleRowClick = (e, id, type) => {
-    if (import.meta.env.VITE_DEBUG == 'true') console.log('handleRowClick, e:', e, 'e.row.lat:', e.row.lat, 'id:', id);
+    if (import.meta.env.VITE_DEBUG == 'true') console.log('handleRowClick, e:', e, 'id:', id);
+    // if (import.meta.env.VITE_DEBUG == 'true') console.log('handleRowClick, e:', e, 'e.row.lat:', e.row.lat, 'id:', id);
     let clickedRow = {
       type: type,
       id: e.row[id],

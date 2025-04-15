@@ -725,21 +725,6 @@ const pollingPlaceCoordinates = computed(() => {
 });
 
 watchEffect(() => {
-  if (NearbyFacilitiesStore.nearbySchools) {
-    const feat2 = featureCollection(NearbyFacilitiesStore.nearbySchools);
-    const bounds = bbox(buffer(feat2, 2000, {units: 'feet'}));
-    map.fitBounds(bounds);
-  }
-});
-
-watchEffect(() => {
-  if (NearbyFacilitiesStore.elementarySchool && NearbyFacilitiesStore.middleSchool && NearbyFacilitiesStore.highSchool) {
-    const feat = featureCollection([NearbyFacilitiesStore.elementarySchool, NearbyFacilitiesStore.middleSchool, NearbyFacilitiesStore.highSchool]);
-    map.getSource('schoolMarkers').setData(feat);
-  }
-});
-
-watchEffect(() => {
   if (VotingStore.divisions.rows && VotingStore.pollingPlaces.rows) {
     const newDivision = feature(votingDivision.value);
     if (import.meta.env.VITE_DEBUG == 'true') console.log('watchEffect 1, newDivision:', newDivision, 'votingDivision.value:', votingDivision.value, 'pollingPlaceCoordinates.value:', pollingPlaceCoordinates.value);
@@ -817,18 +802,35 @@ watch(
         ['get', 'SCHOOL_NUM'],
         parseInt(newHoveredSchoolId),
         0.09,
-        0.050,
+        0.05,
         ]
       )
     } else {
       map.setLayoutProperty(
         'schoolMarkers',
         'icon-size',
-        0.050,
+        0.05,
       )
     }
   }
 )
+
+const allSchools = computed(() => {
+  const elemSchool = NearbyFacilitiesStore.elementarySchool && NearbyFacilitiesStore.elementarySchool.id ? NearbyFacilitiesStore.elementarySchool.id : 0;
+  const midSchool = NearbyFacilitiesStore.middleSchool && NearbyFacilitiesStore.middleSchool.id ? NearbyFacilitiesStore.elementarySchool.id : 0;
+  const highSchool = NearbyFacilitiesStore.highSchool && NearbyFacilitiesStore.highSchool.id ? NearbyFacilitiesStore.elementarySchool.id : 0;
+  if (import.meta.env.VITE_DEBUG) console.log('allSchools, elemSchool:', elemSchool, 'midSchool:', midSchool, 'highSchool:', highSchool);
+  return elemSchool + midSchool + highSchool;
+});
+
+watch(() => allSchools.value, (newValue) => {
+  if (import.meta.env.VITE_DEBUG) console.log('watch for adding school markers, newValue:', newValue);
+  setTimeout(() => {
+    if (import.meta.env.VITE_DEBUG) console.log('setTimeout for adding school markers, newValue:', newValue);
+    const feat = featureCollection([NearbyFacilitiesStore.elementarySchool, NearbyFacilitiesStore.middleSchool, NearbyFacilitiesStore.highSchool]);
+    map.getSource('schoolMarkers').setData(feat);
+  }, 1000);
+});
 
 // for Nearby topic, watch the id of the circle marker that is hovered on to change the color of the circle
 const hoveredStateId = computed(() => { return MainStore.hoveredStateId; })

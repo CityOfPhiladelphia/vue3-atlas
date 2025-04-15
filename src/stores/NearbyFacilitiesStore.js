@@ -262,8 +262,8 @@ export const useNearbyFacilitiesStore = defineStore('NearbyFacilitiesStore', {
               const to = point(featureCoords);
               dist = distance(from, to, { units: 'miles' });
             }
-            const distFeet = parseInt(dist * 5280);
-            feature.properties.distance_ft = distFeet + ' ft';
+            // const distFeet = parseInt(dist * 5280);
+            feature.properties.distance_mi = dist.toFixed(2) + ' mi';
             feature.properties.schoolInfo = '<b>' + feature.properties.SCHOOL_NAME_LABEL + '</b><br>' + feature.properties.STREET_ADDRESS + '<br>Philadelphia, PA ' + feature.properties.ZIP_CODE + '<br>' + feature.properties.PHONE_NUMBER;
             return feature;
           });

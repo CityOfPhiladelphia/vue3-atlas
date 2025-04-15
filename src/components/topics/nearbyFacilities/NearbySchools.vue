@@ -1,7 +1,9 @@
 <script setup>
 
-import { computed, watch } from 'vue';
+import { computed, watch, watchEffect } from 'vue';
 import { point, featureCollection } from '@turf/helpers';
+import bbox from '@turf/bbox';
+import buffer from '@turf/buffer';
 
 import { useGeocodeStore } from '@/stores/GeocodeStore';
 const GeocodeStore = useGeocodeStore();
@@ -181,6 +183,27 @@ const schoolsVertTableData = computed(() => {
           class: highSchool.value.properties.SCHOOL_NUM,
         },
       ];
+    } else if (geocodeMiddleSchool.value == geocodeHighSchool.value) {
+      return [
+        {
+          label: 'Elementary & Middle School',
+          value: elementarySchoolData.value,
+          class: elementarySchool.value.properties.SCHOOL_NUM,
+        },
+        {
+          label: 'High School',
+          value: highSchoolData.value,
+          class: highSchool.value.properties.SCHOOL_NUM,
+        },
+      ];
+    } else if (geocodeElementarySchool.value == geocodeMiddleSchool.value == geocodeHighSchool.value) {
+      return [
+        {
+          label: 'Elementary, Middle, and High School',
+          value: elementarySchoolData.value,
+          class: elementarySchool.value.properties.SCHOOL_NUM,
+        },
+      ];
     } else {
       return [
         {
@@ -209,23 +232,18 @@ const nearbySchools = computed(() => {
 
 const nearbySchoolsGeojson = computed(() => {
   if (!nearbySchools.value) return null;
-  // nearbySchools.value.map(item => {
-  //   // if (import.meta.env.VITE_DEBUG) console.log('item:', item);
-  //   item.properties.id = item.properties.AUN;
-  //   item.properties.type = 'nearbySchools';
-  // });
-  // if (import.meta.env.VITE_DEBUG) console.log('nearbySchoolsAdded:', nearbySchoolsAdded);
-  
   return nearbySchools.value.map(item => point(item.geometry.coordinates, { id: item.id, type: 'nearbySchools' }));
 
 })
 
-watch (() => nearbySchoolsGeojson.value, (newGeojson) => {
+watch(() => nearbySchoolsGeojson.value, (newGeojson) => {
   if (import.meta.env.VITE_DEBUG == 'true') console.log('watch nearbySchoolsGeojson.value, newGeojson:', newGeojson);
-  // if (!newGeojson) return;
   const map = MapStore.map;
   if (import.meta.env.VITE_DEBUG == 'true') console.log('watch, map:', map);
-  if (map.getSource) map.getSource('nearbyFacilities').setData(featureCollection(newGeojson));
+  const feat = featureCollection(newGeojson);
+  if (map.getSource) map.getSource('nearbyFacilities').setData(feat);
+  const bounds = bbox(buffer(feat, 2000, {units: 'feet'}));
+  map.fitBounds(bounds);
 });
 
 const hoveredStateId = computed(() => { return MainStore.hoveredStateId; });
@@ -245,12 +263,7 @@ const nearbySchoolsTableData = computed(() => {
       },
       {
         label: 'Distance',
-        field: 'properties.distance_ft',
-        sortFn: (x, y) => {
-          const xSplit = parseInt(x.split(' ')[0]);
-          const ySplit = parseInt(y.split(' ')[0]);
-          return (xSplit < ySplit ? -1 : (xSplit > ySplit ? 1 : 0));
-        },
+        field: 'properties.distance_mi',
       },
     ],
     rows: nearbySchools.value || [],
@@ -258,7 +271,15 @@ const nearbySchoolsTableData = computed(() => {
 });
 
 const handleCellClick = (e) => {
-  if (import.meta.env.VITE_DEBUG) console.log('handleCellClick is running, e:', e);
+  // if (import.meta.env.VITE_DEBUG) console.log('handleCellClick is running, e:', e);
+  const map = MapStore.map;
+  if (e.includes('Elementary')) {
+    map.flyTo({ center: elementarySchool.value.geometry.coordinates });
+  } else if (e.includes('Middle')) {
+    map.flyTo({ center: middleSchool.value.geometry.coordinates });
+  } else if (e.includes('High')) {
+    map.flyTo({ center: highSchool.value.geometry.coordinates });
+  }
 };
 
 const handleCellMouseover = (e) => {
@@ -294,6 +315,7 @@ const handleCellMouseleave = (e) => {
     @hovered-cell="handleCellMouseover"
     @unhovered-cell="handleCellMouseleave"
   />
+  <!-- @clicked-cell="handleCellClick" -->
 
   <div class="mt-5">
     <h2 class="subtitle mb-3 is-5">
@@ -313,7 +335,7 @@ const handleCellMouseleave = (e) => {
     :rows="nearbySchoolsTableData.rows"
     :row-style-class="row => hoveredStateId === row.id ? 'active-hover ' + row.id : 'inactive ' + row.id"
     style-class="table nearby-table"
-    :sort-options="{ initialSortBy: {field: 'properties.distance_ft', type: 'asc'}}"
+    :sort-options="{ initialSortBy: {field: 'properties.distance_mi', type: 'asc'}}"
     @row-mouseenter="handleRowMouseover($event, 'id')"
     @row-mouseleave="handleRowMouseleave"
     @row-click="handleRowClick($event, 'id', 'nearbySchools')"
