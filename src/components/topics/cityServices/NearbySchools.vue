@@ -1,6 +1,6 @@
 <script setup>
 
-import { computed, watch, watchEffect } from 'vue';
+import { computed, watch, nextTick } from 'vue';
 import { point, featureCollection } from '@turf/helpers';
 import bbox from '@turf/bbox';
 import buffer from '@turf/buffer';
@@ -9,8 +9,8 @@ import maplibregl from 'maplibre-gl';
 
 import { useGeocodeStore } from '@/stores/GeocodeStore';
 const GeocodeStore = useGeocodeStore();
-import { useNearbyFacilitiesStore } from '@/stores/NearbyFacilitiesStore';
-const NearbyFacilitiesStore = useNearbyFacilitiesStore();
+import { useCityServicesStore } from '@/stores/CityServicesStore';
+const CityServicesStore = useCityServicesStore();
 import { useMapStore } from '@/stores/MapStore';
 const MapStore = useMapStore();
 import { useMainStore } from '@/stores/MainStore';
@@ -21,7 +21,7 @@ const { handleRowClick, handleRowMouseover, handleRowMouseleave } = useScrolling
 
 import VerticalTable from '@/components/VerticalTable.vue';
 
-const loadingData = computed(() => NearbyFacilitiesStore.loadingData );
+const loadingData = computed(() => CityServicesStore.loadingData );
 
 const geocodeElementarySchool = computed(() => {
   let value = null;
@@ -47,8 +47,8 @@ const geocodeHighSchool = computed(() => {
 
 const esCatchment = computed(() => {
   let catchment = {};
-  if (NearbyFacilitiesStore.esCatchments && NearbyFacilitiesStore.esCatchments.features) {
-    catchment = NearbyFacilitiesStore.esCatchments.features.find(catchment => {
+  if (CityServicesStore.esCatchments && CityServicesStore.esCatchments.features) {
+    catchment = CityServicesStore.esCatchments.features.find(catchment => {
       if (catchment.properties.ES_NAME && geocodeElementarySchool.value) {
         return catchment.properties.ES_NAME == geocodeElementarySchool.value;
       } else {
@@ -61,8 +61,8 @@ const esCatchment = computed(() => {
 
 const msCatchment = computed(() => {
   let catchment = {};
-  if (NearbyFacilitiesStore.msCatchments && NearbyFacilitiesStore.msCatchments.features) {
-    catchment = NearbyFacilitiesStore.msCatchments.features.find(catchment => {
+  if (CityServicesStore.msCatchments && CityServicesStore.msCatchments.features) {
+    catchment = CityServicesStore.msCatchments.features.find(catchment => {
       if (catchment.properties.ES_NAME && geocodeElementarySchool.value) {
         return catchment.properties.ES_NAME == geocodeElementarySchool.value;
       } else {
@@ -75,8 +75,8 @@ const msCatchment = computed(() => {
 
 const hsCatchment = computed(() => {
   let catchment = {};
-  if (NearbyFacilitiesStore.hsCatchments && NearbyFacilitiesStore.hsCatchments.features) {
-    catchment = NearbyFacilitiesStore.hsCatchments.features.find(catchment => {
+  if (CityServicesStore.hsCatchments && CityServicesStore.hsCatchments.features) {
+    catchment = CityServicesStore.hsCatchments.features.find(catchment => {
       if (catchment.properties.ES_NAME && geocodeElementarySchool.value) {
         return catchment.properties.ES_NAME == geocodeElementarySchool.value;
       } else {
@@ -89,9 +89,9 @@ const hsCatchment = computed(() => {
 
 const elementarySchool = computed(() => {
   let school = {};
-  if (NearbyFacilitiesStore.allSchools && NearbyFacilitiesStore.allSchools.features && esCatchment.value && esCatchment.value.properties) {
+  if (CityServicesStore.allSchools && CityServicesStore.allSchools.features && esCatchment.value && esCatchment.value.properties) {
     if (import.meta.env.VITE_DEBUG) console.log('inside if');
-    school = NearbyFacilitiesStore.allSchools.features.find(school => {
+    school = CityServicesStore.allSchools.features.find(school => {
       if (school.properties.LOCATION_ID) {
         return school.properties.LOCATION_ID == esCatchment.value.properties.ES_ID.toString();
       } else {
@@ -104,16 +104,17 @@ const elementarySchool = computed(() => {
 });
 
 watch(() => elementarySchool.value, (newElementarySchool) => {
-  // if (import.meta.env.VITE_DEBUG) console.log('watch ElementarySchool.value:', newElementarySchool);
+  if (import.meta.env.VITE_DEBUG) console.log('watch ElementarySchool.value:', newElementarySchool);
   if (newElementarySchool && newElementarySchool.properties) {
-    NearbyFacilitiesStore.elementarySchool = newElementarySchool;
+    CityServicesStore.elementarySchool = newElementarySchool;
   }
-});
+}, { immediate: true }
+);
 
 const middleSchool = computed(() => {
   let school = null;
-  if (NearbyFacilitiesStore.allSchools && NearbyFacilitiesStore.allSchools.features && msCatchment.value && msCatchment.value.properties) {
-    school = NearbyFacilitiesStore.allSchools.features.find(school => {
+  if (CityServicesStore.allSchools && CityServicesStore.allSchools.features && msCatchment.value && msCatchment.value.properties) {
+    school = CityServicesStore.allSchools.features.find(school => {
       if (school.properties.LOCATION_ID) {
         return school.properties.LOCATION_ID == msCatchment.value.properties.MS_ID.toString();
       } else {
@@ -125,16 +126,17 @@ const middleSchool = computed(() => {
 });
 
 watch(() => middleSchool.value, (newMiddleSchool) => {
-  // if (import.meta.env.VITE_DEBUG) console.log('watch middleSchool.value:', newMiddleSchool);
+  if (import.meta.env.VITE_DEBUG) console.log('watch middleSchool.value:', newMiddleSchool);
   if (newMiddleSchool && newMiddleSchool.properties) {
-    NearbyFacilitiesStore.middleSchool = newMiddleSchool;
+    CityServicesStore.middleSchool = newMiddleSchool;
   }
-});
+}, { immediate: true }
+);
 
 const highSchool = computed(() => {
   let school = null;
-  if (NearbyFacilitiesStore.allSchools && NearbyFacilitiesStore.allSchools.features && hsCatchment.value && hsCatchment.value.properties) {
-    school = NearbyFacilitiesStore.allSchools.features.find(school => {
+  if (CityServicesStore.allSchools && CityServicesStore.allSchools.features && hsCatchment.value && hsCatchment.value.properties) {
+    school = CityServicesStore.allSchools.features.find(school => {
       if (school.properties.LOCATION_ID && hsCatchment.value && hsCatchment.value.properties) {
         return school.properties.LOCATION_ID == hsCatchment.value.properties.HS_ID.toString();
       } else {
@@ -148,25 +150,26 @@ const highSchool = computed(() => {
 watch(() => highSchool.value, (newHighSchool) => {
   // if (import.meta.env.VITE_DEBUG) console.log('watch highSchool.value:', newHighSchool);
   if (newHighSchool && newHighSchool.properties) {
-    NearbyFacilitiesStore.highSchool = newHighSchool;
+    CityServicesStore.highSchool = newHighSchool;
   }
-});
+}, { immediate: true }
+);
 
 const elementarySchoolData = computed(() => {
   if (elementarySchool.value && elementarySchool.value.properties) {
-    return '<b>' + elementarySchool.value.properties.SCHOOL_NAME_LABEL + '</b><br>' + elementarySchool.value.properties.STREET_ADDRESS + '<br>Philadelphia, PA ' + elementarySchool.value.properties.ZIP_CODE + '<br>' + elementarySchool.value.properties.PHONE_NUMBER + '<br>' + elementarySchool.value.properties.GRADE_ORG;
+    return '<b>' + elementarySchool.value.properties.SCHOOL_NAME_LABEL + '</b><br>' + elementarySchool.value.properties.STREET_ADDRESS + '<br>Philadelphia, PA ' + elementarySchool.value.properties.ZIP_CODE + '<br>' + elementarySchool.value.properties.PHONE_NUMBER + '<br>Grades: ' + elementarySchool.value.properties.GRADE_ORG;
   }
 });
 
 const middleSchoolData = computed(() => {
   if (middleSchool.value && middleSchool.value.properties) {
-    return '<b>' + middleSchool.value.properties.SCHOOL_NAME_LABEL + '</b><br>' + middleSchool.value.properties.STREET_ADDRESS + '<br>Philadelphia, PA ' + middleSchool.value.properties.ZIP_CODE + '<br>' + middleSchool.value.properties.PHONE_NUMBER + '<br>' + middleSchool.value.properties.GRADE_ORG;
+    return '<b>' + middleSchool.value.properties.SCHOOL_NAME_LABEL + '</b><br>' + middleSchool.value.properties.STREET_ADDRESS + '<br>Philadelphia, PA ' + middleSchool.value.properties.ZIP_CODE + '<br>' + middleSchool.value.properties.PHONE_NUMBER + '<br>Grades: ' + middleSchool.value.properties.GRADE_ORG;
   }
 });
 
 const highSchoolData = computed(() => {
   if (highSchool.value && highSchool.value.properties) {
-    return '<b>' + highSchool.value.properties.SCHOOL_NAME_LABEL + '</b><br>' + highSchool.value.properties.STREET_ADDRESS + '<br>Philadelphia, PA ' + highSchool.value.properties.ZIP_CODE + '<br>' + highSchool.value.properties.PHONE_NUMBER + '<br>' + highSchool.value.properties.GRADE_ORG;
+    return '<b>' + highSchool.value.properties.SCHOOL_NAME_LABEL + '</b><br>' + highSchool.value.properties.STREET_ADDRESS + '<br>Philadelphia, PA ' + highSchool.value.properties.ZIP_CODE + '<br>' + highSchool.value.properties.PHONE_NUMBER + '<br>Grades: ' + highSchool.value.properties.GRADE_ORG;
   }
 });
 
@@ -229,7 +232,7 @@ const schoolsVertTableData = computed(() => {
 });
 
 const nearbySchools = computed(() => {
-  return NearbyFacilitiesStore.nearbySchools;
+  return CityServicesStore.nearbySchools;
 })
 
 const nearbySchoolsGeojson = computed(() => {
@@ -243,7 +246,7 @@ watch(() => nearbySchoolsGeojson.value, (newGeojson) => {
   const map = MapStore.map;
   if (import.meta.env.VITE_DEBUG == 'true') console.log('watch, map:', map);
   const feat = featureCollection(newGeojson);
-  if (map.getSource) map.getSource('nearbyFacilities').setData(feat);
+  if (map.getSource) map.getSource('cityServices').setData(feat);
   const bounds = bbox(buffer(feat, 2000, {units: 'feet'}));
   map.fitBounds(bounds);
 });
@@ -318,12 +321,12 @@ const handleCellMouseleave = (e) => {
 
   <div class="mt-5">
     <h2 class="subtitle mb-3 is-5">
-      Neighborhood Schools
-      <font-awesome-icon
+      Designated Neighborhood Schools
+      <!-- <font-awesome-icon
         v-if="loadingData"
         icon="fa-solid fa-spinner"
         spin
-      />
+      /> -->
     </h2>
   </div>
 
@@ -335,11 +338,10 @@ const handleCellMouseleave = (e) => {
     @hovered-cell="handleCellMouseover"
     @unhovered-cell="handleCellMouseleave"
   />
-  <!-- @clicked-cell="handleCellClick" -->
 
   <div class="mt-5">
     <h2 class="subtitle mb-3 is-5">
-      Nearby Citywide, Special Admission, and Charter Schools
+      Nearby Public Schools
       <font-awesome-icon
         v-if="loadingData"
         icon="fa-solid fa-spinner"
@@ -367,7 +369,7 @@ const handleCellMouseleave = (e) => {
           spin
         />
       </div>
-      <div v-else-if="NearbyFacilitiesStore.dataError">
+      <div v-else-if="CityServicesStore.dataError">
         Data loading error - try refreshing the page
       </div>
       <div v-else>

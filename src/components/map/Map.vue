@@ -32,8 +32,8 @@ import { useVotingStore } from '@/stores/VotingStore.js'
 const VotingStore = useVotingStore();
 import { useNearbyActivityStore } from '@/stores/NearbyActivityStore';
 const NearbyActivityStore = useNearbyActivityStore();
-import { useNearbyFacilitiesStore } from '@/stores/NearbyFacilitiesStore';
-const NearbyFacilitiesStore = useNearbyFacilitiesStore();
+import { useCityServicesStore } from '@/stores/CityServicesStore';
+const CityServicesStore = useCityServicesStore();
 import { useCity311Store } from '@/stores/City311Store';
 const City311Store = useCity311Store();
 
@@ -287,14 +287,14 @@ onMounted(async () => {
   });
 
   // if a nearby circle marker is clicked or hovered on, set its id in the MainStore as the hoveredStateId
-  map.on('click', 'nearbyFacilities', (e) => {
+  map.on('click', 'cityServices', (e) => {
     e.clickOnLayer = true;
     const properties = e.features[0].properties;
-    if (import.meta.env.VITE_DEBUG) console.log('click nearbyFacilities, properties:', properties);
+    if (import.meta.env.VITE_DEBUG) console.log('click cityServices, properties:', properties);
 
-    const idField = NearbyFacilitiesStore.dataFields[properties.type].id_field;
-    const infoField = NearbyFacilitiesStore.dataFields[properties.type].info_field;
-    const row = NearbyFacilitiesStore[properties.type].filter(row => row[idField] === properties.id)[0];
+    const idField = CityServicesStore.dataFields[properties.type].id_field;
+    const infoField = CityServicesStore.dataFields[properties.type].info_field;
+    const row = CityServicesStore[properties.type].filter(row => row[idField] === properties.id)[0];
     
     MainStore.clickedMarkerId = e.features[0].properties.id;
     MainStore.hoveredStateId = e.features[0].properties.id;
@@ -313,7 +313,7 @@ onMounted(async () => {
       .addTo(map);
   });
 
-  map.on('mouseenter', 'nearbyFacilities', (e) => {
+  map.on('mouseenter', 'cityServices', (e) => {
     // if (import.meta.env.VITE_DEBUG == 'true') console.log('mouseenter, e:', e);
     if (e.features.length > 0) {
       // if (import.meta.env.VITE_DEBUG == 'true') console.log('map.getSource(nearby):', map.getSource('nearby'), 'map.getStyle().sources:', map.getStyle().sources);
@@ -322,7 +322,7 @@ onMounted(async () => {
     }
   });
 
-  map.on('mouseleave', 'nearbyFacilities', () => {
+  map.on('mouseleave', 'cityServices', () => {
     if (hoveredStateId.value) {
       map.getCanvas().style.cursor = ''
       MainStore.hoveredStateId = null;
@@ -766,10 +766,10 @@ watch(
       idField = NearbyActivityStore.dataFields[newClickedRow.type].id_field;
       infoField = NearbyActivityStore.dataFields[newClickedRow.type].info_field;
       row = NearbyActivityStore[newClickedRow.type].rows.filter(row => row[idField] === newClickedRow.id)[0];
-    } else if (MainStore.currentTopic == 'nearby-facilities') {
-      idField = NearbyFacilitiesStore.dataFields[newClickedRow.type].id_field;
-      infoField = NearbyFacilitiesStore.dataFields[newClickedRow.type].info_field;
-      row = NearbyFacilitiesStore[newClickedRow.type].filter(row => row[idField] === newClickedRow.id)[0];
+    } else if (MainStore.currentTopic == 'city-services') {
+      idField = CityServicesStore.dataFields[newClickedRow.type].id_field;
+      infoField = CityServicesStore.dataFields[newClickedRow.type].info_field;
+      row = CityServicesStore[newClickedRow.type].filter(row => row[idField] === newClickedRow.id)[0];
     } else if (MainStore.currentTopic == 'city311') {
       idField = City311Store.dataFields.city311.id_field;
       infoField = City311Store.dataFields.city311.info_field;
@@ -816,9 +816,9 @@ watch(
 )
 
 const allSchools = computed(() => {
-  const elemSchool = NearbyFacilitiesStore.elementarySchool && NearbyFacilitiesStore.elementarySchool.id ? NearbyFacilitiesStore.elementarySchool.id : 0;
-  const midSchool = NearbyFacilitiesStore.middleSchool && NearbyFacilitiesStore.middleSchool.id ? NearbyFacilitiesStore.elementarySchool.id : 0;
-  const highSchool = NearbyFacilitiesStore.highSchool && NearbyFacilitiesStore.highSchool.id ? NearbyFacilitiesStore.elementarySchool.id : 0;
+  const elemSchool = CityServicesStore.elementarySchool && CityServicesStore.elementarySchool.id ? CityServicesStore.elementarySchool.id : 0;
+  const midSchool = CityServicesStore.middleSchool && CityServicesStore.middleSchool.id ? CityServicesStore.elementarySchool.id : 0;
+  const highSchool = CityServicesStore.highSchool && CityServicesStore.highSchool.id ? CityServicesStore.elementarySchool.id : 0;
   if (import.meta.env.VITE_DEBUG) console.log('allSchools, elemSchool:', elemSchool, 'midSchool:', midSchool, 'highSchool:', highSchool);
   return elemSchool + midSchool + highSchool;
 });
@@ -827,7 +827,7 @@ watch(() => allSchools.value, (newValue) => {
   if (import.meta.env.VITE_DEBUG) console.log('watch for adding school markers, newValue:', newValue);
   setTimeout(() => {
     if (import.meta.env.VITE_DEBUG) console.log('setTimeout for adding school markers, newValue:', newValue);
-    const feat = featureCollection([NearbyFacilitiesStore.elementarySchool, NearbyFacilitiesStore.middleSchool, NearbyFacilitiesStore.highSchool]);
+    const feat = featureCollection([CityServicesStore.elementarySchool, CityServicesStore.middleSchool, CityServicesStore.highSchool]);
     map.getSource('schoolMarkers').setData(feat);
   }, 1000);
 });
@@ -888,17 +888,17 @@ watch(
           ]
         ]
         );
-      } else if (MainStore.currentTopic == 'nearby-facilities') {
-        if (import.meta.env.VITE_DEBUG) console.log('map.getStyle().sources.nearbyFacilities.data.features:', map.getStyle().sources.nearbyFacilities.data.features);
-        const feature = map.getStyle().sources.nearbyFacilities.data.features.filter(feature => feature.properties.id === newHoveredStateId)[0];
-        const index = map.getStyle().sources.nearbyFacilities.data.features.indexOf(feature);
-        if (import.meta.env.VITE_DEBUG == 'true') console.log('feature:', feature, 'index:', index, 'map.getStyle().sources.nearbyFacilities.data.features:', map.getStyle().sources.nearbyFacilities.data.features.filter(feature => feature.properties.id === newHoveredStateId)[0]);
-        map.getStyle().sources.nearbyFacilities.data.features.splice(index, 1);
-        map.getStyle().sources.nearbyFacilities.data.features.push(feature);
-        console.log("map.getSource('nearbyFacilities'):", map.getSource('nearbyFacilities'), "map.getStyle().sources.nearbyFacilities.data:", map.getStyle().sources.nearbyFacilities.data);
-        map.getSource('nearbyFacilities').setData(map.getStyle().sources.nearbyFacilities.data);
+      } else if (MainStore.currentTopic == 'city-services') {
+        if (import.meta.env.VITE_DEBUG) console.log('map.getStyle().sources.cityServices.data.features:', map.getStyle().sources.cityServices.data.features);
+        const feature = map.getStyle().sources.cityServices.data.features.filter(feature => feature.properties.id === newHoveredStateId)[0];
+        const index = map.getStyle().sources.cityServices.data.features.indexOf(feature);
+        if (import.meta.env.VITE_DEBUG == 'true') console.log('feature:', feature, 'index:', index, 'map.getStyle().sources.cityServices.data.features:', map.getStyle().sources.cityServices.data.features.filter(feature => feature.properties.id === newHoveredStateId)[0]);
+        map.getStyle().sources.cityServices.data.features.splice(index, 1);
+        map.getStyle().sources.cityServices.data.features.push(feature);
+        console.log("map.getSource('cityServices'):", map.getSource('cityServices'), "map.getStyle().sources.cityServices.data:", map.getStyle().sources.cityServices.data);
+        map.getSource('cityServices').setData(map.getStyle().sources.cityServices.data);
         map.setPaintProperty(
-          'nearbyFacilities',
+          'cityServices',
           'circle-stroke-color',
           ['match',
           ['get', 'id'],
@@ -908,7 +908,7 @@ watch(
           ]
         )
         map.setPaintProperty(
-          'nearbyFacilities', 
+          'cityServices', 
           'circle-color',
           ['match',
           ['get', 'id'],
@@ -956,14 +956,14 @@ watch(
           /* other */ '#000000'
           ]
         );
-      } else if (MainStore.currentTopic == 'nearby-facilities') {
+      } else if (MainStore.currentTopic == 'city-services') {
         map.setPaintProperty(
-          'nearbyFacilities',
+          'cityServices',
           'circle-stroke-color',
           'white',
         )
         map.setPaintProperty(
-          'nearbyFacilities', 
+          'cityServices', 
           'circle-color', 
           ['match',
           ['get', 'type'],

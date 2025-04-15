@@ -1079,9 +1079,9 @@ const nearbyActivityDrawnMapStyle = mergeDeep(imageryInfo,{
   ],
 });
 
-const nearbyFacilitiesDrawnMapStyle = mergeDeep(imageryInfo,{
+const cityServicesDrawnMapStyle = mergeDeep(imageryInfo,{
   version: 8,
-  name: 'nearbyFacilitiesDrawnMap',
+  name: 'cityServicesDrawnMap',
   glyphs: '//fonts.openmaptiles.org/{fontstack}/{range}.pbf',
   sources: {
     pwd: {
@@ -1125,7 +1125,7 @@ const nearbyFacilitiesDrawnMapStyle = mergeDeep(imageryInfo,{
         }
       }
     },
-    nearbyFacilities: {
+    cityServices: {
       type: 'geojson',
       data: {
         type: 'FeatureCollection',
@@ -1157,8 +1157,8 @@ const nearbyFacilitiesDrawnMapStyle = mergeDeep(imageryInfo,{
       }
     },
     {
-      id: 'nearbyFacilities',
-      source: 'nearbyFacilities',
+      id: 'cityServices',
+      source: 'cityServices',
       type: 'circle',
       paint: {
         'circle-radius': 7,
@@ -1253,7 +1253,7 @@ const $config = {
     city311: 'nearbyActivityDrawnMapStyle',
     stormwater: 'stormwaterDrawnMapStyle',
     'nearby-activity': 'nearbyActivityDrawnMapStyle',
-    'nearby-facilities': 'nearbyFacilitiesDrawnMapStyle',
+    'city-services': 'cityServicesDrawnMapStyle',
     districts: 'pwdDrawnMapStyle',
   },
   parcelLayerForTopic: {
@@ -1267,7 +1267,7 @@ const $config = {
     city311: 'pwd',
     stormwater: 'pwd',
     'nearby-activity': 'pwd',
-    'nearby-facilities': 'pwd',
+    'city-services': 'pwd',
     districts: 'pwd',
   },
   mapLayers: {
@@ -1633,7 +1633,7 @@ $config['zoningDrawnMapStyle'] = zoningDrawnMapStyle;
 $config['votingDrawnMapStyle'] = votingDrawnMapStyle;
 $config['stormwaterDrawnMapStyle'] = stormwaterDrawnMapStyle;
 $config['nearbyActivityDrawnMapStyle'] = nearbyActivityDrawnMapStyle;
-$config['nearbyFacilitiesDrawnMapStyle'] = nearbyFacilitiesDrawnMapStyle;
+$config['cityServicesDrawnMapStyle'] = cityServicesDrawnMapStyle;
 $config['ZONING_CODE_MAP'] = ZONING_CODE_MAP;
 $config['dorLegendData'] = dorLegendData;
 $config['stormwaterLegendData'] = stormwaterLegendData;

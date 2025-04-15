@@ -13,7 +13,7 @@ import { useVotingStore } from '@/stores/VotingStore.js'
 import { useCity311Store } from '@/stores/City311Store.js'
 import { useStormwaterStore } from '@/stores/StormwaterStore.js'
 import { useNearbyActivityStore } from '@/stores/NearbyActivityStore.js'
-import { useNearbyFacilitiesStore } from '@/stores/NearbyFacilitiesStore.js'
+import { useCityServicesStore } from '@/stores/CityServicesStore.js'
 import { useMainStore } from '@/stores/MainStore.js'
 
 import useRouting from '@/composables/useRouting';
@@ -39,8 +39,8 @@ const clearStoreData = async() => {
   StormwaterStore.clearAllStormwaterData();
   const NearbyActivityStore = useNearbyActivityStore();
   NearbyActivityStore.clearAllNearbyActivityData();
-  const NearbyFacilitiesStore = useNearbyFacilitiesStore();
-  NearbyFacilitiesStore.clearAllNearbyFacilitiesData();
+  const CityServicesStore = useCityServicesStore();
+  CityServicesStore.clearAllCityServicesData();
 
   const CondosStore = useCondosStore();
   CondosStore.lastPageUsed = 1;
@@ -198,7 +198,7 @@ const dataFetch = async(to, from) => {
       await ParcelsStore.fillDorParcelData();
     }
 
-  } else if (to.params.topic !== 'nearby-activity' && to.params.topic !== 'nearby-facilities' && dataSourcesLoadedArray.includes(topic)) {
+  } else if (to.params.topic !== 'nearby-activity' && to.params.topic !== 'city-services' && dataSourcesLoadedArray.includes(topic)) {
     MainStore.datafetchRunning = false;
     return;
   } else if (to.params.topic === 'nearby-activity' && dataSourcesLoadedArray.includes(to.params.data)) {
@@ -206,10 +206,10 @@ const dataFetch = async(to, from) => {
     if (import.meta.env.VITE_DEBUG == 'true') console.log('dataFetch is still going, MainStore.currentNearbyActivityDataType:', MainStore.currentNearbyActivityDataType, 'to.params.data:', to.params.data);
     MainStore.datafetchRunning = false;
     return;
-  // } else if (to.params.topic === 'nearby-facilities' && dataSourcesLoadedArray.includes(to.params.data)) {
-  } else if (to.params.topic === 'nearby-facilities' && dataSourcesLoadedArray.includes(to.params.data)) {
-    MainStore.currentNearbyFacilitiesDataType = to.params.data;
-    if (import.meta.env.VITE_DEBUG == 'true') console.log('dataFetch is still going, MainStore.currentNearbyFacilitiesDataType:', MainStore.currentNearbyFacilitiesDataType, 'to.params.data:', to.params.data);
+  // } else if (to.params.topic === 'city-services' && dataSourcesLoadedArray.includes(to.params.data)) {
+  } else if (to.params.topic === 'city-services' && dataSourcesLoadedArray.includes(to.params.data)) {
+    MainStore.currentCityServicesDataType = to.params.data;
+    if (import.meta.env.VITE_DEBUG == 'true') console.log('dataFetch is still going, MainStore.currentCityServicesDataType:', MainStore.currentCityServicesDataType, 'to.params.data:', to.params.data);
     MainStore.datafetchRunning = false;
     return;
   }
@@ -303,9 +303,9 @@ const topicDataFetch = async (topic, data) => {
     await NearbyActivityStore.fetchData(data);
   }
 
-  if (topic === 'nearby-facilities') {
-    const NearbyFacilitiesStore = useNearbyFacilitiesStore();
-    await NearbyFacilitiesStore.fetchData(data);
+  if (topic === 'city-services') {
+    const CityServicesStore = useCityServicesStore();
+    await CityServicesStore.fetchData(data);
   }
 }
 

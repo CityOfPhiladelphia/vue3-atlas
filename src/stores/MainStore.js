@@ -21,7 +21,7 @@ export const useMainStore = defineStore("MainStore", {
       currentLang: null,
       currentNearbyActivityDataType: null,
       currentNearbyTimeInterval: {},
-      currentNearbyFacilitiesDataType: null,
+      currentCityServicesDataType: null,
       dataSourcesLoadedArray: [],
       clickedRow: [],
       clickedMarkerId: null,

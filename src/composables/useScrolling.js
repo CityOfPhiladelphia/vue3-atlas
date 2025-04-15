@@ -34,6 +34,10 @@ export default function useScrolling() {
   const handleRowMouseleave = () => {
     const MainStore = useMainStore();
     MainStore.hoveredStateId = '';
+    const popup = document.getElementsByClassName('maplibregl-popup');
+    if (popup.length) {
+      popup[0].remove();
+    }
   }
 
   const isElementInViewport = (el) => {

@@ -104,7 +104,7 @@ const fetchNearby = (feature, dataSource) => {
   return params
 }
 
-export const useNearbyFacilitiesStore = defineStore('NearbyFacilitiesStore', {
+export const useCityServicesStore = defineStore('CityServicesStore', {
   state: () => {
     return {
       dataError: false,
@@ -133,7 +133,7 @@ export const useNearbyFacilitiesStore = defineStore('NearbyFacilitiesStore', {
     setLoadingData(loading) {
       this.loadingData = loading;
     },
-    async clearAllNearbyFacilitiesData() {
+    async clearAllCityServicesData() {
       this.dataError = false;
       this.loadingData = true;
     },

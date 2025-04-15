@@ -12,7 +12,7 @@ import { useRouter, useRoute } from 'vue-router';
 const route = useRoute();
 const router = useRouter();
 
-import NearbySchools from '@/components/topics/nearbyFacilities/NearbySchools.vue';
+import NearbySchools from '@/components/topics/cityServices/NearbySchools.vue';
 
 const selectedDataType = ref('publicSchools');
 const dataTypes = {
@@ -21,15 +21,15 @@ const dataTypes = {
   recreationFacilities: 'Recreation Facilities',
 };
 
-const currentNearbyFacilitiesDataType = computed(() => {
-  return MainStore.currentNearbyFacilitiesDataType;
+const currentCityServicesDataType = computed(() => {
+  return MainStore.currentCityServicesDataType;
 });
 
 watch(() => selectedDataType.value, (newDataType) => {
   if (import.meta.env.VITE_DEBUG == 'true') console.log('watch selectedDataType.value, newDataType:', newDataType);
   if (MainStore.currentAddress) {
     setDataTypeInRouter(newDataType);
-    MainStore.currentNearbyFacilitiesDataType = newDataType;
+    MainStore.currentCityServicesDataType = newDataType;
     const popup = document.getElementsByClassName('maplibregl-popup');
     if (popup.length) {
       popup[0].remove();
@@ -56,10 +56,10 @@ watch(() => clickedMarkerId.value, (newClickedMarkerId) => {
 });
 
 onMounted( () => {
-  if (import.meta.env.VITE_DEBUG == 'true') console.log('NearbyFacilities.vue onMounted is running, route.params.data:', route.params.data);
+  if (import.meta.env.VITE_DEBUG == 'true') console.log('CityServices.vue onMounted is running, route.params.data:', route.params.data);
   selectedDataType.value = route.params.data;
-  if (!currentNearbyFacilitiesDataType.value) {
-    MainStore.currentNearbyFacilitiesDataType = selectedDataType.value;
+  if (!currentCityServicesDataType.value) {
+    MainStore.currentCityServicesDataType = selectedDataType.value;
   }
 })
 
@@ -68,10 +68,16 @@ onMounted( () => {
 <template>
   <section>
     <div
+      class="topic-callout"
+    >
+      This section of Atlas is in beta.  We are continuing to build out information about city services here.  Please submit your ideas and questions via our <a target="_blank" href="https://phila.formstack.com/forms/atlas_feedback_form">Feedback form</a>.
+    </div>
+
+    <div
       id="Nearby Facilities-description"
       class="topic-info"
     >
-      See city facilities located near your search address including schools, libraries, rec centers, police stations, and fire stations. Hover over a facility below to highlight it on the map.
+      Find city services and facilities for your search address including schools, libraries, rec centers, trash schedules, police stations, and fire stations. Hover over a facility below to highlight it on the map.  See the full directory of city services at <a target="_blank" href="phila.gov/services">phila.gov/services</a>.
     </div>
 
     <div class="filter-div columns is-multiline">
@@ -85,7 +91,7 @@ onMounted( () => {
       </div>
     </div>
 
-    <NearbySchools v-if="currentNearbyFacilitiesDataType == 'publicSchools'" />
+    <NearbySchools v-if="currentCityServicesDataType == 'publicSchools'" />
 
   </section>
 </template>
