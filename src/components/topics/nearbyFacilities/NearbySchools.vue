@@ -5,6 +5,8 @@ import { point, featureCollection } from '@turf/helpers';
 import bbox from '@turf/bbox';
 import buffer from '@turf/buffer';
 
+import maplibregl from 'maplibre-gl';
+
 import { useGeocodeStore } from '@/stores/GeocodeStore';
 const GeocodeStore = useGeocodeStore();
 import { useNearbyFacilitiesStore } from '@/stores/NearbyFacilitiesStore';
@@ -273,13 +275,27 @@ const nearbySchoolsTableData = computed(() => {
 const handleCellClick = (e) => {
   // if (import.meta.env.VITE_DEBUG) console.log('handleCellClick is running, e:', e);
   const map = MapStore.map;
+  let lngLat, schoolName;
   if (e.includes('Elementary')) {
-    map.flyTo({ center: elementarySchool.value.geometry.coordinates });
+    lngLat = elementarySchool.value.geometry.coordinates;
+    schoolName = elementarySchool.value.properties.SCHOOL_NAME_LABEL;
   } else if (e.includes('Middle')) {
-    map.flyTo({ center: middleSchool.value.geometry.coordinates });
+    lngLat = middleSchool.value.geometry.coordinates;
+    schoolName = middleSchool.value.properties.SCHOOL_NAME_LABEL;
   } else if (e.includes('High')) {
-    map.flyTo({ center: highSchool.value.geometry.coordinates });
+    lngLat = highSchool.value.geometry.coordinates;
+    schoolName = highSchool.value.properties.SCHOOL_NAME_LABEL;
   }
+  map.flyTo({ center: lngLat });
+  const popup = document.getElementsByClassName('maplibregl-popup');
+  if (popup.length) {
+    popup[0].remove();
+  }
+  new maplibregl.Popup({ className: 'my-class', offset: 40 })
+    .setLngLat(lngLat)
+    .setHTML(schoolName)
+    .setMaxWidth("300px")
+    .addTo(map);
 };
 
 const handleCellMouseover = (e) => {
@@ -290,6 +306,10 @@ const handleCellMouseover = (e) => {
 const handleCellMouseleave = (e) => {
   if (import.meta.env.VITE_DEBUG) console.log('handleCellMouseleave is running, e:', e);
   MainStore.hoveredSchoolId = null;
+  const popup = document.getElementsByClassName('maplibregl-popup');
+  if (popup.length) {
+    popup[0].remove();
+  }
 };
 
 </script>
