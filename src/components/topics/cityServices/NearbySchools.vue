@@ -294,7 +294,7 @@ const handleCellClick = (e) => {
   if (popup.length) {
     popup[0].remove();
   }
-  new maplibregl.Popup({ className: 'my-class', offset: 40 })
+  new maplibregl.Popup({ className: 'my-class', offset: 25 })
     .setLngLat(lngLat)
     .setHTML(schoolName)
     .setMaxWidth("300px")
