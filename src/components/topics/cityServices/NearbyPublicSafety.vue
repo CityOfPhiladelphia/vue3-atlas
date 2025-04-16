@@ -25,24 +25,27 @@ const { nth } = useTransforms();
 import VerticalTable from '@/components/VerticalTable.vue';
 import CityServices from './CityServices.vue';
 
-const loadingData = computed(() => CityServicesStore.loadingData );
+const loadingData = computed(() => CityServicesStore.loadingData);
+const hoveredStateId = computed(() => { return MainStore.hoveredStateId; });
 
 const nearbyFireStations = computed(() => {
   return CityServicesStore.nearbyFireStations;
-})
+});
 
 const nearbyFireStationsGeojson = computed(() => {
   if (!nearbyFireStations.value) return null;
   return nearbyFireStations.value.map(item => point(item.geometry.coordinates, { id: item.id, type: 'nearbyFireStations' }));
-
-})
+});
 
 watch(() => nearbyFireStationsGeojson.value, (newGeojson) => {
-  // if (import.meta.env.VITE_DEBUG == 'true') console.log('watch nearbyFireStationsGeojson.value, newGeojson:', newGeojson);
+  const currentAddress = point(MapStore.currentAddressCoords);
+  if (import.meta.env.VITE_DEBUG == 'true') console.log('watch nearbyFireStationsGeojson.value, newGeojson:', newGeojson, 'policeStation.value', policeStation.value, 'currentAddress:', currentAddress);
   const map = MapStore.map;
   const feat = featureCollection(newGeojson);
+  if (import.meta.env.VITE_DEBUG) console.log('watch nearbyFireStationsGeojson.value, feat:', feat);
   if (map.getSource) map.getSource('cityServices').setData(feat);
-  const bounds = bbox(buffer(feat, 2000, {units: 'feet'}));
+  const feat2 = featureCollection([policeStation.value, currentAddress, ...newGeojson]);
+  const bounds = bbox(buffer(feat2, 2000, {units: 'feet'}));
   map.fitBounds(bounds);
 });
 
@@ -51,7 +54,7 @@ const nearbyFireStationsTableData = computed(() => {
     columns: [
       {
         label: 'Station',
-        field: 'properties.stationInfo',
+        field: 'properties.stationInfoAddress',
         html: true,
       },
       {
@@ -80,7 +83,7 @@ const policeStation = computed(() => {
       LOCATION: 'No nearby police station found',
     },
   };
-  if (GeocodeStore.aisData.features && GeocodeStore.aisData.features.length) {
+  if (GeocodeStore.aisData.features && GeocodeStore.aisData.features.length && CityServicesStore.allPoliceStations.features && CityServicesStore.allPoliceStations.features.length) {
     district = GeocodeStore.aisData.features[0].properties.police_district;
     station = CityServicesStore.allPoliceStations.features.find(station => station.properties.DISTRICT_NUMBER === parseInt(district));
   }

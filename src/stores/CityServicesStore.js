@@ -128,8 +128,8 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
         },
         nearbyFireStations: {
           title: 'Nearby Fire Stations',
-          id_field: 'FIRESTA_',
-          info_field: 'LOCATION',
+          id_field: 'id',
+          info_field: 'stationInfo',
         },
       }
     }
@@ -367,7 +367,8 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
             feature.properties.LAD && feature.properties.LAD != 0 ? feature.properties.stationInfo += 'Ladder ' + feature.properties.LAD : '';
             feature.properties.LAD && feature.properties.LAD != 0 && feature.properties.MED && feature.properties.MED != 0 || feature.properties.ENG && feature.properties.ENG != 0 && feature.properties.MED && feature.properties.MED != 0 ? feature.properties.stationInfo += ' / ' : '';
             feature.properties.MED && feature.properties.MED != 0 ? feature.properties.stationInfo += 'Medic ' + feature.properties.MED : '';
-            feature.properties.stationInfo += '<br>' + feature.properties.LOCATION;// + '<br>Philadelphia, PA ';// + feature.properties.ZIP_CODE;
+            
+            feature.properties.stationInfoAddress = feature.properties.stationInfo + '<br>' + feature.properties.LOCATION;// + '<br>Philadelphia, PA ';// + feature.properties.ZIP_CODE;
             return feature;
           });
 

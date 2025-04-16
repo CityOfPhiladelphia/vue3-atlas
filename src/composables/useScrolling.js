@@ -27,7 +27,7 @@ export default function useScrolling() {
   const handleRowMouseover = (e, id) => {
     const MainStore = useMainStore();
     const hoveredStateId = e.row[id];
-    // if (import.meta.env.VITE_DEBUG == 'true') console.log('handleRowMouseover, e:', e, 'id:', id, 'e.row[id]:', e.row[id], 'hoveredStateId:', hoveredStateId);
+    if (import.meta.env.VITE_DEBUG == 'true') console.log('handleRowMouseover, e:', e, 'id:', id, 'e.row[id]:', e.row[id], 'hoveredStateId:', hoveredStateId);
     MainStore.hoveredStateId = hoveredStateId;
   }
   const handleRowMouseleave = () => {
