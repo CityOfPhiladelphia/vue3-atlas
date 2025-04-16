@@ -113,6 +113,7 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
       msCatchments: null,
       hsCatchments: null,
       allSchools: null,
+      allPoliceStations: null,
       nearbySchools: null,
       nearbyFireStations: null,
       elementarySchool: null,
@@ -198,6 +199,29 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
 
       } catch {
         if (import.meta.env.VITE_DEBUG == 'true') console.error('nearbyCatchments - await never resolved, failed to fetch address data');
+        this.setLoadingData(false);
+        this.setDataError(true);
+      }
+    },
+    async fillAllPoliceStations() {
+      const params = {
+        where: '1=1',
+        outFields: '*',
+        f: 'geojson',
+      }
+      try {
+        const response = await axios.get('https://services.arcgis.com/fLeGjb7u4uXqeF9q/arcgis/rest/services/Police_Stations/FeatureServer/0/query?', { params });
+        if (response.status === 200) {
+          const data = response.data;
+          this.allPoliceStations = data;
+          this.setLoadingData(false);
+        } else {
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('nearby311 - await resolved but HTTP status was not successful');
+          this.setLoadingData(false);
+          this.setDataError(true);
+        }
+      } catch {
+        if (import.meta.env.VITE_DEBUG == 'true') console.error('allPoliceStations - await never resolved, failed to fetch address data');
         this.setLoadingData(false);
         this.setDataError(true);
       }

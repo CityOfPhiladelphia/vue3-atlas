@@ -5,7 +5,7 @@ import { point, featureCollection } from '@turf/helpers';
 import bbox from '@turf/bbox';
 import buffer from '@turf/buffer';
 
-import maplibregl from 'maplibre-gl';
+// import maplibregl from 'maplibre-gl';
 
 import { useGeocodeStore } from '@/stores/GeocodeStore';
 const GeocodeStore = useGeocodeStore();
@@ -19,7 +19,11 @@ const MainStore = useMainStore();
 import useScrolling from '@/composables/useScrolling';
 const { handleRowClick, handleRowMouseover, handleRowMouseleave } = useScrolling();
 
+import useTransforms from '@/composables/useTransforms';
+const { nth } = useTransforms();
+
 import VerticalTable from '@/components/VerticalTable.vue';
+import CityServices from './CityServices.vue';
 
 const loadingData = computed(() => CityServicesStore.loadingData );
 
@@ -59,9 +63,70 @@ const nearbyFireStationsTableData = computed(() => {
   }
 });
 
+const policeDistrict = computed(() => {
+  let district, division;
+  if (GeocodeStore.aisData.features && GeocodeStore.aisData.features.length) {
+    district = GeocodeStore.aisData.features[0].properties.police_district;
+    division = GeocodeStore.aisData.features[0].properties.police_division;
+  }
+  return "<a href='https://phillypolice.com/" + nth(district) + "-district/' target='_blank'>\
+    "+ nth(district) + " Police District (" + division + ") <i class='fa fa-external-link-alt'></i></a>";
+});
+
+const policeStation = computed(() => {
+  let district;
+  let station = {
+    properties: {
+      LOCATION: 'No nearby police station found',
+    },
+  };
+  if (GeocodeStore.aisData.features && GeocodeStore.aisData.features.length) {
+    district = GeocodeStore.aisData.features[0].properties.police_district;
+    station = CityServicesStore.allPoliceStations.features.find(station => station.properties.DISTRICT_NUMBER === parseInt(district));
+  }
+  return station;
+});
+
+const policeVertTableData = computed(() => {
+  // if (geocodeElementarySchool.value == geocodeMiddleSchool.value) {
+    return [
+      {
+        label: 'Jurisdictions',
+        value: policeDistrict.value,
+        // class: elementarySchool.value.properties.SCHOOL_NUM,
+      },
+      {
+        label: 'Police Station',
+        value: policeStation.value.properties.LOCATION,
+        // class: highSchool.value.properties.SCHOOL_NUM,
+      },
+    ];
+  // }
+});
+
 </script>
 
 <template>
+
+  <div class="mt-5">
+    <h2 class="subtitle mb-3 is-5">
+      Police District
+    </h2>
+  </div>
+
+  <vertical-table
+    table-id="police-district"
+    :data="policeVertTableData"
+  />
+  <a
+    class="table-link"
+    target="_blank"
+    href="https://www.phillypolice.com/district/district-gis/"
+  >See citywide police stations at PhillyPolice.com <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
+    <!-- :hovered-id="hoveredSchoolId"
+    @clicked-cell="handleCellClick"
+    @hovered-cell="handleCellMouseover"
+    @unhovered-cell="handleCellMouseleave" -->
 
   <div class="mt-5">
     <h2 class="subtitle mb-3 is-5">

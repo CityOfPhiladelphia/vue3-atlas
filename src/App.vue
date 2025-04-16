@@ -51,6 +51,7 @@ onMounted(async () => {
 
   CityServicesStore.fillAllCatchments();
   CityServicesStore.fillAllSchools();
+  CityServicesStore.fillAllPoliceStations();
 
   const main = document.getElementById('main');
   main.scrollTop = -main.scrollHeight;
