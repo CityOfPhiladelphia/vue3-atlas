@@ -1217,7 +1217,7 @@ const cityServicesDrawnMapStyle = mergeDeep(imageryInfo,{
         'icon-image': 'police-station-solid',
         'icon-rotate': 0,
         'icon-anchor': 'center',
-        'icon-size': .05,
+        'icon-size': .15,
       }
     },
     {

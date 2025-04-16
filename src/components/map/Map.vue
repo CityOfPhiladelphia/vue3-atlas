@@ -86,7 +86,7 @@ const buildingColumnsSrc = computed(() => {
   return MainStore.publicPath + 'images/building-columns-solid.png';
 })
 const policeStationSrc = computed(() => {
-  return MainStore.publicPath + 'images/policeStation_02_edit.png';
+  return MainStore.publicPath + 'images/policeStation_03_edit.png';
 })
 const cameraSrc = computed(() => {
   return MainStore.publicPath + 'images/camera.png';
