@@ -829,7 +829,7 @@ const allSchools = computed(() => {
 });
 
 watch(() => allSchools.value, (newValue) => {
-  // if (import.meta.env.VITE_DEBUG) console.log('watch for adding school markers, newValue:', newValue);
+  if (import.meta.env.VITE_DEBUG) console.log('watch for adding school markers, newValue:', newValue);
   setTimeout(() => {
     const feat = featureCollection([CityServicesStore.elementarySchool, CityServicesStore.middleSchool, CityServicesStore.highSchool]);
     map.getSource('schoolMarkers').setData(feat);
@@ -839,7 +839,7 @@ watch(() => allSchools.value, (newValue) => {
 watch(
   () => CityServicesStore.policeStation,
   (newValue) => {
-    console.log('Map.vue watch for adding police station markers, newValue:', newValue);
+    if (import.meta.env.VITE_DEBUG) console.log('Map.vue watch for adding police station markers, newValue:', newValue);
     map.getSource('policeStationMarker').setData(newValue);
   }
 )
@@ -858,7 +858,7 @@ watch(
         if (import.meta.env.VITE_DEBUG == 'true') console.log('feature:', feature, 'index:', index, 'map.getStyle().sources.nearbyActivity.data.features:', map.getStyle().sources.nearbyActivity.data.features.filter(feature => feature.properties.id === newHoveredStateId)[0]);
         map.getStyle().sources.nearbyActivity.data.features.splice(index, 1);
         map.getStyle().sources.nearbyActivity.data.features.push(feature);
-        console.log("map.getSource('nearbyActivity'):", map.getSource('nearbyActivity'), "map.getStyle().sources.nearbyActivity.data:", map.getStyle().sources.nearbyActivity.data);
+        if (import.meta.env.VITE_DEBUG) console.log("map.getSource('nearbyActivity'):", map.getSource('nearbyActivity'), "map.getStyle().sources.nearbyActivity.data:", map.getStyle().sources.nearbyActivity.data);
         map.getSource('nearbyActivity').setData(map.getStyle().sources.nearbyActivity.data);
         // if (import.meta.env.VITE_DEBUG == 'true') console.log('map.getStyle().sources:', map.getStyle().sources.filter(source => source.id === 'nearby')[0]);
         map.setPaintProperty(

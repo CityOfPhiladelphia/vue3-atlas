@@ -2,8 +2,14 @@
 
 import { ref, computed, watch, onMounted } from 'vue';
 
+import { point } from '@turf/helpers';
+
 import { useMainStore } from '@/stores/MainStore';
 const MainStore = useMainStore();
+import { useMapStore } from '@/stores/MapStore';
+const MapStore = useMapStore();
+import { useCityServicesStore } from '@/stores/CityServicesStore';
+const CityServicesStore = useCityServicesStore();
 
 import useScrolling from '@/composables/useScrolling';
 const { isElementInViewport } = useScrolling();
@@ -31,6 +37,19 @@ watch(() => selectedDataType.value, (newDataType) => {
   if (MainStore.currentAddress) {
     setDataTypeInRouter(newDataType);
     MainStore.currentCityServicesDataType = newDataType;
+
+    const map = MapStore.map;
+    if (newDataType == 'public-safety') {
+      CityServicesStore.elementarySchool = point([0,0]);
+      CityServicesStore.middleSchool = point([0,0]);
+      CityServicesStore.highSchool = point([0,0]);
+      // map.getSource('schoolMarkers').setData({ type: 'FeatureCollection', features: [] });
+      // map.getSource('policeStationMarker').setData()
+    } else if (newDataType == 'public-schools') {
+      CityServicesStore.policeStation = point([0,0]);
+      // map.getSource('policeStationMarker').setData(point([0,0]));
+    }
+
     const popup = document.getElementsByClassName('maplibregl-popup');
     if (popup.length) {
       popup[0].remove();

@@ -93,8 +93,10 @@ const policeStation = computed(() => {
 watch(
   () => policeStation.value,
   (newPoliceStation) => {
+    if (import.meta.env.VITE_DEBUG) console.log('watch policeStation.value, newPoliceStation:', newPoliceStation);
     CityServicesStore.policeStation = newPoliceStation;
-  }
+  },
+  { immediate: true }
 )
 
 const policeVertTableData = computed(() => {
