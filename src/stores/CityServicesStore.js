@@ -114,6 +114,7 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
       hsCatchments: null,
       allSchools: null,
       allPoliceStations: null,
+      policeStation: null,
       nearbySchools: null,
       nearbyFireStations: null,
       elementarySchool: null,

@@ -1105,6 +1105,16 @@ const cityServicesDrawnMapStyle = mergeDeep(imageryInfo,{
         features: []
       },
     },
+    policeStationMarker: {
+      type: 'geojson',
+      data: {
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: [],
+        },
+      }
+    },
     addressMarker: {
       type: 'geojson',
       data: {
@@ -1198,6 +1208,17 @@ const cityServicesDrawnMapStyle = mergeDeep(imageryInfo,{
         'fill-color': 'rgb(0,102,255)',
         'fill-opacity': 0.2,
       },
+    },
+    {
+      id: 'policeStationMarker',
+      source: 'policeStationMarker',
+      type: 'symbol',
+      layout: {
+        'icon-image': 'police-station-solid',
+        'icon-rotate': 0,
+        'icon-anchor': 'center',
+        'icon-size': .05,
+      }
     },
     {
       id: 'schoolMarkers',

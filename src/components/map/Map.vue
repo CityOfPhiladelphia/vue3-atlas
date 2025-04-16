@@ -85,6 +85,9 @@ const purpleSchoolSrc = computed(() => {
 const buildingColumnsSrc = computed(() => {
   return MainStore.publicPath + 'images/building-columns-solid.png';
 })
+const policeStationSrc = computed(() => {
+  return MainStore.publicPath + 'images/policeStation_02_edit.png';
+})
 const cameraSrc = computed(() => {
   return MainStore.publicPath + 'images/camera.png';
 })
@@ -139,6 +142,8 @@ onMounted(async () => {
   map.addImage('blue-school-solid', blueSchoolImage.data);
   const purpleSchoolImage = await map.loadImage(purpleSchoolSrc.value)
   map.addImage('purple-school-solid', purpleSchoolImage.data);
+  const policeStationImage = await map.loadImage(policeStationSrc.value)
+  map.addImage('police-station-solid', policeStationImage.data);
   const buildingColumnsImage = await map.loadImage(buildingColumnsSrc.value)
   map.addImage('building-columns-solid', buildingColumnsImage.data);
   const cameraImage = await map.loadImage(cameraSrc.value)
@@ -830,6 +835,14 @@ watch(() => allSchools.value, (newValue) => {
     map.getSource('schoolMarkers').setData(feat);
   }, 1000);
 });
+
+watch(
+  () => CityServicesStore.policeStation,
+  (newValue) => {
+    console.log('Map.vue watch for adding police station markers, newValue:', newValue);
+    map.getSource('policeStationMarker').setData(newValue);
+  }
+)
 
 // for Nearby topic, watch the id of the circle marker that is hovered on to change the color of the circle
 const hoveredStateId = computed(() => { return MainStore.hoveredStateId; })

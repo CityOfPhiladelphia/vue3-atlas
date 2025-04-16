@@ -87,6 +87,13 @@ const policeStation = computed(() => {
   return station;
 });
 
+watch(
+  () => policeStation.value,
+  (newPoliceStation) => {
+    CityServicesStore.policeStation = newPoliceStation;
+  }
+)
+
 const policeVertTableData = computed(() => {
   // if (geocodeElementarySchool.value == geocodeMiddleSchool.value) {
     return [
