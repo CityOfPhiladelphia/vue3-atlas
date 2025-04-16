@@ -140,6 +140,10 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
     async fetchData(dataType) {
       if (import.meta.env.VITE_DEBUG) console.log('fetchData is running, dataType:', dataType);
       this.setLoadingData(false);
+      const GeocodeStore = useGeocodeStore();
+      const coordinates = GeocodeStore.aisData.features[0].geometry.coordinates;
+      const MapStore = useMapStore();
+      await MapStore.fillBufferForAddress(coordinates[0], coordinates[1], 5820);
       if (dataType === 'public-schools') {
         await this.fillNearbySchools();
       }
@@ -217,12 +221,8 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
       try {
         this.setLoadingData(true);
         const GeocodeStore = useGeocodeStore();
-        const coordinates = GeocodeStore.aisData.features[0].geometry.coordinates;
         const MapStore = useMapStore();
-        await MapStore.fillBufferForAddress(coordinates[0], coordinates[1], 5820);
         const buffer = MapStore.bufferForAddress;
-        if (import.meta.env.VITE_DEBUG == 'true') console.log('fillNearbySchools, buffer:', buffer);
-
         const url = 'https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/Schools/FeatureServer/0/query?';
 
         const params = {
@@ -239,7 +239,7 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
 
         const response = await axios.get(url, { params });
         if (response.status === 200) {
-          if (import.meta.env.VITE_DEBUG) console.log('this.elementarySchool:', this.elementarySchool.id, 'this.middleSchool:', this.middleSchool.id, 'this.highSchool:', this.highSchool.id);
+          // if (import.meta.env.VITE_DEBUG) console.log('this.elementarySchool:', this.elementarySchool.id, 'this.middleSchool:', this.middleSchool.id, 'this.highSchool:', this.highSchool.id);
           const designatedSchools = [this.elementarySchool.id, this.middleSchool.id, this.highSchool.id];
           const data = await response.data;
 
@@ -248,7 +248,7 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
           const from = point(feature.geometry.coordinates);
 
           features = features.filter(feature => !designatedSchools.includes(feature.id)).map(feature => {
-            if (import.meta.env.VITE_DEBUG) console.log('feature:', feature);
+            // if (import.meta.env.VITE_DEBUG) console.log('feature:', feature);
             const featureCoords = feature.geometry.coordinates;
             let dist;
             if (Array.isArray(featureCoords[0])) {
@@ -280,5 +280,8 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
         if (import.meta.env.VITE_DEBUG == 'true') console.error('nearbySchools - await never resolved, failed to fetch address data');
       }
     },
+    fillNearbyFireStations() {
+
+    }
   },
 });

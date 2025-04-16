@@ -90,7 +90,7 @@ const hsCatchment = computed(() => {
 const elementarySchool = computed(() => {
   let school = {};
   if (CityServicesStore.allSchools && CityServicesStore.allSchools.features && esCatchment.value && esCatchment.value.properties) {
-    if (import.meta.env.VITE_DEBUG) console.log('inside if');
+    // if (import.meta.env.VITE_DEBUG) console.log('inside if');
     school = CityServicesStore.allSchools.features.find(school => {
       if (school.properties.LOCATION_ID) {
         return school.properties.LOCATION_ID == esCatchment.value.properties.ES_ID.toString();
@@ -99,16 +99,16 @@ const elementarySchool = computed(() => {
       }
     });
   };
-  if (import.meta.env.VITE_DEBUG) console.log('school:', school);
   return school;
 });
 
-watch(() => elementarySchool.value, (newElementarySchool) => {
-  if (import.meta.env.VITE_DEBUG) console.log('watch ElementarySchool.value:', newElementarySchool);
-  if (newElementarySchool && newElementarySchool.properties) {
-    CityServicesStore.elementarySchool = newElementarySchool;
-  }
-}, { immediate: true }
+watch(
+  () => elementarySchool.value, (newElementarySchool) => {
+    // if (import.meta.env.VITE_DEBUG) console.log('watch ElementarySchool.value:', newElementarySchool);
+    if (newElementarySchool && newElementarySchool.properties) {
+      CityServicesStore.elementarySchool = newElementarySchool;
+    }
+  }, { immediate: true }
 );
 
 const middleSchool = computed(() => {
@@ -125,12 +125,13 @@ const middleSchool = computed(() => {
   return school;
 });
 
-watch(() => middleSchool.value, (newMiddleSchool) => {
-  if (import.meta.env.VITE_DEBUG) console.log('watch middleSchool.value:', newMiddleSchool);
-  if (newMiddleSchool && newMiddleSchool.properties) {
-    CityServicesStore.middleSchool = newMiddleSchool;
-  }
-}, { immediate: true }
+watch(
+  () => middleSchool.value, (newMiddleSchool) => {
+    // if (import.meta.env.VITE_DEBUG) console.log('watch middleSchool.value:', newMiddleSchool);
+    if (newMiddleSchool && newMiddleSchool.properties) {
+      CityServicesStore.middleSchool = newMiddleSchool;
+    }
+  }, { immediate: true }
 );
 
 const highSchool = computed(() => {
@@ -147,12 +148,13 @@ const highSchool = computed(() => {
   return school;
 });
 
-watch(() => highSchool.value, (newHighSchool) => {
-  // if (import.meta.env.VITE_DEBUG) console.log('watch highSchool.value:', newHighSchool);
-  if (newHighSchool && newHighSchool.properties) {
-    CityServicesStore.highSchool = newHighSchool;
-  }
-}, { immediate: true }
+watch(
+  () => highSchool.value, (newHighSchool) => {
+    // if (import.meta.env.VITE_DEBUG) console.log('watch highSchool.value:', newHighSchool);
+    if (newHighSchool && newHighSchool.properties) {
+      CityServicesStore.highSchool = newHighSchool;
+    }
+  }, { immediate: true }
 );
 
 const elementarySchoolData = computed(() => {
@@ -242,9 +244,8 @@ const nearbySchoolsGeojson = computed(() => {
 })
 
 watch(() => nearbySchoolsGeojson.value, (newGeojson) => {
-  if (import.meta.env.VITE_DEBUG == 'true') console.log('watch nearbySchoolsGeojson.value, newGeojson:', newGeojson);
+  // if (import.meta.env.VITE_DEBUG == 'true') console.log('watch nearbySchoolsGeojson.value, newGeojson:', newGeojson);
   const map = MapStore.map;
-  if (import.meta.env.VITE_DEBUG == 'true') console.log('watch, map:', map);
   const feat = featureCollection(newGeojson);
   if (map.getSource) map.getSource('cityServices').setData(feat);
   const bounds = bbox(buffer(feat, 2000, {units: 'feet'}));
@@ -302,12 +303,12 @@ const handleCellClick = (e) => {
 };
 
 const handleCellMouseover = (e) => {
-  if (import.meta.env.VITE_DEBUG) console.log('handleCellMouseover is running, e:', e);
+  // if (import.meta.env.VITE_DEBUG) console.log('handleCellMouseover is running, e:', e);
   MainStore.hoveredSchoolId = e.toString();
 };
 
 const handleCellMouseleave = (e) => {
-  if (import.meta.env.VITE_DEBUG) console.log('handleCellMouseleave is running, e:', e);
+  // if (import.meta.env.VITE_DEBUG) console.log('handleCellMouseleave is running, e:', e);
   MainStore.hoveredSchoolId = null;
   const popup = document.getElementsByClassName('maplibregl-popup');
   if (popup.length) {

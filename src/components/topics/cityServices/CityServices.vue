@@ -13,6 +13,7 @@ const route = useRoute();
 const router = useRouter();
 
 import NearbySchools from '@/components/topics/cityServices/NearbySchools.vue';
+import NearbyPublicSafety from '@/components/topics/cityServices/NearbyPublicSafety.vue';
 
 const selectedDataType = ref('public-schools');
 const dataTypes = {
@@ -46,7 +47,7 @@ const clickedMarkerId = computed(() => { return MainStore.clickedMarkerId; });
 
 watch(() => clickedMarkerId.value, (newClickedMarkerId) => {
   if (newClickedMarkerId) {
-    if (import.meta.env.VITE_DEBUG) console.log('watch clickedMarkerId.value, newClickedMarkerId:', newClickedMarkerId);
+    // if (import.meta.env.VITE_DEBUG) console.log('watch clickedMarkerId.value, newClickedMarkerId:', newClickedMarkerId);
     const el = document.getElementsByClassName(newClickedMarkerId)[0];
     const visible = isElementInViewport(el);
     if (!visible && !MainStore.isMobileDevice) {
@@ -56,7 +57,7 @@ watch(() => clickedMarkerId.value, (newClickedMarkerId) => {
 });
 
 onMounted( () => {
-  if (import.meta.env.VITE_DEBUG == 'true') console.log('CityServices.vue onMounted is running, route.params.data:', route.params.data);
+  // if (import.meta.env.VITE_DEBUG == 'true') console.log('CityServices.vue onMounted is running, route.params.data:', route.params.data);
   selectedDataType.value = route.params.data;
   if (!currentCityServicesDataType.value) {
     MainStore.currentCityServicesDataType = selectedDataType.value;
@@ -92,6 +93,7 @@ onMounted( () => {
     </div>
 
     <NearbySchools v-if="currentCityServicesDataType == 'public-schools'" />
+    <NearbyPublicSafety v-if="currentCityServicesDataType == 'public-safety'" />
 
   </section>
 </template>

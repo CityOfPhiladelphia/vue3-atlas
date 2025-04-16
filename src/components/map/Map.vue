@@ -271,7 +271,7 @@ onMounted(async () => {
   map.on('click', 'schoolMarkers', (e) => {
     e.clickOnLayer = true;
     const properties = e.features[0].properties;
-    if (import.meta.env.VITE_DEBUG) console.log('click schoolMarkers, properties:', properties);
+    // if (import.meta.env.VITE_DEBUG) console.log('click schoolMarkers, properties:', properties);
 
     MainStore.clickedMarkerId = properties.SCHOOL_NUM;
 
@@ -290,7 +290,7 @@ onMounted(async () => {
   map.on('click', 'cityServices', (e) => {
     e.clickOnLayer = true;
     const properties = e.features[0].properties;
-    if (import.meta.env.VITE_DEBUG) console.log('click cityServices, properties:', properties);
+    // if (import.meta.env.VITE_DEBUG) console.log('click cityServices, properties:', properties);
 
     const idField = CityServicesStore.dataFields[properties.type].id_field;
     const infoField = CityServicesStore.dataFields[properties.type].info_field;
@@ -373,7 +373,7 @@ onMounted(async () => {
 watch(
   () => GeocodeStore.aisData,
   async newAddress => {
-    if (import.meta.env.VITE_DEBUG == 'true') console.log('MapStore aisData watch, newAddress:', newAddress);
+    // if (import.meta.env.VITE_DEBUG == 'true') console.log('MapStore aisData watch, newAddress:', newAddress);
     if (newAddress.features && newAddress.features[0].geometry.coordinates.length) {
       const newCoords = newAddress.features[0].geometry.coordinates;
       if (MainStore.lastSearchMethod !== 'mapClick') {
@@ -402,7 +402,7 @@ const pwdCoordinates = computed(() => {
 watch(
   () => pwdCoordinates.value,
   newCoords => {
-  if (import.meta.env.VITE_DEBUG == 'true') console.log('Map pwdCoordinates watch, newCoords:', newCoords, 'MapStore.addressMarker:', MapStore.addressMarker);
+  // if (import.meta.env.VITE_DEBUG == 'true') console.log('Map pwdCoordinates watch, newCoords:', newCoords, 'MapStore.addressMarker:', MapStore.addressMarker);
   if (newCoords.length) {
     const address = point(newCoords);
     map.getSource('addressMarker').setData(address);
@@ -431,7 +431,7 @@ const dorCoordinates = computed(() => {
 watch(
   () => dorCoordinates.value,
   newCoords => {
-  if (import.meta.env.VITE_DEBUG == 'true') console.log('Map dorCoordinates watch, newCoords:', newCoords);
+  // if (import.meta.env.VITE_DEBUG == 'true') console.log('Map dorCoordinates watch, newCoords:', newCoords);
   let newParcel;
   if (newCoords.length > 3) {
     newParcel = polygon([ newCoords ]);
@@ -759,7 +759,7 @@ const clickedRow = computed(() => { return MainStore.clickedRow; })
 watch(
   () => clickedRow.value,
   newClickedRow => {
-    if (import.meta.env.VITE_DEBUG == 'true') console.log('Map.vue clickedRow watch, newClickedRow:', newClickedRow, 'newClickedRow.type:', newClickedRow.type);
+    // if (import.meta.env.VITE_DEBUG == 'true') console.log('Map.vue clickedRow watch, newClickedRow:', newClickedRow, 'newClickedRow.type:', newClickedRow.type);
     if (newClickedRow) map.flyTo({ center: newClickedRow.lngLat });
     let idField, infoField, row;
     if (MainStore.currentTopic == 'nearby-activity') {
@@ -775,7 +775,7 @@ watch(
       infoField = City311Store.dataFields.city311.info_field;
       row = City311Store[newClickedRow.type].rows.filter(row => row[idField] === newClickedRow.id)[0];
     }
-    if (import.meta.env.VITE_DEBUG == 'true') console.log('nearby click, newClickedRow:', newClickedRow, 'idField:', idField, 'row:', row);
+    // if (import.meta.env.VITE_DEBUG == 'true') console.log('nearby click, newClickedRow:', newClickedRow, 'idField:', idField, 'row:', row);
     if (row.properties) row[infoField] = row.properties[infoField];
     const popup = document.getElementsByClassName('maplibregl-popup');
     if (popup.length) {
@@ -793,7 +793,7 @@ watch(
   () => hoveredSchoolId.value,
   newHoveredSchoolId => {
     const style = map.getStyle().layers.filter(layer => layer.id === 'schoolMarkers')[0].layout['icon-size'];
-    if (import.meta.env.VITE_DEBUG) console.log('Map.vue hoveredSchoolId watch, newHoveredSchoolId:', newHoveredSchoolId, 'style:', style, 'map.getStyle().sources.schoolMarkers.data.features:', map.getStyle().sources.schoolMarkers.data.features);
+    // if (import.meta.env.VITE_DEBUG) console.log('Map.vue hoveredSchoolId watch, newHoveredSchoolId:', newHoveredSchoolId, 'style:', style, 'map.getStyle().sources.schoolMarkers.data.features:', map.getStyle().sources.schoolMarkers.data.features);
     if (newHoveredSchoolId) {
       map.setLayoutProperty(
         'schoolMarkers',
@@ -819,14 +819,13 @@ const allSchools = computed(() => {
   const elemSchool = CityServicesStore.elementarySchool && CityServicesStore.elementarySchool.id ? CityServicesStore.elementarySchool.id : 0;
   const midSchool = CityServicesStore.middleSchool && CityServicesStore.middleSchool.id ? CityServicesStore.elementarySchool.id : 0;
   const highSchool = CityServicesStore.highSchool && CityServicesStore.highSchool.id ? CityServicesStore.elementarySchool.id : 0;
-  if (import.meta.env.VITE_DEBUG) console.log('allSchools, elemSchool:', elemSchool, 'midSchool:', midSchool, 'highSchool:', highSchool);
+  // if (import.meta.env.VITE_DEBUG) console.log('allSchools, elemSchool:', elemSchool, 'midSchool:', midSchool, 'highSchool:', highSchool);
   return elemSchool + midSchool + highSchool;
 });
 
 watch(() => allSchools.value, (newValue) => {
-  if (import.meta.env.VITE_DEBUG) console.log('watch for adding school markers, newValue:', newValue);
+  // if (import.meta.env.VITE_DEBUG) console.log('watch for adding school markers, newValue:', newValue);
   setTimeout(() => {
-    if (import.meta.env.VITE_DEBUG) console.log('setTimeout for adding school markers, newValue:', newValue);
     const feat = featureCollection([CityServicesStore.elementarySchool, CityServicesStore.middleSchool, CityServicesStore.highSchool]);
     map.getSource('schoolMarkers').setData(feat);
   }, 1000);
@@ -889,13 +888,11 @@ watch(
         ]
         );
       } else if (MainStore.currentTopic == 'city-services') {
-        if (import.meta.env.VITE_DEBUG) console.log('map.getStyle().sources.cityServices.data.features:', map.getStyle().sources.cityServices.data.features);
+        // if (import.meta.env.VITE_DEBUG) console.log('map.getStyle().sources.cityServices.data.features:', map.getStyle().sources.cityServices.data.features);
         const feature = map.getStyle().sources.cityServices.data.features.filter(feature => feature.properties.id === newHoveredStateId)[0];
         const index = map.getStyle().sources.cityServices.data.features.indexOf(feature);
-        if (import.meta.env.VITE_DEBUG == 'true') console.log('feature:', feature, 'index:', index, 'map.getStyle().sources.cityServices.data.features:', map.getStyle().sources.cityServices.data.features.filter(feature => feature.properties.id === newHoveredStateId)[0]);
         map.getStyle().sources.cityServices.data.features.splice(index, 1);
         map.getStyle().sources.cityServices.data.features.push(feature);
-        console.log("map.getSource('cityServices'):", map.getSource('cityServices'), "map.getStyle().sources.cityServices.data:", map.getStyle().sources.cityServices.data);
         map.getSource('cityServices').setData(map.getStyle().sources.cityServices.data);
         map.setPaintProperty(
           'cityServices',
