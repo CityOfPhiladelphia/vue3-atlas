@@ -1,6 +1,6 @@
 <script setup>
 
-import { computed, watch, nextTick } from 'vue';
+import { computed, watch } from 'vue';
 import { point, featureCollection } from '@turf/helpers';
 import bbox from '@turf/bbox';
 import buffer from '@turf/buffer';
@@ -323,11 +323,6 @@ const handleCellMouseleave = (e) => {
   <div class="mt-5">
     <h2 class="subtitle mb-3 is-5">
       Designated Neighborhood Schools
-      <!-- <font-awesome-icon
-        v-if="loadingData"
-        icon="fa-solid fa-spinner"
-        spin
-      /> -->
     </h2>
   </div>
 
@@ -383,17 +378,16 @@ const handleCellMouseleave = (e) => {
 
 <style>
 
-@media 
+/* @media 
 only screen and (max-width: 768px) {
 
   #nearbyVacantIndicators {
     td:nth-of-type(2) { min-height: 60px; }
 
-    /*Label the data*/
     td:nth-of-type(1):before { content: "Address"; }
     td:nth-of-type(2):before { content: "Property Type"; }
     td:nth-of-type(3):before { content: "Distance"; }
   }
-}
+} */
 
 </style>

@@ -1166,6 +1166,8 @@ const cityServicesDrawnMapStyle = mergeDeep(imageryInfo,{
           'match',
           ['get', 'type'],
           'nearbySchools',
+          '#9400c6',
+          'nearbyFireStations',
           '#FF0000',
           /* other */ '#000000'
         ],

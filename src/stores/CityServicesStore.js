@@ -114,6 +114,7 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
       hsCatchments: null,
       allSchools: null,
       nearbySchools: null,
+      nearbyFireStations: null,
       elementarySchool: null,
       middleSchool: null,
       highSchool: null,
@@ -122,7 +123,12 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
           title: 'Nearby Schools',
           id_field: 'id',
           info_field: 'SCHOOL_NAME_LABEL',
-        }
+        },
+        nearbyFireStations: {
+          title: 'Nearby Fire Stations',
+          id_field: 'FIRESTA_',
+          info_field: 'LOCATION',
+        },
       }
     }
   },
@@ -146,6 +152,8 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
       await MapStore.fillBufferForAddress(coordinates[0], coordinates[1], 5820);
       if (dataType === 'public-schools') {
         await this.fillNearbySchools();
+      } else if (dataType === 'public-safety') {
+        await this.fillNearbyFireStations();
       }
     },
     async fillAllCatchments() {
@@ -224,7 +232,6 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
         const MapStore = useMapStore();
         const buffer = MapStore.bufferForAddress;
         const url = 'https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/Schools/FeatureServer/0/query?';
-
         const params = {
           'returnGeometry': true,
           'where': '1=1',
@@ -280,8 +287,73 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
         if (import.meta.env.VITE_DEBUG == 'true') console.error('nearbySchools - await never resolved, failed to fetch address data');
       }
     },
-    fillNearbyFireStations() {
+    async fillNearbyFireStations() {
+      try {
+        this.setLoadingData(true);
+        const GeocodeStore = useGeocodeStore();
+        const MapStore = useMapStore();
+        const buffer = MapStore.bufferForAddress;
+        const url = 'https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/Fire_Dept_Facilities/FeatureServer/0/query?';
+        const params = {
+          'returnGeometry': true,
+          'where': 'FIRESTA_ IS NOT NULL',
+          'outSR': 4326,
+          'outFields': '*',
+          'inSr': 4326,
+          'geometryType': 'esriGeometryPolygon',
+          'spatialRel': 'esriSpatialRelContains',
+          'f': 'geojson',
+          'geometry': JSON.stringify({ "rings": buffer, "spatialReference": { "wkid": 4326 }}),
+        };
 
+        const response = await axios.get(url, { params });
+        if (response.status === 200) {
+          // if (import.meta.env.VITE_DEBUG) console.log('this.elementarySchool:', this.elementarySchool.id, 'this.middleSchool:', this.middleSchool.id, 'this.highSchool:', this.highSchool.id);
+          // const designatedSchools = [this.elementarySchool.id, this.middleSchool.id, this.highSchool.id];
+          const data = await response.data;
+
+          let features = (data || {}).features;
+          const feature = GeocodeStore.aisData.features[0];
+          const from = point(feature.geometry.coordinates);
+
+          features = features.map(feature => {
+            // if (import.meta.env.VITE_DEBUG) console.log('feature:', feature);
+            const featureCoords = feature.geometry.coordinates;
+            let dist;
+            if (Array.isArray(featureCoords[0])) {
+              let instance;
+              if (feature.geometry.type === 'LineString') {
+                instance = lineString([ featureCoords[0], featureCoords[1] ], { name: 'line 1' });
+              } else {
+                instance = polygon([ featureCoords[0] ]);
+              }
+              const vertices = explode(instance);
+              const closestVertex = nearest(from, vertices);
+              dist = distance(from, closestVertex, { units: 'miles' });
+            } else {
+              const to = point(featureCoords);
+              dist = distance(from, to, { units: 'miles' });
+            }
+            // const distFeet = parseInt(dist * 5280);
+            feature.properties.distance_mi = dist.toFixed(2) + ' mi';
+            feature.properties.stationInfo = '';
+            feature.properties.ENG && feature.properties.ENG != 0 ? feature.properties.stationInfo += 'Engine ' + feature.properties.ENG : '';
+            feature.properties.ENG && feature.properties.ENG != 0 && feature.properties.LAD && feature.properties.LAD != 0 ? feature.properties.stationInfo += ' / ' : '';
+            feature.properties.LAD && feature.properties.LAD != 0 ? feature.properties.stationInfo += 'Ladder ' + feature.properties.LAD : '';
+            feature.properties.LAD && feature.properties.LAD != 0 && feature.properties.MED && feature.properties.MED != 0 || feature.properties.ENG && feature.properties.ENG != 0 && feature.properties.MED && feature.properties.MED != 0 ? feature.properties.stationInfo += ' / ' : '';
+            feature.properties.MED && feature.properties.MED != 0 ? feature.properties.stationInfo += 'Medic ' + feature.properties.MED : '';
+            feature.properties.stationInfo += '<br>' + feature.properties.LOCATION;// + '<br>Philadelphia, PA ';// + feature.properties.ZIP_CODE;
+            return feature;
+          });
+
+          this.nearbyFireStations = features;
+          this.setLoadingData(false);
+        } else {
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('nearbyFireStations - await resolved but HTTP status was not successful');
+        }
+      } catch {
+        if (import.meta.env.VITE_DEBUG == 'true') console.error('nearbyFireStations - await never resolved, failed to fetch address data');
+      }
     }
   },
 });
