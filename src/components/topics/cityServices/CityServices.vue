@@ -20,6 +20,7 @@ const router = useRouter();
 
 import NearbySchools from '@/components/topics/cityServices/NearbySchools.vue';
 import NearbyPublicSafety from '@/components/topics/cityServices/NearbyPublicSafety.vue';
+import NearbyRec from '@/components/topics/cityServices/NearbyRec.vue';
 
 const selectedDataType = ref('public-schools');
 const dataTypes = {
@@ -43,11 +44,8 @@ watch(() => selectedDataType.value, (newDataType) => {
       CityServicesStore.elementarySchool = point([0,0]);
       CityServicesStore.middleSchool = point([0,0]);
       CityServicesStore.highSchool = point([0,0]);
-      // map.getSource('schoolMarkers').setData({ type: 'FeatureCollection', features: [] });
-      // map.getSource('policeStationMarker').setData()
     } else if (newDataType == 'public-schools') {
       CityServicesStore.policeStation = point([0,0]);
-      // map.getSource('policeStationMarker').setData(point([0,0]));
     }
 
     const popup = document.getElementsByClassName('maplibregl-popup');
@@ -113,6 +111,7 @@ onMounted( () => {
 
     <NearbySchools v-if="currentCityServicesDataType == 'public-schools'" />
     <NearbyPublicSafety v-if="currentCityServicesDataType == 'public-safety'" />
+    <NearbyRec v-if="currentCityServicesDataType == 'recreation-facilities'"></NearbyRec>
 
   </section>
 </template>

@@ -117,6 +117,7 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
       policeStation: null,
       nearbySchools: null,
       nearbyFireStations: null,
+      nearbyRecreationFacilities: null,
       elementarySchool: null,
       middleSchool: null,
       highSchool: null,
@@ -130,6 +131,11 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
           title: 'Nearby Fire Stations',
           id_field: 'id',
           info_field: 'stationInfo',
+        },
+        nearbyRecreationFacilities: {
+          title: 'Nearby Recreation Facilities',
+          id_field: 'id',
+          info_field: 'public_name',
         },
       }
     }
@@ -156,6 +162,8 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
         await this.fillNearbySchools();
       } else if (dataType === 'public-safety') {
         await this.fillNearbyFireStations();
+      } else if (dataType === 'recreation-facilities') {
+        await this.fillNearbyRecreationFacilities();
       }
     },
     async fillAllCatchments() {
@@ -380,6 +388,48 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
       } catch {
         if (import.meta.env.VITE_DEBUG == 'true') console.error('nearbyFireStations - await never resolved, failed to fetch address data');
       }
-    }
+    },
+    async fillNearbyRecreationFacilities() {
+      try {
+        const GeocodeStore = useGeocodeStore();
+        this.setLoadingData(true);
+        const feature = GeocodeStore.aisData.features[0];
+        let dataSource = {
+          url: 'https://phl.carto.com/api/v2/sql?',
+        };
+
+        const distQuery = "(ST_Distance(pprlp.the_geom::geography, ST_SetSRID(ST_Point("
+                + feature.geometry.coordinates[0]
+                + "," + feature.geometry.coordinates[1]
+                + "),4326)::geography))";
+
+        const latQuery = "ST_Y(pprlp.the_geom)";
+        const lngQuery = "ST_X(pprlp.the_geom)";
+
+        let query = `WITH pprlp AS (SELECT * FROM ppr_website_locatorpoints) `
+        query += `SELECT *, ${distQuery} as distance, ${latQuery} as lat, ${lngQuery} as lng FROM ppr_facilities pprf`
+        query += ` LEFT JOIN pprlp ON pprf.website_locator_points_link_id = pprlp.linkid`
+        query += ` WHERE pprf.facility_is_published='true' and ${distQuery} < 1609.34`;
+        query += ` ORDER BY distance`;
+        
+        let params = {
+          q: query,
+        };
+
+        const response = await axios.get(dataSource.url, { params })
+        if (response.status === 200) {
+          const data = response.data;
+          data.rows.forEach(row => {
+            row.distance_mi = (row.distance / 1609.34).toFixed(2) + ' mi';
+          });
+          this.nearbyRecreationFacilities = data;
+          this.setLoadingData(false);
+        } else {
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('nearbyRecreationFacilities - await resolved but HTTP status was not successful');
+        }
+      } catch {
+        if (import.meta.env.VITE_DEBUG == 'true') console.error('nearbyRecreationFacilities - await never resolved, failed to fetch address data');
+      }
+    },
   },
 });

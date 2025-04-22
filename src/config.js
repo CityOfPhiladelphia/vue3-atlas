@@ -1179,6 +1179,8 @@ const cityServicesDrawnMapStyle = mergeDeep(imageryInfo,{
           '#9400c6',
           'nearbyFireStations',
           '#FF0000',
+          'nearbyRecreationFacilities',
+          '#0096FF',
           /* other */ '#000000'
         ],
         'circle-stroke-width': 1,
