@@ -406,10 +406,12 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
         const latQuery = "ST_Y(pprlp.the_geom)";
         const lngQuery = "ST_X(pprlp.the_geom)";
 
-        let query = `WITH pprlp AS (SELECT * FROM ppr_website_locatorpoints) `
-        query += `SELECT *, ${distQuery} as distance, ${latQuery} as lat, ${lngQuery} as lng FROM ppr_facilities pprf`
-        query += ` LEFT JOIN pprlp ON pprf.website_locator_points_link_id = pprlp.linkid`
+        let query = `WITH pprf AS (SELECT * FROM ppr_facilities) `
+        query += `SELECT pprf.public_name, pprf.id, ${distQuery} as distance, ${latQuery} as lat, ${lngQuery} as lng FROM ppr_website_locatorpoints pprlp`
+        query += ` LEFT JOIN pprf ON pprf.website_locator_points_link_id = pprlp.linkid`
+        // query += ` WHERE pprf.facility_is_published='true' and ${distQuery} < 2000`;
         query += ` WHERE pprf.facility_is_published='true' and ${distQuery} < 1609.34`;
+        query += ` GROUP BY pprf.public_name, pprlp.the_geom, pprf.id`;
         query += ` ORDER BY distance`;
         
         let params = {
@@ -419,6 +421,7 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
         const response = await axios.get(dataSource.url, { params })
         if (response.status === 200) {
           const data = response.data;
+          if (import.meta.env.VITE_DEBUG) console.log('nearbyRecreationFacilities, data:', data);
           data.rows.forEach(row => {
             row.distance_mi = (row.distance / 1609.34).toFixed(2) + ' mi';
           });
