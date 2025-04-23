@@ -44,7 +44,8 @@ watch(() => selectedDataType.value, (newDataType) => {
       CityServicesStore.elementarySchool = point([0,0]);
       CityServicesStore.middleSchool = point([0,0]);
       CityServicesStore.highSchool = point([0,0]);
-    } else if (newDataType !== 'public-safety') {
+    }
+    if (newDataType !== 'public-safety') {
       CityServicesStore.policeStation = point([0,0]);
     }
 
