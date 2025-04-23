@@ -1220,6 +1220,8 @@ const cityServicesDrawnMapStyle = mergeDeep(imageryInfo,{
         'icon-rotate': 0,
         'icon-anchor': 'center',
         'icon-size': .15,
+        "icon-allow-overlap" : true,
+        "text-allow-overlap": true,
       }
     },
     {

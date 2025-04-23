@@ -24,8 +24,8 @@ import NearbyRec from '@/components/topics/cityServices/NearbyRec.vue';
 
 const selectedDataType = ref('public-schools');
 const dataTypes = {
-  'public-safety': 'Public Safety',
   'public-schools': 'Public Schools',
+  'public-safety': 'Public Safety',
   'recreation-facilities': 'Recreation Facilities',
 };
 

@@ -5,7 +5,7 @@ import { point, featureCollection } from '@turf/helpers';
 import bbox from '@turf/bbox';
 import buffer from '@turf/buffer';
 
-// import maplibregl from 'maplibre-gl';
+import maplibregl from 'maplibre-gl';
 
 import { useGeocodeStore } from '@/stores/GeocodeStore';
 const GeocodeStore = useGeocodeStore();
@@ -23,10 +23,10 @@ import useTransforms from '@/composables/useTransforms';
 const { nth } = useTransforms();
 
 import VerticalTable from '@/components/VerticalTable.vue';
-import CityServices from './CityServices.vue';
 
 const loadingData = computed(() => CityServicesStore.loadingData);
 const hoveredStateId = computed(() => { return MainStore.hoveredStateId; });
+const hoveredPoliceStationId = computed(() => { return MainStore.hoveredPoliceStationId; });
 
 const nearbyFireStations = computed(() => {
   return CityServicesStore.nearbyFireStations;
@@ -100,21 +100,50 @@ watch(
 )
 
 const policeVertTableData = computed(() => {
-  // if (geocodeElementarySchool.value == geocodeMiddleSchool.value) {
-    return [
-      {
-        label: 'Jurisdictions',
-        value: policeDistrict.value,
-        // class: elementarySchool.value.properties.SCHOOL_NUM,
-      },
-      {
-        label: 'Police Station',
-        value: policeStation.value.properties.LOCATION,
-        // class: highSchool.value.properties.SCHOOL_NUM,
-      },
-    ];
-  // }
+  return [
+    {
+      label: 'Jurisdictions',
+      value: policeDistrict.value,
+      // class: 'none',
+    },
+    {
+      label: 'Police Station',
+      value: policeStation.value.properties.LOCATION,
+      class: policeStation.value.id,
+    },
+  ];
 });
+
+const handleCellClick = () => {
+  // if (import.meta.env.VITE_DEBUG) console.log('handleCellClick is running');
+  const map = MapStore.map;
+  let lngLat = policeStation.value.geometry.coordinates;
+  let location = policeStation.value.properties.LOCATION;
+  map.flyTo({ center: lngLat });
+  const popup = document.getElementsByClassName('maplibregl-popup');
+  if (popup.length) {
+    popup[0].remove();
+  }
+  new maplibregl.Popup({ className: 'my-class', offset: 25 })
+    .setLngLat(lngLat)
+    .setHTML(location)
+    .setMaxWidth("300px")
+    .addTo(map);
+};
+
+const handleCellMouseover = (e) => {
+  if (import.meta.env.VITE_DEBUG) console.log('handleCellMouseover is running, e:', e);
+  MainStore.hoveredPoliceStationId = e.toString();
+};
+
+const handleCellMouseleave = () => {
+  // if (import.meta.env.VITE_DEBUG) console.log('handleCellMouseleave is running, e:', e);
+  MainStore.hoveredPoliceStationId = null;
+  const popup = document.getElementsByClassName('maplibregl-popup');
+  if (popup.length) {
+    popup[0].remove();
+  }
+};
 
 </script>
 
@@ -129,16 +158,16 @@ const policeVertTableData = computed(() => {
   <vertical-table
     table-id="police-district"
     :data="policeVertTableData"
+    :hovered-id="hoveredPoliceStationId"
+    @clicked-cell="handleCellClick"
+    @hovered-cell="handleCellMouseover"
+    @unhovered-cell="handleCellMouseleave"
   />
   <a
     class="table-link"
     target="_blank"
     href="https://www.phillypolice.com/district/district-gis/"
   >See citywide police stations at PhillyPolice.com <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
-    <!-- :hovered-id="hoveredSchoolId"
-    @clicked-cell="handleCellClick"
-    @hovered-cell="handleCellMouseover"
-    @unhovered-cell="handleCellMouseleave" -->
 
   <div class="mt-5">
     <h2 class="subtitle mb-3 is-5">

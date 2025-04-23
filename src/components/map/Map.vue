@@ -93,6 +93,7 @@ const cameraSrc = computed(() => {
 })
 
 const hoveredSchoolId = computed(() => { return MainStore.hoveredSchoolId; })
+const hoveredPoliceStationId = computed(() => { return MainStore.hoveredPoliceStationId; })
 
 onMounted(async () => {
   // if (import.meta.env.VITE_DEBUG == 'true') console.log('Map.vue onMounted route.params.topic:', route.params.topic, 'route.params.address:', route.params.address);
@@ -287,6 +288,38 @@ onMounted(async () => {
     new maplibregl.Popup({ className: 'my-class' })
       .setLngLat(e.lngLat)
       .setHTML(properties.SCHOOL_NAME_LABEL)
+      .setMaxWidth("300px")
+      .addTo(map);
+  });
+
+  map.on('mouseenter', 'policeStationMarker', (e) => {
+    if (import.meta.env.VITE_DEBUG == 'true') console.log('mouseenter, e:', e);
+    if (e.features.length > 0) {
+      // if (import.meta.env.VITE_DEBUG == 'true') console.log('map.getSource(nearby):', map.getSource('nearby'), 'map.getStyle().sources:', map.getStyle().sources);
+      map.getCanvas().style.cursor = 'pointer'
+      MainStore.hoveredPoliceStationId = e.features[0].id.toString();
+    }
+  });
+
+  map.on('mouseleave', 'policeStationMarker', () => {
+    map.getCanvas().style.cursor = ''
+    MainStore.hoveredPoliceStationId = null;
+  });
+
+  map.on('click', 'policeStationMarker', (e) => {
+    e.clickOnLayer = true;
+    const properties = e.features[0].properties;
+    // if (import.meta.env.VITE_DEBUG) console.log('click schoolMarkers, properties:', properties);
+
+    MainStore.clickedMarkerId = properties.OBJECTID;
+
+    const popup = document.getElementsByClassName('maplibregl-popup');
+    if (popup.length) {
+      popup[0].remove();
+    }
+    new maplibregl.Popup({ className: 'my-class' })
+      .setLngLat(e.lngLat)
+      .setHTML(properties.LOCATION)
       .setMaxWidth("300px")
       .addTo(map);
   });
@@ -795,6 +828,25 @@ watch(
 );
 
 watch(
+  () => hoveredPoliceStationId.value,
+  newHoveredPoliceStationId => {
+    if (newHoveredPoliceStationId) {
+      map.setLayoutProperty(
+        'policeStationMarker',
+        'icon-size',
+        0.25,
+      )
+    } else {
+      map.setLayoutProperty(
+        'policeStationMarker',
+        'icon-size',
+        0.15,
+      )
+    }
+  }
+)
+
+watch(
   () => hoveredSchoolId.value,
   newHoveredSchoolId => {
     const style = map.getStyle().layers.filter(layer => layer.id === 'schoolMarkers')[0].layout['icon-size'];
@@ -840,7 +892,9 @@ watch(
   () => CityServicesStore.policeStation,
   (newValue) => {
     if (import.meta.env.VITE_DEBUG) console.log('Map.vue watch for adding police station markers, newValue:', newValue);
-    map.getSource('policeStationMarker').setData(newValue);
+    if (map.getSource('policeStationMarker')) {
+      map.getSource('policeStationMarker').setData(newValue);
+    }
   }
 )
 
