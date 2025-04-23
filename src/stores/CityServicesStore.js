@@ -8,6 +8,11 @@ import distance from '@turf/distance';
 import explode from '@turf/explode';
 import nearest from '@turf/nearest-point';
 
+import slugify from 'slugify';
+
+import useTransforms from '@/composables/useTransforms';
+const { phoneNumber } = useTransforms();
+
 const evaluateParams = (feature, dataSource) => {
   const params = {};
   if (!dataSource.options.params) {
@@ -407,11 +412,11 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
         const lngQuery = "ST_X(pprlp.the_geom)";
 
         let query = `WITH pprf AS (SELECT * FROM ppr_facilities) `
-        query += `SELECT pprf.public_name, pprf.id, ${distQuery} as distance, ${latQuery} as lat, ${lngQuery} as lng FROM ppr_website_locatorpoints pprlp`
+        query += `SELECT pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, pprf.id, pprf.facility_type, pprf.facility_description, ${distQuery} as distance, ${latQuery} as lat, ${lngQuery} as lng FROM ppr_website_locatorpoints pprlp`
         query += ` LEFT JOIN pprf ON pprf.website_locator_points_link_id = pprlp.linkid`
-        // query += ` WHERE pprf.facility_is_published='true' and ${distQuery} < 2000`;
         query += ` WHERE pprf.facility_is_published='true' and ${distQuery} < 1609.34`;
-        query += ` GROUP BY pprf.public_name, pprlp.the_geom, pprf.id`;
+        query += ` GROUP BY pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, pprlp.the_geom, pprf.facility_type, pprf.facility_description, pprf.id`;
+        // query += ` GROUP BY pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, pprlp.the_geom, pprf.facility_type, pprf.id`;
         query += ` ORDER BY distance`;
         
         let params = {
@@ -424,6 +429,24 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
           if (import.meta.env.VITE_DEBUG) console.log('nearbyRecreationFacilities, data:', data);
           data.rows.forEach(row => {
             row.distance_mi = (row.distance / 1609.34).toFixed(2) + ' mi';
+            row.location = `<a target="_blank" href="https://www.phila.gov/parks-rec-finder/#/location/${slugify(row.public_name.toLowerCase())}/${row.id}">${row.public_name}</a>
+            <br>${row.address.full}`
+
+            if (row.contact_phone) {
+              row.location += `<br>${phoneNumber(row.contact_phone)}`;
+            }
+            
+            if (row.location_contact_name && row.location_contact_name.includes('@')) {
+              row.location +=`<br><a href="mailto:${row.location_contact_name}">${row.location_contact_name}</a>`;
+            } else if (row.location_contact_name) {
+              row.location +=`<br>${row.location_contact_name}`;
+            }
+
+            row.features = `Facility Type: ${row.facility_type}`;
+            if (row.facility_description) {
+              row.features += `<br><div class="description">${row.facility_description}</div>`;
+            }
+
           });
           this.nearbyRecreationFacilities = data.rows;
           this.setLoadingData(false);

@@ -47,12 +47,13 @@ const nearbyRecreationFacilitiesTableData = computed(() => {
     columns: [
       {
         label: 'Location',
-        field: 'public_name',
+        field: 'location',
         html: true,
       },
       {
         label: 'Features',
-        field: 'id',
+        field: 'features',
+        html: true,
       },
       {
         label: 'Distance',
@@ -67,12 +68,24 @@ const nearbyRecreationFacilitiesTableData = computed(() => {
 
 <template>
   
+  <div class="mt-5">
+    <h2 class="subtitle mb-3 is-5">
+      Nearby Recreation Facilities
+      <font-awesome-icon
+        v-if="loadingData"
+        icon="fa-solid fa-spinner"
+        spin
+      />
+      <span v-else>({{ nearbyRecreationFacilitiesTableData.rows.length }})</span>
+    </h2>
+  </div>
+
   <vue-good-table
     id="nearbyRecreationFacilities"
     :columns="nearbyRecreationFacilitiesTableData.columns"
     :rows="nearbyRecreationFacilitiesTableData.rows"
     :row-style-class="row => hoveredStateId === row.id ? 'active-hover ' + row.id : 'inactive ' + row.id"
-    style-class="table nearby-table"
+    style-class="table nearby-table nearby-recreation-facilities-table"
     :sort-options="{ initialSortBy: {field: 'distance_mi', type: 'asc'}}"
     @row-mouseenter="handleRowMouseover($event, 'id')"
     @row-mouseleave="handleRowMouseleave"
@@ -95,3 +108,28 @@ const nearbyRecreationFacilitiesTableData = computed(() => {
   </vue-good-table>
 
 </template>
+
+<style>
+
+.nearby-recreation-facilities-table {
+  .description {
+    font-size: 0.7rem;
+
+    /* p {
+      font-size: 0.8rem;
+    } */
+  }
+  /* tbody {
+    tr {
+      td {
+        span { */
+          /* p {
+            font-size: 0.6rem;
+          } */
+        /* }
+      }
+    }
+  } */
+}
+
+</style>
