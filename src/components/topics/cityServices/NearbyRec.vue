@@ -107,6 +107,14 @@ const nearbyRecreationFacilitiesTableData = computed(() => {
     </template>
   </vue-good-table>
 
+  <a
+    class="table-link"
+    target="_blank"
+    href="https://www.phila.gov/parks-rec-finder/#/"
+  >See all parks & recreation facilities citywide <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
+
+  
+
 </template>
 
 <style>
@@ -114,22 +122,7 @@ const nearbyRecreationFacilitiesTableData = computed(() => {
 .nearby-recreation-facilities-table {
   .description {
     font-size: 0.7rem;
-
-    /* p {
-      font-size: 0.8rem;
-    } */
   }
-  /* tbody {
-    tr {
-      td {
-        span { */
-          /* p {
-            font-size: 0.6rem;
-          } */
-        /* }
-      }
-    }
-  } */
 }
 
 </style>
