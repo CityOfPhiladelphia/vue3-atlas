@@ -425,7 +425,7 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
           data.rows.forEach(row => {
             row.distance_mi = (row.distance / 1609.34).toFixed(2) + ' mi';
           });
-          this.nearbyRecreationFacilities = data;
+          this.nearbyRecreationFacilities = data.rows;
           this.setLoadingData(false);
         } else {
           if (import.meta.env.VITE_DEBUG == 'true') console.warn('nearbyRecreationFacilities - await resolved but HTTP status was not successful');

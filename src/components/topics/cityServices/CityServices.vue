@@ -40,11 +40,11 @@ watch(() => selectedDataType.value, (newDataType) => {
     MainStore.currentCityServicesDataType = newDataType;
 
     const map = MapStore.map;
-    if (newDataType == 'public-safety') {
+    if (newDataType !== 'public-schools') {
       CityServicesStore.elementarySchool = point([0,0]);
       CityServicesStore.middleSchool = point([0,0]);
       CityServicesStore.highSchool = point([0,0]);
-    } else if (newDataType == 'public-schools') {
+    } else if (newDataType !== 'public-safety') {
       CityServicesStore.policeStation = point([0,0]);
     }
 

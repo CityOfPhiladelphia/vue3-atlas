@@ -26,7 +26,7 @@ const nearbyRecreationFacilities = computed(() => {
 
 const nearbyRecreationFacilitiesGeojson = computed(() => {
   if (!nearbyRecreationFacilities.value) return null;
-  return nearbyRecreationFacilities.value.rows.map(item => point([item.lng, item.lat], { id: item.id, type: 'nearbyRecreationFacilities' }));
+  return nearbyRecreationFacilities.value.map(item => point([item.lng, item.lat], { id: item.id, type: 'nearbyRecreationFacilities' }));
 
 })
 
@@ -59,7 +59,7 @@ const nearbyRecreationFacilitiesTableData = computed(() => {
         field: 'distance_mi',
       },
     ],
-    rows: nearbyRecreationFacilities.value.rows || [],
+    rows: nearbyRecreationFacilities.value || [],
   }
 });
 
@@ -73,7 +73,7 @@ const nearbyRecreationFacilitiesTableData = computed(() => {
     :rows="nearbyRecreationFacilitiesTableData.rows"
     :row-style-class="row => hoveredStateId === row.id ? 'active-hover ' + row.id : 'inactive ' + row.id"
     style-class="table nearby-table"
-    :sort-options="{ initialSortBy: {field: 'properties.distance_mi', type: 'asc'}}"
+    :sort-options="{ initialSortBy: {field: 'distance_mi', type: 'asc'}}"
     @row-mouseenter="handleRowMouseover($event, 'id')"
     @row-mouseleave="handleRowMouseleave"
     @row-click="handleRowClick($event, 'id', 'nearbyRecreationFacilities')"
