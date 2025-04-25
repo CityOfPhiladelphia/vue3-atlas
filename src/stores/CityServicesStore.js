@@ -412,11 +412,12 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
         const lngQuery = "ST_X(pprlp.the_geom)";
 
         let query = `WITH pprf AS (SELECT * FROM ppr_facilities) `
-        query += `SELECT pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, pprf.id, pprf.facility_type, pprf.facility_description, ${distQuery} as distance, ${latQuery} as lat, ${lngQuery} as lng FROM ppr_website_locatorpoints pprlp`
+        // query += `SELECT pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, pprf.id, pprf.facility_type, pprf.facility_description, ${distQuery} as distance, ${latQuery} as lat, ${lngQuery} as lng FROM ppr_website_locatorpoints pprlp`
+        query += `SELECT pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, pprf.id, pprf.facility_type, ${distQuery} as distance, ${latQuery} as lat, ${lngQuery} as lng FROM ppr_website_locatorpoints pprlp`
         query += ` LEFT JOIN pprf ON pprf.website_locator_points_link_id = pprlp.linkid`
         query += ` WHERE pprf.facility_is_published='true' and ${distQuery} < 1609.34`;
-        query += ` GROUP BY pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, pprlp.the_geom, pprf.facility_type, pprf.facility_description, pprf.id`;
-        // query += ` GROUP BY pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, pprlp.the_geom, pprf.facility_type, pprf.id`;
+        // query += ` GROUP BY pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, pprlp.the_geom, pprf.facility_type, pprf.facility_description, pprf.id`;
+        query += ` GROUP BY pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, pprlp.the_geom, pprf.facility_type, pprf.id`;
         query += ` ORDER BY distance`;
         
         let params = {
@@ -442,10 +443,12 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
               row.location +=`<br>${row.location_contact_name}`;
             }
 
-            row.features = `Facility Type: ${row.facility_type}`;
-            if (row.facility_description) {
-              row.features += `<br><div class="description">${row.facility_description}</div>`;
+            if (row.facility_type) {
+              row.features = `Facility Type: ${row.facility_type}`;
             }
+            // if (row.facility_description) {
+            //   row.features += `<br><div class="description">${row.facility_description}</div>`;
+            // }
 
           });
           this.nearbyRecreationFacilities = data.rows;
