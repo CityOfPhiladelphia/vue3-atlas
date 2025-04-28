@@ -1,6 +1,6 @@
 <script setup>
 
-import { computed, watch } from 'vue';
+import { computed, watch, onMounted } from 'vue';
 import { point, featureCollection } from '@turf/helpers';
 import bbox from '@turf/bbox';
 import buffer from '@turf/buffer';
@@ -133,7 +133,9 @@ const handleCellClick = () => {
 
 const handleCellMouseover = (e) => {
   if (import.meta.env.VITE_DEBUG) console.log('handleCellMouseover is running, e:', e);
-  MainStore.hoveredPoliceStationId = e.toString();
+  if (e) {
+    MainStore.hoveredPoliceStationId = e.toString();
+  }
 };
 
 const handleCellMouseleave = () => {
@@ -144,6 +146,16 @@ const handleCellMouseleave = () => {
     popup[0].remove();
   }
 };
+
+// in order to be able to switch off the topic and come back
+onMounted(() => {
+  const map = MapStore.map;
+  if (map.getSource) {
+    // if (import.meta.env.VITE_DEBUG) console.log("NearbySchools.vue onMounted is running, map.getSource('schoolMarkers'):", map.getSource('schoolMarkers'));
+    // CityServicesStore.policeStation;
+    map.getSource('policeStationMarker').setData(CityServicesStore.policeStation);
+  }
+})
 
 </script>
 

@@ -39,7 +39,7 @@ watch(() => selectedDataType.value, (newDataType) => {
     setDataTypeInRouter(newDataType);
     MainStore.currentCityServicesDataType = newDataType;
 
-    const map = MapStore.map;
+    // const map = MapStore.map;
     if (newDataType !== 'public-schools') {
       CityServicesStore.elementarySchool = point([0,0]);
       CityServicesStore.middleSchool = point([0,0]);
@@ -74,7 +74,7 @@ watch(() => clickedMarkerId.value, (newClickedMarkerId) => {
   }
 });
 
-onMounted( () => {
+onMounted(() => {
   // if (import.meta.env.VITE_DEBUG == 'true') console.log('CityServices.vue onMounted is running, route.params.data:', route.params.data);
   selectedDataType.value = route.params.data;
   if (!currentCityServicesDataType.value) {

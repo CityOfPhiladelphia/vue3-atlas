@@ -27,7 +27,6 @@ const nearbyRecreationFacilities = computed(() => {
 const nearbyRecreationFacilitiesGeojson = computed(() => {
   if (!nearbyRecreationFacilities.value) return null;
   return nearbyRecreationFacilities.value.map(item => point([item.lng, item.lat], { id: item.id, type: 'nearbyRecreationFacilities' }));
-
 })
 
 watch(() => nearbyRecreationFacilitiesGeojson.value, (newGeojson) => {

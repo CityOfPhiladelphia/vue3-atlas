@@ -1,6 +1,6 @@
 <script setup>
 
-import { computed, watch } from 'vue';
+import { computed, watch, onMounted } from 'vue';
 import { point, featureCollection } from '@turf/helpers';
 import bbox from '@turf/bbox';
 import buffer from '@turf/buffer';
@@ -240,7 +240,6 @@ const nearbySchools = computed(() => {
 const nearbySchoolsGeojson = computed(() => {
   if (!nearbySchools.value) return null;
   return nearbySchools.value.map(item => point(item.geometry.coordinates, { id: item.id, type: 'nearbySchools' }));
-
 })
 
 watch(() => nearbySchoolsGeojson.value, (newGeojson) => {
@@ -315,6 +314,16 @@ const handleCellMouseleave = (e) => {
     popup[0].remove();
   }
 };
+
+// in order to be able to switch off the topic and come back
+onMounted(() => {
+  const map = MapStore.map;
+  if (map.getSource) {
+    // if (import.meta.env.VITE_DEBUG) console.log("NearbySchools.vue onMounted is running, map.getSource('schoolMarkers'):", map.getSource('schoolMarkers'));
+    const feat = featureCollection([CityServicesStore.elementarySchool, CityServicesStore.middleSchool, CityServicesStore.highSchool]);
+    map.getSource('schoolMarkers').setData(feat);
+  }
+})
 
 </script>
 
