@@ -19,12 +19,15 @@ export const useMainStore = defineStore("MainStore", {
       otherParcelAddress:'',
       currentAddress: '',
       currentLang: null,
-      currentNearbyDataType: null,
+      currentNearbyActivityDataType: null,
       currentNearbyTimeInterval: {},
+      currentCityServicesDataType: null,
       dataSourcesLoadedArray: [],
       clickedRow: [],
       clickedMarkerId: null,
       hoveredStateId: null,
+      hoveredSchoolId: null,
+      hoveredPoliceStationId: null,
       selectedParcelId: null,
       fullScreenMapEnabled: false,
       fullScreenTopicsEnabled: false,
@@ -45,8 +48,8 @@ export const useMainStore = defineStore("MainStore", {
     setLastSearchMethod(searchMethod) {
       this.lastSearchMethod = searchMethod;
     },
-    setCurrentNearbyDataType(data) {
-      this.currentNearbyDataType = data;
+    setcurrentNearbyActivityDataType(data) {
+      this.currentNearbyActivityDataType = data;
     },
     clearDataSourcesLoadedArray() {
       this.dataSourcesLoadedArray = [];

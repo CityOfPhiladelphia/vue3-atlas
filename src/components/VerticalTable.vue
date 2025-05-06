@@ -2,6 +2,8 @@
 
 import { defineProps } from 'vue';
 
+const $emit = defineEmits(['clickedCell', 'hoveredCell', 'unhoveredCell']);
+
 defineProps({
   tableId: {
     type: String,
@@ -10,6 +12,10 @@ defineProps({
   data: {
     type: Array,
     default: () => []
+  },
+  hoveredId: {
+    type: String,
+    default: ''
   },
 });
 
@@ -26,7 +32,13 @@ defineProps({
         :key="field.label"
       >
         <th>{{ field.label }}</th>
-        <td v-html="field.value" />
+        <td
+          v-html="field.value"
+          :class="hoveredId == field.class && hoveredId != null ? 'active-hover ' + field.class : 'inactive ' + field.class"
+          @mouseenter="$emit('hoveredCell', field.class)"
+          @mouseleave="$emit('unhoveredCell', field.class)"
+          @click="$emit('clickedCell', field.label)"
+        />
       </tr>
     </tbody>
   </table>

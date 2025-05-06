@@ -218,6 +218,13 @@ a {
   padding-bottom: 1.5rem;
 }
 
+.topic-callout {
+  background-color: #DAEDFe;
+  margin-bottom: 1.5rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+}
+
 .title-col {
   padding-top: 12px !important;
   padding-bottom: 12px !important;
@@ -428,6 +435,11 @@ only screen and (min-device-width: 768px) and (max-device-width: 1024px) {
 .table-link {
   padding-left: 4px;
   font-size: .875rem !important;
+}
+
+.active-hover {
+  // background-color: #FFFF00 !important;
+  background-color: #F3D661 !important;
 }
 
 .active-hover td {
