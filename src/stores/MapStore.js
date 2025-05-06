@@ -49,9 +49,9 @@ export const useMapStore = defineStore("MapStore", {
     setMapStyle(style) {
       this.currentMapStyle = style;
     },
-    async fillBufferForAddress(lng, lat) {
+    async fillBufferForAddress(lng, lat, distance=750) {
       let thePoint = point([lng, lat])
-      let theBuffer = buffer(thePoint, 750, {units: 'feet'});
+      let theBuffer = buffer(thePoint, distance, {units: 'feet'});
       if (import.meta.env.VITE_DEBUG == 'true') console.log('fillBufferForAddress is running, thePoint:', thePoint, 'theBuffer:', theBuffer, 'lng:', lng, 'lat:', lat);
       this.bufferForAddress = theBuffer.geometry.coordinates;
     }

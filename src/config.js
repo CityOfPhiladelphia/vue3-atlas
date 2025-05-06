@@ -940,9 +940,9 @@ const votingDrawnMapStyle = mergeDeep(imageryInfo,{
   ],
 });
 
-const nearbyDrawnMapStyle = mergeDeep(imageryInfo,{
+const nearbyActivityDrawnMapStyle = mergeDeep(imageryInfo,{
   version: 8,
-  name: 'nearbyDrawnMap',
+  name: 'nearbyActivityDrawnMap',
   glyphs: '//fonts.openmaptiles.org/{fontstack}/{range}.pbf',
   sources: {
     pwd: {
@@ -979,7 +979,7 @@ const nearbyDrawnMapStyle = mergeDeep(imageryInfo,{
         }
       }
     },
-    nearby: {
+    nearbyActivity: {
       type: 'geojson',
       data: {
         type: 'FeatureCollection',
@@ -1011,8 +1011,8 @@ const nearbyDrawnMapStyle = mergeDeep(imageryInfo,{
       }
     },
     {
-      id: 'nearby',
-      source: 'nearby',
+      id: 'nearbyActivity',
+      source: 'nearbyActivity',
       type: 'circle',
       paint: {
         'circle-radius': 7,
@@ -1079,6 +1079,196 @@ const nearbyDrawnMapStyle = mergeDeep(imageryInfo,{
   ],
 });
 
+const cityServicesDrawnMapStyle = mergeDeep(imageryInfo,{
+  version: 8,
+  name: 'cityServicesDrawnMap',
+  glyphs: '//fonts.openmaptiles.org/{fontstack}/{range}.pbf',
+  sources: {
+    pwd: {
+      tiles: [
+        'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/CityBasemap/MapServer/tile/{z}/{y}/{x}',
+      ],
+      type: 'raster',
+      tileSize: 256,
+    },
+    pwdLabels: {
+      tiles: [
+        'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/CityBasemap_Labels/MapServer/tile/{z}/{y}/{x}',
+      ],
+      type: 'raster',
+      tileSize: 256,
+    },
+    schoolMarkers: {
+      type: 'geojson',
+      data: {
+        type: 'FeatureCollection',
+        features: []
+      },
+    },
+    policeStationMarker: {
+      type: 'geojson',
+      data: {
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: [],
+        },
+      }
+    },
+    addressMarker: {
+      type: 'geojson',
+      data: {
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: [],
+        },
+      }
+    },
+    dorParcel: {
+      type: 'geojson',
+      data: {
+        type: 'Feature',
+        geometry: {
+          type: 'Polygon',
+          coordinates: [[[]]],
+        }
+      }
+    },
+    cityServices: {
+      type: 'geojson',
+      data: {
+        type: 'FeatureCollection',
+        features: []
+      },
+    },
+  },
+  layers: [
+    {
+      id: 'pwd',
+      source: 'pwd',
+      type: 'raster',
+    },
+    {
+      id: 'pwdLabels',
+      source: 'pwdLabels',
+      type: 'raster',
+    },
+    {
+      id: 'cyclomediaRecordings',
+      source: 'cyclomediaRecordings',
+      type: 'circle',
+      paint: {
+        'circle-radius': 6,
+        'circle-color': '#5b94c6',
+        'circle-stroke-width': 1,
+        'circle-stroke-color': '#a1a1a1',
+        'circle-opacity': 0.5,
+      }
+    },
+    {
+      id: 'cityServices',
+      source: 'cityServices',
+      type: 'circle',
+      paint: {
+        'circle-radius': 7,
+        'circle-color': [
+          'match',
+          ['get', 'type'],
+          'nearbySchools',
+          '#9400c6',
+          'nearbyFireStations',
+          '#FF0000',
+          'nearbyRecreationFacilities',
+          '#0096FF',
+          /* other */ '#000000'
+        ],
+        'circle-stroke-width': 1,
+        'circle-stroke-color': 'white',
+      },
+    },
+    {
+      id: 'cyclomediaCamera',
+      source: 'cyclomediaCamera',
+      type: 'symbol',
+      layout: {
+        'icon-image': 'camera-icon',
+        'icon-anchor' : 'center',
+        'icon-size': 0.09,
+        'icon-rotate': 0,
+        'icon-rotation-alignment': 'map',
+        "icon-allow-overlap" : true,
+        "text-allow-overlap": true,
+      },
+    },
+    {
+      'id': 'cyclomediaViewcone',
+      'type': 'fill',
+      'source': 'cyclomediaViewcone',
+      'layout': {},
+      'paint': {
+        'fill-color': 'rgb(0,102,255)',
+        'fill-opacity': 0.2,
+      },
+    },
+    {
+      id: 'policeStationMarker',
+      source: 'policeStationMarker',
+      type: 'symbol',
+      layout: {
+        'icon-image': 'police-station-solid',
+        'icon-rotate': 0,
+        'icon-anchor': 'center',
+        'icon-size': .15,
+        "icon-allow-overlap" : true,
+        "text-allow-overlap": true,
+      }
+    },
+    {
+      id: 'schoolMarkers',
+      source: 'schoolMarkers',
+      type: 'symbol',
+      layout: {
+        // 'icon-image': 'school-solid',
+        'icon-image': [
+          'match',
+          ['get', 'GRADE_LEVEL'],
+          'PRE-K/KINDERGARTEN',
+          'pink-school-solid',
+          'ELEMENTARY SCHOOL',
+          'red-school-solid',
+          'ELEMENTARY/MIDDLE',
+          'orange-school-solid',
+          'MIDDLE SCHOOL',
+          'yellow-school-solid',
+          'MIDDLE/HIGH',
+          'green-school-solid',
+          'HIGH SCHOOL',
+          'blue-school-solid',
+          'ELEMENTARY/MIDDLE/HIGH',
+          'purple-school-solid',
+          'red-school-solid',
+        ],
+        'icon-anchor' : 'center',
+        'icon-size': .05,
+        "icon-allow-overlap" : true,
+        "text-allow-overlap": true,
+      },
+    },
+    {
+      id: 'addressMarker',
+      source: 'addressMarker',
+      type: 'symbol',
+      layout: {
+        'icon-image': 'marker-blue',
+        'icon-rotate': 180,
+        'icon-anchor': 'bottom',
+        'icon-size': .05,
+      }
+    },
+  ],
+});
+
 const $config = {
   topicStyles: {
     property: 'pwdDrawnMapStyle',
@@ -1087,9 +1277,10 @@ const $config = {
     li: 'liDrawnMapStyle',
     zoning: 'zoningDrawnMapStyle',
     voting: 'votingDrawnMapStyle',
-    city311: 'nearbyDrawnMapStyle',
+    city311: 'nearbyActivityDrawnMapStyle',
     stormwater: 'stormwaterDrawnMapStyle',
-    nearby: 'nearbyDrawnMapStyle',
+    'nearby-activity': 'nearbyActivityDrawnMapStyle',
+    'city-services': 'cityServicesDrawnMapStyle',
     districts: 'pwdDrawnMapStyle',
   },
   parcelLayerForTopic: {
@@ -1102,7 +1293,8 @@ const $config = {
     voting: 'pwd',
     city311: 'pwd',
     stormwater: 'pwd',
-    nearby: 'pwd',
+    'nearby-activity': 'pwd',
+    'city-services': 'pwd',
     districts: 'pwd',
   },
   mapLayers: {
@@ -1467,7 +1659,8 @@ $config['liDrawnMapStyle'] = liDrawnMapStyle;
 $config['zoningDrawnMapStyle'] = zoningDrawnMapStyle;
 $config['votingDrawnMapStyle'] = votingDrawnMapStyle;
 $config['stormwaterDrawnMapStyle'] = stormwaterDrawnMapStyle;
-$config['nearbyDrawnMapStyle'] = nearbyDrawnMapStyle;
+$config['nearbyActivityDrawnMapStyle'] = nearbyActivityDrawnMapStyle;
+$config['cityServicesDrawnMapStyle'] = cityServicesDrawnMapStyle;
 $config['ZONING_CODE_MAP'] = ZONING_CODE_MAP;
 $config['dorLegendData'] = dorLegendData;
 $config['stormwaterLegendData'] = stormwaterLegendData;

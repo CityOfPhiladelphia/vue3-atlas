@@ -8,8 +8,10 @@ import i18nFromFiles from './i18n/i18n.js';
 const languages = i18nFromFiles.i18n.languages;
 
 // STORES
-import { useMainStore } from '@/stores/MainStore.js'
+import { useMainStore } from '@/stores/MainStore.js';
 const MainStore = useMainStore();
+import { useCityServicesStore } from '@/stores/CityServicesStore.js';
+const CityServicesStore = useCityServicesStore();
 
 if (!import.meta.env.VITE_PUBLICPATH) {
   MainStore.publicPath = '/';
@@ -46,6 +48,10 @@ onMounted(async () => {
   if (route.params.topic) {
     MainStore.currentTopic = route.params.topic;
   }
+
+  CityServicesStore.fillAllCatchments();
+  CityServicesStore.fillAllSchools();
+  CityServicesStore.fillAllPoliceStations();
 
   const main = document.getElementById('main');
   main.scrollTop = -main.scrollHeight;

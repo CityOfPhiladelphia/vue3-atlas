@@ -13,6 +13,7 @@ import { useVotingStore } from '@/stores/VotingStore.js'
 import { useCity311Store } from '@/stores/City311Store.js'
 import { useStormwaterStore } from '@/stores/StormwaterStore.js'
 import { useNearbyActivityStore } from '@/stores/NearbyActivityStore.js'
+import { useCityServicesStore } from '@/stores/CityServicesStore.js'
 import { useMainStore } from '@/stores/MainStore.js'
 
 import useRouting from '@/composables/useRouting';
@@ -38,6 +39,8 @@ const clearStoreData = async() => {
   StormwaterStore.clearAllStormwaterData();
   const NearbyActivityStore = useNearbyActivityStore();
   NearbyActivityStore.clearAllNearbyActivityData();
+  const CityServicesStore = useCityServicesStore();
+  CityServicesStore.clearAllCityServicesData();
 
   const CondosStore = useCondosStore();
   CondosStore.lastPageUsed = 1;
@@ -195,12 +198,18 @@ const dataFetch = async(to, from) => {
       await ParcelsStore.fillDorParcelData();
     }
 
-  } else if (to.params.topic !== 'nearby' && dataSourcesLoadedArray.includes(topic)) {
+  } else if (to.params.topic !== 'nearby-activity' && to.params.topic !== 'city-services' && dataSourcesLoadedArray.includes(topic)) {
     MainStore.datafetchRunning = false;
     return;
-  } else if (to.params.topic === 'nearby' && dataSourcesLoadedArray.includes(to.params.data)) {
-    MainStore.currentNearbyDataType = to.params.data;
-    if (import.meta.env.VITE_DEBUG == 'true') console.log('dataFetch is still going, MainStore.currentNearbyDataType:', MainStore.currentNearbyDataType, 'to.params.data:', to.params.data);
+  } else if (to.params.topic === 'nearby-activity' && dataSourcesLoadedArray.includes(to.params.data)) {
+    MainStore.currentNearbyActivityDataType = to.params.data;
+    if (import.meta.env.VITE_DEBUG == 'true') console.log('dataFetch is still going, MainStore.currentNearbyActivityDataType:', MainStore.currentNearbyActivityDataType, 'to.params.data:', to.params.data);
+    MainStore.datafetchRunning = false;
+    return;
+  // } else if (to.params.topic === 'city-services' && dataSourcesLoadedArray.includes(to.params.data)) {
+  } else if (to.params.topic === 'city-services' && dataSourcesLoadedArray.includes(to.params.data)) {
+    MainStore.currentCityServicesDataType = to.params.data;
+    if (import.meta.env.VITE_DEBUG == 'true') console.log('dataFetch is still going, MainStore.currentCityServicesDataType:', MainStore.currentCityServicesDataType, 'to.params.data:', to.params.data);
     MainStore.datafetchRunning = false;
     return;
   }
@@ -223,13 +232,13 @@ const dataFetch = async(to, from) => {
   MainStore.datafetchRunning = false;
 
   await topicDataFetch(to.params.topic, to.params.data);
-  if (to.params.topic !== 'nearby') {
+  if (to.params.topic !== 'nearby-activity') {
     MainStore.addToDataSourcesLoadedArray(to.params.topic);
   } else {
-    if (!MainStore.dataSourcesLoadedArray.includes('nearby')) {
-      MainStore.addToDataSourcesLoadedArray('nearby');
+    if (!MainStore.dataSourcesLoadedArray.includes('nearby-activity')) {
+      MainStore.addToDataSourcesLoadedArray('nearby-activity');
     }
-    MainStore.addToDataSourcesLoadedArray(MainStore.currentNearbyDataType);
+    MainStore.addToDataSourcesLoadedArray(MainStore.currentNearbyActivityDataType);
   }
 }
 
@@ -289,9 +298,14 @@ const topicDataFetch = async (topic, data) => {
     StormwaterStore.loadingStormwaterData = false;
   }
 
-  if (topic === 'nearby') {
+  if (topic === 'nearby-activity') {
     const NearbyActivityStore = useNearbyActivityStore();
     await NearbyActivityStore.fetchData(data);
+  }
+
+  if (topic === 'city-services') {
+    const CityServicesStore = useCityServicesStore();
+    await CityServicesStore.fetchData(data);
   }
 }
 

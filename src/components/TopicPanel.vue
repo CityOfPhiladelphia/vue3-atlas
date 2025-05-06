@@ -22,6 +22,7 @@ import LI from '@/components/topics/LI.vue';
 import Zoning from '@/components/topics/Zoning.vue';
 import Voting from '@/components/topics/Voting.vue';
 import NearbyActivity from '@/components/topics/nearbyActivity/NearbyActivity.vue';
+import CityServices from '@/components/topics/cityServices/CityServices.vue';
 import City311 from '@/components/topics/cityAtlas/City311.vue';
 import Stormwater from '@/components/topics/cityAtlas/Stormwater.vue';
 import Districts from '@/components/topics/cityAtlas/Districts.vue';
@@ -198,10 +199,22 @@ const zipCode = computed(() => {
     </topic>
 
     <topic
-      :topic-name="'Nearby Activity'"
-      :topic-slug="'nearby'"
+      :topic-name="'City Services & Facilities'"
+      :topic-slug="'city-services'"
       :topic-icon="'fa-solid fa-map-marker-alt'"
-      :loading="!dataSourcesLoadedArray.includes('nearby')"
+      :loading="!dataSourcesLoadedArray.includes('city-services')"
+      :topic-index="7"
+    >
+      <KeepAlive>
+        <CityServices />
+      </KeepAlive>
+    </topic>
+
+    <topic
+      :topic-name="'Nearby Activity'"
+      :topic-slug="'nearby-activity'"
+      :topic-icon="'fa-solid fa-map-marker-alt'"
+      :loading="!dataSourcesLoadedArray.includes('nearby-activity')"
       :topic-index="7"
     >
       <KeepAlive>

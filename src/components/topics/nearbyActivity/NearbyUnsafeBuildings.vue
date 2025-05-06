@@ -14,6 +14,9 @@ const { timeReverseFn } = useTransforms();
 import useScrolling from '@/composables/useScrolling';
 const { handleRowClick, handleRowMouseover, handleRowMouseleave } = useScrolling();
 
+import bbox from '@turf/bbox';
+import buffer from '@turf/buffer';
+
 const loadingData = computed(() => NearbyActivityStore.loadingData );
 
 const props = defineProps({
@@ -47,23 +50,33 @@ const nearbyUnsafeBuildings = computed(() => {
   return data;
 });
 const nearbyUnsafeBuildingsGeojson = computed(() => {
-  if (!nearbyUnsafeBuildings.value) return [point([0,0])];
+  if (!nearbyUnsafeBuildings.value) return featureCollection();
   return nearbyUnsafeBuildings.value.map(item => point([item.lng, item.lat], { id: item.casenumber, type: 'nearbyUnsafeBuildings' }));
 })
 watch (() => nearbyUnsafeBuildingsGeojson.value, (newGeojson) => {
   const map = MapStore.map;
-  if (map.getSource) map.getSource('nearby').setData(featureCollection(newGeojson));
+  if (map.getSource) map.getSource('nearbyActivity').setData(featureCollection(newGeojson));
+  if (newGeojson.length) {
+    const bounds = bbox(buffer(featureCollection(newGeojson), 1000, {units: 'feet'}));
+    if (map.fitBounds) map.fitBounds(bounds);
+  }
 });
 
 const hoveredStateId = computed(() => { return MainStore.hoveredStateId; });
 
 onMounted(() => {
   const map = MapStore.map;
-  if (!NearbyActivityStore.loadingData && nearbyUnsafeBuildingsGeojson.value.length > 0) { map.getSource('nearby').setData(featureCollection(nearbyUnsafeBuildingsGeojson.value)) }
+  if (!NearbyActivityStore.loadingData && nearbyUnsafeBuildingsGeojson.value.length > 0) {
+    map.getSource('nearbyActivity').setData(featureCollection(nearbyUnsafeBuildingsGeojson.value));
+    if (nearbyUnsafeBuildingsGeojson.value.length > 0) {
+      const bounds = bbox(buffer(featureCollection(nearbyUnsafeBuildingsGeojson.value), 1000, {units: 'feet'}));
+      if (map.fitBounds) map.fitBounds(bounds);
+    }
+  }
 });
 onBeforeUnmount(() => {
   const map = MapStore.map;
-  if (map.getSource('nearby')) { map.getSource('nearby').setData(featureCollection([point([0,0])])) }
+  if (map.getSource('nearbyActivity')) { map.getSource('nearbyActivity').setData(featureCollection([point([0,0])])) }
 });
 
 const nearbyUnsafeBuildingsTableData = computed(() => {
