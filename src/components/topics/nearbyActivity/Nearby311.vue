@@ -14,6 +14,9 @@ const { timeReverseFn } = useTransforms();
 import useScrolling from '@/composables/useScrolling';
 const { handleRowClick, handleRowMouseover, handleRowMouseleave } = useScrolling();
 
+import bbox from '@turf/bbox';
+import buffer from '@turf/buffer';
+
 const loadingData = computed(() => NearbyActivityStore.loadingData );
 
 const props = defineProps({
@@ -45,19 +48,31 @@ const nearby311 = computed(() => {
   return data;
 });
 const nearby311Geojson = computed(() => {
-  if (!nearby311.value) return [point([0,0])];
+  if (!nearby311.value) return featureCollection();
   return nearby311.value.map(item => point([item.lng, item.lat], { id: item.service_request_id, type: 'nearby311' }));
 })
 watch (() => nearby311Geojson.value, async(newGeojson) => {
+  if (import.meta.env.VITE_DEBUG) console.log('watch nearby311.value, newGeojson:', newGeojson);
   const map = MapStore.map;
   if (map.getSource) map.getSource('nearbyActivity').setData(featureCollection(newGeojson));
+  if (import.meta.env.VITE_DEBUG) console.log('newGeojson:', newGeojson);
+  if (newGeojson.length) {
+    const bounds = bbox(buffer(featureCollection(newGeojson), 1000, {units: 'feet'}));
+    if (map.fitBounds) map.fitBounds(bounds);
+  }
 });
 
 const hoveredStateId = computed(() => { return MainStore.hoveredStateId; });
 
 onMounted(() => {
   const map = MapStore.map;
-  if (!NearbyActivityStore.loadingData && nearby311Geojson.value.length > 0) { map.getSource('nearbyActivity').setData(featureCollection(nearby311Geojson.value)) }
+  if (!NearbyActivityStore.loadingData && nearby311Geojson.value.length > 0) {
+    map.getSource('nearbyActivity').setData(featureCollection(nearby311Geojson.value));
+    if (nearby311Geojson.value.length > 0) {
+      const bounds = bbox(buffer(featureCollection(nearby311Geojson.value), 1000, {units: 'feet'}));
+      if (map.fitBounds) map.fitBounds(bounds);
+    }
+  }
 });
 onBeforeUnmount(() => {
   const map = MapStore.map;

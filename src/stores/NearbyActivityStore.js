@@ -252,10 +252,12 @@ export const useNearbyActivityStore = defineStore('NearbyActivityStore', {
         const response = await axios.get(dataSource.url, { params })
         if (response.status === 200) {
           const data = response.data;
+          if (import.meta.env.VITE_DEBUG) console.log('nearbyCrimeIncidents data:', data);
           data.rows.forEach(row => {
             row.distance_ft = (row.distance * 3.28084).toFixed(0) + ' ft';
           });
           this.nearbyCrimeIncidents = data;
+          if (import.meta.env.VITE_DEBUG) console.log('this.nearbyCrimeIncidents:', this.nearbyCrimeIncidents);
           this.setLoadingData(false);
         } else {
           if (import.meta.env.VITE_DEBUG == 'true') console.warn('nearbyCrimeIncidents - await resolved but HTTP status was not successful');

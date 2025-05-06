@@ -14,6 +14,9 @@ const { timeReverseFn } = useTransforms();
 import useScrolling from '@/composables/useScrolling';
 const { handleRowClick, handleRowMouseover, handleRowMouseleave } = useScrolling();
 
+import bbox from '@turf/bbox';
+import buffer from '@turf/buffer';
+
 const loadingData = computed(() => NearbyActivityStore.loadingData );
 
 const props = defineProps({
@@ -45,19 +48,29 @@ const nearbyConstructionPermits = computed(() => {
   return data;
 });
 const nearbyConstructionPermitsGeojson = computed(() => {
-  if (!nearbyConstructionPermits.value) return [point([0,0])];
+  if (!nearbyConstructionPermits.value) return featureCollection();
   return nearbyConstructionPermits.value.map(item => point([item.lng, item.lat], { id: item.objectid, type: 'nearbyConstructionPermits' }));
 })
 watch (() => nearbyConstructionPermitsGeojson.value, (newGeojson) => {
   const map = MapStore.map;
   if (map.getSource) map.getSource('nearbyActivity').setData(featureCollection(newGeojson));
+  if (newGeojson.length) {
+    const bounds = bbox(buffer(featureCollection(newGeojson), 1000, {units: 'feet'}));
+    if (map.fitBounds) map.fitBounds(bounds);
+  }
 });
 
 const hoveredStateId = computed(() => { return MainStore.hoveredStateId; });
 
 onMounted(() => {
   const map = MapStore.map;
-  if (!NearbyActivityStore.loadingData && nearbyConstructionPermitsGeojson.value.length > 0) { map.getSource('nearbyActivity').setData(featureCollection(nearbyConstructionPermitsGeojson.value)) }
+  if (!NearbyActivityStore.loadingData && nearbyConstructionPermitsGeojson.value.length > 0) {
+    map.getSource('nearbyActivity').setData(featureCollection(nearbyConstructionPermitsGeojson.value));
+    if (nearbyConstructionPermitsGeojson.value.length > 0) {
+      const bounds = bbox(buffer(featureCollection(nearbyConstructionPermitsGeojson.value), 1000, {units: 'feet'}));
+      if (map.fitBounds) map.fitBounds(bounds);
+    }
+  }
 });
 onBeforeUnmount(() => {
   const map = MapStore.map;

@@ -243,7 +243,7 @@ const nearbySchoolsGeojson = computed(() => {
 })
 
 watch(() => nearbySchoolsGeojson.value, (newGeojson) => {
-  // if (import.meta.env.VITE_DEBUG == 'true') console.log('watch nearbySchoolsGeojson.value, newGeojson:', newGeojson);
+  if (import.meta.env.VITE_DEBUG == 'true') console.log('watch nearbySchoolsGeojson.value, newGeojson:', newGeojson);
   const map = MapStore.map;
   const feat = featureCollection(newGeojson);
   if (map.getSource) map.getSource('cityServices').setData(feat);

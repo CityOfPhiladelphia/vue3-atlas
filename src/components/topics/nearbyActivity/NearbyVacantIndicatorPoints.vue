@@ -1,6 +1,6 @@
 <script setup>
 import { computed, watch, onMounted, onBeforeUnmount } from 'vue';
-import { point, featureCollection } from '@turf/helpers';
+import { point, featureCollection, feature } from '@turf/helpers';
 
 import { useNearbyActivityStore } from '@/stores/NearbyActivityStore';
 const NearbyActivityStore = useNearbyActivityStore();
@@ -11,6 +11,9 @@ const MapStore = useMapStore();
 
 import useScrolling from '@/composables/useScrolling';
 const { handleRowClick, handleRowMouseover, handleRowMouseleave } = useScrolling();
+
+import bbox from '@turf/bbox';
+import buffer from '@turf/buffer';
 
 const loadingData = computed(() => NearbyActivityStore.loadingData );
 
@@ -33,20 +36,32 @@ const nearbyVacantIndicatorPoints = computed(() => {
   return data;
 });
 const nearbyVacantIndicatorPointsGeojson = computed(() => {
-  if (!nearbyVacantIndicatorPoints.value) return [point([0,0])];
+  if (!nearbyVacantIndicatorPoints.value) return featureCollection();
   return nearbyVacantIndicatorPoints.value.map(item => point(item.geometry.coordinates, { id: item.id, type: 'nearbyVacantIndicatorPoints' }));
 })
 watch (() => nearbyVacantIndicatorPointsGeojson.value, (newGeojson) => {
-  if (import.meta.env.VITE_DEBUG == 'true') console.log('watch nearbySchoolsGeojson.value, newGeojson:', newGeojson);
+  if (import.meta.env.VITE_DEBUG == 'true') console.log('watch nearbyVacantIndicatorPointsGeojson.value, newGeojson:', newGeojson);
   const map = MapStore.map;
   if (map.getSource) map.getSource('nearbyActivity').setData(featureCollection(newGeojson));
+  if (import.meta.env.VITE_DEBUG) console.log('newGeojson:', newGeojson, 'newGeojson.length:', newGeojson.length);
+  if (newGeojson.length > 0) {
+    const bounds = bbox(buffer(featureCollection(newGeojson), 1000, {units: 'feet'}));
+    if (map.fitBounds) map.fitBounds(bounds);
+  }
 });
 
 const hoveredStateId = computed(() => { return MainStore.hoveredStateId; });
 
 onMounted(() => {
   const map = MapStore.map;
-  if (!NearbyActivityStore.loadingData && nearbyVacantIndicatorPointsGeojson.value.length > 0) { map.getSource('nearbyActivity').setData(featureCollection(nearbyVacantIndicatorPointsGeojson.value)) }
+  if (!NearbyActivityStore.loadingData && nearbyVacantIndicatorPointsGeojson.value.length > 0) {
+    map.getSource('nearbyActivity').setData(featureCollection(nearbyVacantIndicatorPointsGeojson.value));
+    if (import.meta.env.VITE_DEBUG) console.log('nearbyVacantIndicatorPointsGeojson.value:', nearbyVacantIndicatorPointsGeojson.value, 'nearbyVacantIndicatorPointsGeojson.value.length:', nearbyVacantIndicatorPointsGeojson.value.length);
+    if (nearbyVacantIndicatorPointsGeojson.value.length > 0) {
+      const bounds = bbox(buffer(featureCollection(nearbyVacantIndicatorPointsGeojson.value), 1000, {units: 'feet'}));
+      if (map.fitBounds) map.fitBounds(bounds);
+    };
+  }
 });
 onBeforeUnmount(() => {
   const map = MapStore.map;
