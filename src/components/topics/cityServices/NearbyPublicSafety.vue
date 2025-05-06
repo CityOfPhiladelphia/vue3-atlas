@@ -178,7 +178,7 @@ onMounted(() => {
   <a
     class="table-link"
     target="_blank"
-    href="https://www.phillypolice.com/district/district-gis/"
+    href="https://www.phillypolice.com/district/"
   >See citywide police stations at PhillyPolice.com <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
 
   <div class="mt-5">

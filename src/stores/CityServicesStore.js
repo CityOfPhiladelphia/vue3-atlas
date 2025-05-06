@@ -272,7 +272,7 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
         const url = 'https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/Schools/FeatureServer/0/query?';
         const params = {
           'returnGeometry': true,
-          'where': '1=1',
+          'where': "TYPE_SPECIFIC IN ('DISTRICT', 'CHARTER')",
           'outSR': 4326,
           'outFields': '*',
           'inSr': 4326,
@@ -374,13 +374,14 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
             }
             // const distFeet = parseInt(dist * 5280);
             feature.properties.distance_mi = dist.toFixed(2) + ' mi';
-            feature.properties.stationInfo = '';
+            feature.properties.stationInfo = '<b>';
             feature.properties.ENG && feature.properties.ENG != 0 ? feature.properties.stationInfo += 'Engine ' + feature.properties.ENG : '';
             feature.properties.ENG && feature.properties.ENG != 0 && feature.properties.LAD && feature.properties.LAD != 0 ? feature.properties.stationInfo += ' / ' : '';
             feature.properties.LAD && feature.properties.LAD != 0 ? feature.properties.stationInfo += 'Ladder ' + feature.properties.LAD : '';
             feature.properties.LAD && feature.properties.LAD != 0 && feature.properties.MED && feature.properties.MED != 0 || feature.properties.ENG && feature.properties.ENG != 0 && feature.properties.MED && feature.properties.MED != 0 ? feature.properties.stationInfo += ' / ' : '';
             feature.properties.MED && feature.properties.MED != 0 ? feature.properties.stationInfo += 'Medic ' + feature.properties.MED : '';
-            
+            feature.properties.stationInfo += '</b>';
+
             feature.properties.stationInfoAddress = feature.properties.stationInfo + '<br>' + feature.properties.LOCATION;// + '<br>Philadelphia, PA ';// + feature.properties.ZIP_CODE;
             return feature;
           });
