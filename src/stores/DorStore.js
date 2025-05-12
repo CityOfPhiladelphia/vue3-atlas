@@ -242,7 +242,7 @@ export const useDorStore = defineStore("DorStore", {
           this.dorDocuments = {};
           const ParcelsStore = useParcelsStore();
           const GeocodeStore = useGeocodeStore();
-          const url = `//services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/RTT_SUMMARY/FeatureServer/0/query`;
+          const url = `//services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/RTT_SUMMARY/FeatureServer/1/query`;
           
           const where = function(feature) {
             if (import.meta.env.VITE_DEBUG == 'true') console.log('where function is running, feature:', feature);
