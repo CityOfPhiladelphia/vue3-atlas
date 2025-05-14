@@ -191,10 +191,12 @@ const rcosTableData = computed(() => {
     <br><br>
     A fuller summary of zoning for this address can be found on the <a target="_blank" :href="'https://www.phila.gov/zoning-summary-generator/?address='+MainStore.currentAddress">Zoning Summary Generator</a>.
   </div>
-  <collection-summary
-    :value="'STATUS'"
-    :descriptor="'parcel'"
-  />
+  <div :class="selectedParcel ? 'mb-5' : 'mb-6'">
+    <collection-summary
+      :value="'STATUS'"
+      :descriptor="'parcel'"
+    />
+  </div>
   <div
     v-if="selectedParcel"
     id="parcel-div"
