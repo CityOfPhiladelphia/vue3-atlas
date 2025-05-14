@@ -429,6 +429,17 @@ const liAppealsTableData = computed(() => {
   }
 });
 
+// const hasRentalLicense = computed(() => {
+//   let hasLicense = false;
+//   for (let license of LiStore.liBusinessLicenses.rows) {
+//     if (license.licensetype == 'Rental') {
+//       hasLicense = true;
+//       break;
+//     }
+//   }
+//   return hasLicense;
+// })
+
 </script>
 
 <template>
@@ -847,7 +858,10 @@ const liAppealsTableData = computed(() => {
     </div>
 
     <!-- Lead Certifications -->
-    <div class="data-section">
+    <div
+      class="data-section"
+    >
+    <!-- v-if="hasRentalLicense" -->
       <h2 class="subtitle mb-3 is-5 table-title">
         Lead Certification Details
         <font-awesome-icon
