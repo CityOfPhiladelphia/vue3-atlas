@@ -27,6 +27,12 @@ const zoningOverlays = computed(() => {
   return ZoningStore.zoningOverlays[selectedParcelId.value].rows || [];
 });
 
+// PROPOSED ZONING
+const proposedZoning = computed(() => {
+  if (!ZoningStore.proposedZoning) return [];
+  return ZoningStore.proposedZoning.features || [];
+});
+
 // ZONING APPEALS
 const zoningAppealsCompareFn = (a, b) => new Date(b.scheduleddate) - new Date(a.scheduleddate);
 const zoningAppeals = computed(() => {
@@ -113,6 +119,24 @@ const overlaysTableData = computed(() => {
       },
     ],
     rows: zoningOverlays.value || [],
+  }
+});
+
+const proposedZoningTableData = computed(() => {
+  return {
+    columns: [
+      {
+        label: 'Bill',
+        field: 'properties.bill_number_link',
+        html: true,
+      },
+      {
+        label: 'Status',
+        field: 'properties.remap_status',
+        // html: true,
+      },
+    ],
+    rows: proposedZoning.value || [],
   }
 });
 
@@ -346,6 +370,56 @@ const rcosTableData = computed(() => {
           </template>
         </vue-good-table>
       </div>
+
+      <div class="data-section">
+        <h2 class="subtitle mb-3 is-5 table-title">
+          Record of Zoning Legislation
+          <font-awesome-icon
+            v-if="ZoningStore.loadingProposedZoning"
+            icon="fa-solid fa-spinner"
+            spin
+          />
+          <span v-else>({{ proposedZoningTableData.rows.length }})</span>
+        </h2>
+        <vue-good-table
+          id="proposed-zoning"
+          :columns="proposedZoningTableData.columns"
+          :rows="proposedZoningTableData.rows"
+          :pagination-options="paginationOptions(proposedZoningTableData.rows.length)"
+          style-class="table"
+        >
+          <template #emptystate>
+            <div v-if="ZoningStore.loadingZoningOverlays">
+              Loading proposed zoning... <font-awesome-icon
+                icon="fa-solid fa-spinner"
+                spin
+              />
+            </div>
+            <div v-else>
+              No proposed zoning found
+            </div>
+          </template>
+          <template #pagination-top="props">
+            <custom-pagination-labels
+              :mode="'pages'"
+              :total="props.total"
+              :perPage="5"
+              @page-changed="props.pageChanged"
+              @per-page-changed="props.perPageChanged"
+            >
+            </custom-pagination-labels>
+          </template>
+        </vue-good-table>
+      </div>
+
+      <!-- <div class="topic-info"> -->
+      <div>
+        Community based map changes are shown from 1969 onward. Individual property or small block map
+        changes are shown from 2013 onward. The maps and data provided on this page are intended for 
+        general reference purposes only. Users should not assume that the information is complete or 
+        free from error and should not rely on it exclusively when making decisions.
+      </div>
+
     </div>
   </div>
 
