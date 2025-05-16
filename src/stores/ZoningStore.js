@@ -109,6 +109,50 @@ export const useZoningStore = defineStore('ZoningStore', {
         if (import.meta.env.VITE_DEBUG == 'true') console.error('fillZoningBase - await never resolved, failed to fetch data');
       }
     },
+    async fillProposedZoning() {
+      
+      const ParcelsStore = useParcelsStore();
+      const features = ParcelsStore.dor.features;
+      if (!features) return;
+      for (let feature of features) {
+        try {
+          console.log('feature:', feature);
+          let url = '//services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/Proposed_Zoning_Implementation_Public/FeatureServer/0/query';
+
+          let params = {
+            'returnGeometry': false,
+            'where': "1=1",
+            'outSR': 4326,
+            'outFields': '*',
+            'inSr': 4326,
+            'geometryType': 'esriGeometryPolygon',
+            'spatialRel': 'esriSpatialRelIntersects',
+            'f': 'geojson',
+            'geometry': JSON.stringify({ "rings": feature.geometry.coordinates, "spatialReference": { "wkid": 4326 }}),
+            // 'geometry': JSON.stringify({ "x": feature.geometry.coordinates[0], "y": feature.geometry.coordinates[1], "spatialReference": { "wkid": 4326 }}),
+          };
+
+          const response = await axios.get(url, { params });
+          if (response.status === 200) {
+            let data = await response.data;
+
+            data.features.forEach(item => {
+              item.properties.bill_number_link = `<a target='_blank' href='${item.properties.bill_url_updated}'>${item.properties.bill_number_txt} <i class='fas fa-external-link-alt'></i></a>`;
+              item.properties.formatted_enacted_date = date(item.properties.enacted_date, 'MM/dd/yyyy');
+            })
+
+            this.proposedZoning[feature.properties.OBJECTID] = data;
+            this.loadingProposedZoning = false;
+          } else {
+            this.loadingProposedZoning = false;
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillProposedZoning - await resolved but HTTP status was not successful');
+          }
+        } catch {
+          this.loadingProposedZoning = false;
+          if (import.meta.env.VITE_DEBUG == 'true') console.error('fillProposedZoning - await never resolved, failed to fetch data');
+        }
+      }
+    },
     async fillZoningOverlays() {
       const ParcelsStore = useParcelsStore();
       const features = ParcelsStore.dor.features;
@@ -286,43 +330,6 @@ export const useZoningStore = defineStore('ZoningStore', {
       } catch {
         this.loadingRcos = false;
         if (import.meta.env.VITE_DEBUG == 'true') console.error('fillRcos - await never resolved, failed to fetch data');
-      }
-    },
-    async fillProposedZoning() {
-      try {
-        const GeocodeStore = useGeocodeStore();
-        const feature = GeocodeStore.aisData.features[0];
-        let url = '//services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/Proposed_Zoning_Implementation_Public/FeatureServer/0/query';
-
-        let params = {
-          'returnGeometry': true,
-          'where': "1=1",
-          'outSR': 4326,
-          'outFields': '*',
-          'inSr': 4326,
-          'geometryType': 'esriGeometryPoint',
-          'spatialRel': 'esriSpatialRelWithin',
-          'f': 'geojson',
-          'geometry': JSON.stringify({ "x": feature.geometry.coordinates[0], "y": feature.geometry.coordinates[1], "spatialReference": { "wkid": 4326 }}),
-        };
-
-        const response = await axios.get(url, { params });
-        if (response.status === 200) {
-          let data = await response.data;
-
-          data.features.forEach(item => {
-            item.properties.bill_number_link = `<a target='_blank' href='${item.properties.bill_url_updated}'>${item.properties.bill_number_txt} <i class='fas fa-external-link-alt'></i></a>`;
-          })
-
-          this.proposedZoning = data;
-          this.loadingProposedZoning = false;
-        } else {
-          this.loadingProposedZoning = false;
-          if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillProposedZoning - await resolved but HTTP status was not successful');
-        }
-      } catch {
-        this.loadingProposedZoning = false;
-        if (import.meta.env.VITE_DEBUG == 'true') console.error('fillProposedZoning - await never resolved, failed to fetch data');
       }
     },
   },
