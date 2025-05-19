@@ -399,7 +399,7 @@ const rcosTableData = computed(() => {
               />
             </div>
             <div v-else>
-              No proposed zoning found
+              No previous zoning legislation published
             </div>
           </template>
           <template #pagination-top="props">
