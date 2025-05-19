@@ -418,7 +418,7 @@ const rcosTableData = computed(() => {
       <!-- <div class="topic-info"> -->
       <div>
         Community based map changes are shown from 1969 onward. Individual property or small block map
-        changes are shown from 2013 onward. The maps and data provided on this page are intended for 
+        changes are shown from 2000 onward. The maps and data provided on this page are intended for 
         general reference purposes only. Users should not assume that the information is complete or 
         free from error and should not rely on it exclusively when making decisions.
       </div>
