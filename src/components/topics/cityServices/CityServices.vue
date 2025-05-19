@@ -26,7 +26,7 @@ const selectedDataType = ref('public-schools');
 const dataTypes = {
   'public-schools': 'Public Schools',
   'public-safety': 'Public Safety',
-  // 'recreation-facilities': 'Recreation Facilities',
+  'recreation-facilities': 'Recreation Facilities',
 };
 
 const currentCityServicesDataType = computed(() => {
