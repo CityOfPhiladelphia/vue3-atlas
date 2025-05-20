@@ -36,16 +36,16 @@ const selectedDocs = computed(() => {
     // if (import.meta.env.VITE_DEBUG == 'true') console.log('selectedParcelId.value:', selectedParcelId.value);
     let data = [];
     for (let feature of DorStore.dorDocuments[selectedParcelId.value].features) {
-      if (feature.attributes.GRANTORS != null && feature.attributes.GRANTORS.toLowerCase().includes(textSearch.value.toLowerCase())
-        || feature.attributes.GRANTEES != null && feature.attributes.GRANTEES.toLowerCase().includes(textSearch.value.toLowerCase())
-        || feature.attributes.UNIT_NUM != null && feature.attributes.UNIT_NUM.toLowerCase().includes(textSearch.value.toLowerCase())
+      if (feature.attributes.grantors != null && feature.attributes.grantors.toLowerCase().includes(textSearch.value.toLowerCase())
+        || feature.attributes.grantees != null && feature.attributes.grantees.toLowerCase().includes(textSearch.value.toLowerCase())
+        || feature.attributes.unit_num != null && feature.attributes.unit_num.toLowerCase().includes(textSearch.value.toLowerCase())
       ){
         data.push({
           ...feature.attributes,
         });
       }
     }
-    data.sort((a, b) => new Date(b.DISPLAY_DATE) - new Date(a.DISPLAY_DATE));
+    data.sort((a, b) => new Date(b.display_date) - new Date(a.display_date));
     return data;
   } else {
     return null;
@@ -191,19 +191,19 @@ const dorDocsTableData = computed(() => {
       },
       {
         label: 'Type',
-        field: 'DOCUMENT_TYPE',
+        field: 'document_type',
       },
       {
         label: 'Grantor',
-        field: 'GRANTORS',
+        field: 'grantors',
       },
       {
         label: 'Grantee',
-        field: 'GRANTEES',
+        field: 'grantees',
       },
       {
         label: 'Unit #',
-        field: 'UNIT_NUM',
+        field: 'unit_num',
       }
     ],
     rows: selectedDocs.value || [],

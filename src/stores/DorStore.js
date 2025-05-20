@@ -254,7 +254,7 @@ export const useDorStore = defineStore("DorStore", {
             // REVIEW if the parcel has no address, we don't want to query
             // WHERE ADDRESS = 'null' (doesn't make sense), so use this for now
             if (!parcelBaseAddress || parcelBaseAddress === 'null'){
-              where = "MATCHED_REGMAP = '" + ParcelsStore.dor.features[0].properties.BASEREG + "'";
+              where = "matched_regmap = '" + ParcelsStore.dor.features[0].properties.BASEREG + "'";
             } else {
               // TODO make these all camel case
               var props = GeocodeStore.aisData.features[0].properties,
@@ -301,14 +301,14 @@ export const useDorStore = defineStore("DorStore", {
               // if (import.meta.env.VITE_DEBUG == 'true') console.log('unitNum:', unitNum, 'unitNum2:', unitNum2);
           
               if (unitNum) {
-                where += " AND UNIT_NUM = '" + unitNum + "'";
+                where += " AND unit_num = '" + unitNum + "'";
               } else if (unitNum2 !== '') {
-                where += " AND UNIT_NUM = '" + unitNum2 + "'";
+                where += " AND unit_num = '" + unitNum2 + "'";
               }
               
               // where += ")";
-              where += ") or MATCHED_REGMAP = '" + ParcelsStore.dor.features[0].properties.BASEREG + "'";
-              where += " or REG_MAP_ID = '" + ParcelsStore.dor.features[0].properties.BASEREG + "'";
+              where += ") or matched_regmap = '" + ParcelsStore.dor.features[0].properties.BASEREG + "'";
+              where += " or reg_map_id = '" + ParcelsStore.dor.features[0].properties.BASEREG + "'";
             }
 
             if (import.meta.env.VITE_DEBUG == 'true') console.log('address_low:', address_low, 'address_floor:', address_floor,
@@ -337,8 +337,8 @@ export const useDorStore = defineStore("DorStore", {
               const params = {
                 where: theWhere,
                 // outFields: '*',
-                // outFields: "DOCUMENT_ID, DISPLAY_DATE, DOCUMENT_TYPE, GRANTORS, GRANTEES, UNIT_NUM, MATCHED_REGMAP, REG_MAP_ID",
-                outFields: "DOCUMENT_ID, DISPLAY_DATE, DOCUMENT_TYPE, GRANTORS, GRANTEES, UNIT_NUM",
+                // outFields: "document_id, display_date, document_type, grantors, grantees, unit_num, matched_regmap, reg_map_id",
+                outFields: "document_id, display_date, document_type, grantors, grantees, unit_num",
                 returnDistinctValues: 'true',
                 returnGeometry: 'false',
                 f: 'json',
@@ -350,8 +350,8 @@ export const useDorStore = defineStore("DorStore", {
               if (response.status === 200) {
                 const data = response.data;
                 data.features.forEach((doc) => {
-                  doc.attributes.date = date(doc.attributes.DISPLAY_DATE);
-                  doc.attributes.link = `<a target='_blank' href='http://epay.phila-records.com/phillyepay/web/integration/document/InstrumentID=${doc.attributes.DOCUMENT_ID}&Guest=true'>${doc.attributes.DOCUMENT_ID}<i class='fa fa-external-link-alt'></i></a>`;
+                  doc.attributes.date = date(doc.attributes.display_date);
+                  doc.attributes.link = `<a target='_blank' href='http://epay.phila-records.com/phillyepay/web/integration/document/InstrumentID=${doc.attributes.document_id}&Guest=true'>${doc.attributes.document_id}<i class='fa fa-external-link-alt'></i></a>`;
                 })
                 this.dorDocuments[feature.properties.OBJECTID] = data;
                 // return resolve();
