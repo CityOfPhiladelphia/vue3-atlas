@@ -74,6 +74,8 @@ const handleTopicClick = () => {
     >
       <div class="topic-name">
         <div class="icon-holder">
+          <!-- <i :class="props.topicIcon"></i> -->
+          <!-- <font-awesome-icon :icon="['far', 'location-dot']" /> -->
           <font-awesome-icon :icon="props.topicIcon" />
         </div>
         <h1 class="name-holder">

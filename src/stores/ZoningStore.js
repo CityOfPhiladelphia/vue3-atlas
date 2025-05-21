@@ -137,7 +137,7 @@ export const useZoningStore = defineStore('ZoningStore', {
             let data = await response.data;
 
             data.features.forEach(item => {
-              item.properties.bill_number_link = `<a target='_blank' href='${item.properties.bill_url_updated}'>${item.properties.bill_number_txt} <i class='fas fa-external-link-alt'></i></a>`;
+              item.properties.bill_number_link = `<a target='_blank' href='${item.properties.bill_url_updated}'>${item.properties.bill_number_txt} <i class='fas fa-external-link'></i></a>`;
               item.properties.formatted_enacted_date = date(item.properties.enacted_date, 'MM/dd/yyyy');
             })
 
@@ -175,7 +175,7 @@ export const useZoningStore = defineStore('ZoningStore', {
             const data = await response.json();
             if (import.meta.env.VITE_DEBUG == 'true') console.log('data:', data);
             data.rows.forEach(row => {
-              row.link = `<a target='_blank' href='${row.code_section_link}'>${row.code_section}<i class='fas fa-external-link-alt'></i></a>`
+              row.link = `<a target='_blank' href='${row.code_section_link}'>${row.code_section}<i class='fas fa-external-link'></i></a>`
             });
             this.zoningOverlays[feature.properties.OBJECTID] = data;
             this.loadingZoningOverlays = false;
@@ -269,8 +269,8 @@ export const useZoningStore = defineStore('ZoningStore', {
               address += ' Unit ' + row.unit_num;
             }
             console.log('in loop, row:', row);
-            row.appeallink = `<a target='_blank' href='https://li.phila.gov/Property-History/search/Appeal-Detail?address=${row.address}&Id=${row.appealnumber}'>${row.appealnumber}<i class='fas fa-external-link-alt'></i></a>`
-            row.calendarlink = "<a target='_blank' href='https://li.phila.gov/zba-appeals-calendar/appeal?from=2-7-2000&to=4-7-2050&region=all&Id="+row.appealnumber+"'>"+date(row.scheduleddate, 'MM/dd/yyyy')+" <i class='fa fa-external-link-alt'></i></a>";
+            row.appeallink = `<a target='_blank' href='https://li.phila.gov/Property-History/search/Appeal-Detail?address=${row.address}&Id=${row.appealnumber}'>${row.appealnumber}<i class='fas fa-external-link'></i></a>`
+            row.calendarlink = "<a target='_blank' href='https://li.phila.gov/zba-appeals-calendar/appeal?from=2-7-2000&to=4-7-2050&region=all&Id="+row.appealnumber+"'>"+date(row.scheduleddate, 'MM/dd/yyyy')+" <i class='fa fa-external-link'></i></a>";
             console.log('in loop, row:', row);
           });
           this.zoningAppeals = data;

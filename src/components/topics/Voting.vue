@@ -229,7 +229,7 @@ const electionDate = computed(() => {
     <a
       target="_blank"
       :href="ballotFileId"
-    >{{ $t('voting.topic.previewBallot') }} <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
+    >{{ $t('voting.topic.previewBallot') }} <font-awesome-icon icon="fa-solid fa-external-link" /></a>
   </div>
 
   <div
@@ -259,7 +259,7 @@ const electionDate = computed(() => {
     class="table-link"
     target="_blank"
     :href="`https://vote.phila.gov/voting/vote-by-mail/`"
-  >{{ $t('voting.topic.verticalTable1.link') }} <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
+  >{{ $t('voting.topic.verticalTable1.link') }} <font-awesome-icon icon="fa-solid fa-external-link" /></a>
   <br>
   <br>
 
@@ -283,7 +283,7 @@ const electionDate = computed(() => {
     class="table-link"
     target="_blank"
     :href="`https://vote.phila.gov/voting/current-elected-officials/`"
-  >{{ $t('voting.topic.verticalTable2.link') }} <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
+  >{{ $t('voting.topic.verticalTable2.link') }} <font-awesome-icon icon="fa-solid fa-external-link" /></a>
   <br>
   <br>
 </template>

@@ -110,7 +110,7 @@ const nearbyRecreationFacilitiesTableData = computed(() => {
     class="table-link"
     target="_blank"
     href="https://www.phila.gov/parks-rec-finder/#/"
-  >See all parks & recreation facilities citywide <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
+  >See all parks & recreation facilities citywide <font-awesome-icon icon="fa-solid fa-external-link" /></a>
 
   
 

@@ -287,7 +287,7 @@ const rcosTableData = computed(() => {
           class="table-link"
           target="_blank"
           href="https://www.phila.gov/media/20220909084529/ZONING-QUICK-GUIDE_PCPC_9_9_22.pdf"
-        >See more info about zoning codes [PDF] <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
+        >See more info about zoning codes [PDF] <font-awesome-icon icon="fa-solid fa-external-link" /></a>
       </div>
 
       <div class="data-section">
@@ -530,7 +530,7 @@ const rcosTableData = computed(() => {
       class="table-link"
       target="_blank"
       href="//www.phila.gov/documents/registered-community-organization-rco-materials/"
-    >See a list of all RCOs in the city <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
+    >See a list of all RCOs in the city <font-awesome-icon icon="fa-solid fa-external-link" /></a>
   </div>
 </template>
 

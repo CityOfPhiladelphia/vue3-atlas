@@ -210,7 +210,7 @@ const accountsTableData = computed(() => {
     class="table-link"
     target="_blank"
     :href="`https://stormwater.phila.gov/parcelviewer/parcel/${parcelId}`"
-  >See more at Stormwater Billing <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
+  >See more at Stormwater Billing <font-awesome-icon icon="fa-solid fa-external-link" /></a>
 </template>
 
 <style>

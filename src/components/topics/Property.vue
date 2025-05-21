@@ -253,7 +253,7 @@ const valuationHistoryTableData = computed(() => {
         class="table-link"
         target="_blank"
         :href="`https://property.phila.gov/?p=${opaAccountNumber}`"
-      >See more at Property Search <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
+      >See more at Property Search <font-awesome-icon icon="fa-solid fa-external-link" /></a>
     </div>
 
     <div v-if="MainStore.appVersion == 'cityatlas' && !hasNoData">

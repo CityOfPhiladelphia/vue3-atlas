@@ -73,7 +73,7 @@ const policeDistrict = computed(() => {
     division = GeocodeStore.aisData.features[0].properties.police_division;
   }
   return "<a href='https://phillypolice.com/" + nth(district) + "-district/' target='_blank'>\
-    "+ nth(district) + " Police District (" + division + ") <i class='fa fa-external-link-alt'></i></a>";
+    "+ nth(district) + " Police District (" + division + ") <i class='fa fa-external-link'></i></a>";
 });
 
 const policeStation = computed(() => {
@@ -179,7 +179,7 @@ onMounted(() => {
     class="table-link"
     target="_blank"
     href="https://www.phillypolice.com/district/"
-  >See citywide police stations at PhillyPolice.com <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
+  >See citywide police stations at PhillyPolice.com <font-awesome-icon icon="fa-solid fa-external-link" /></a>
 
   <div class="mt-5">
     <h2 class="subtitle mb-3 is-5">
