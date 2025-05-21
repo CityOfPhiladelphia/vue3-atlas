@@ -69,7 +69,7 @@ const nearbyRecreationFacilitiesTableData = computed(() => {
   
   <div class="mt-5">
     <h2 class="subtitle mb-3 is-5">
-      Nearby Recreation Facilities
+      Nearby Parks and Recreation Facilities
       <font-awesome-icon
         v-if="loadingData"
         icon="fa-solid fa-spinner"
@@ -92,7 +92,7 @@ const nearbyRecreationFacilitiesTableData = computed(() => {
   >
     <template #emptystate>
       <div v-if="loadingData">
-        Loading nearby recreation facilities... <font-awesome-icon
+        Loading nearby parks and recreation facilities... <font-awesome-icon
           icon="fa-solid fa-spinner"
           spin
         />
@@ -101,7 +101,7 @@ const nearbyRecreationFacilitiesTableData = computed(() => {
         Data loading error - try refreshing the page
       </div>
       <div v-else>
-        No nearby recreation facilities found
+        No nearby parks and recreation facilities found
       </div>
     </template>
   </vue-good-table>
