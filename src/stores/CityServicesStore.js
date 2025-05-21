@@ -445,7 +445,7 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
 
             row.features = `Facility Type: ${row.facility_type}`;
             if (row.facility_description) {
-              row.features += `<br><div class="description">${row.facility_description}</div>`;
+              row.features += `<br><div class="description">${row.facility_description.split('---')[0]}</div>`;
             }
 
           });
