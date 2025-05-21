@@ -142,7 +142,8 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
           id_field: 'id',
           info_field: 'public_name',
         },
-      }
+      },
+      allParksRecLocationTypes: null,
     }
   },
   actions: {
@@ -395,6 +396,19 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
         if (import.meta.env.VITE_DEBUG == 'true') console.error('nearbyFireStations - await never resolved, failed to fetch address data');
       }
     },
+    async fillAllParksRecLocationTypes() {
+      try {
+        const response = await axios.get('https://phl.carto.com/api/v2/sql?&q=SELECT+*+FROM+ppr_location_types');
+        if (response.status === 200) {
+          const data = response.data;
+          this.allParksRecLocationTypes = data.rows;
+        } else {
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('parksRecLocationTypes - await resolved but HTTP status was not successful');
+        }
+      } catch {
+        if (import.meta.env.VITE_DEBUG == 'true') console.error('parksRecLocationTypes - await never resolved, failed to fetch data');
+      }
+    },
     async fillNearbyRecreationFacilities() {
       try {
         const GeocodeStore = useGeocodeStore();
@@ -413,10 +427,10 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
         const lngQuery = "ST_X(pprlp.the_geom)";
 
         let query = `WITH pprf AS (SELECT * FROM ppr_facilities) `
-        query += `SELECT pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, pprf.id, pprf.facility_type, pprf.facility_description, ${distQuery} as distance, ${latQuery} as lat, ${lngQuery} as lng FROM ppr_website_locatorpoints pprlp`
+        query += `SELECT pprf.location_type, pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, pprf.id, pprf.facility_type, pprf.facility_description, ${distQuery} as distance, ${latQuery} as lat, ${lngQuery} as lng FROM ppr_website_locatorpoints pprlp`
         query += ` LEFT JOIN pprf ON pprf.website_locator_points_link_id = pprlp.linkid`
         query += ` WHERE pprf.facility_is_published='true' and ${distQuery} < 1609.34`;
-        query += ` GROUP BY pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, pprlp.the_geom, pprf.facility_type, pprf.facility_description, pprf.id`;
+        query += ` GROUP BY pprf.location_type, pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, pprlp.the_geom, pprf.facility_type, pprf.facility_description, pprf.id`;
         // query += ` GROUP BY pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, pprlp.the_geom, pprf.facility_type, pprf.id`;
         query += ` ORDER BY distance`;
         
@@ -444,6 +458,15 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
             }
 
             row.features = `Facility Type: ${row.facility_type}`;
+            row.features += `<br>Facility Location Types:`;
+            for (let locType of row.location_type) {
+              if (this.allParksRecLocationTypes) {
+                const locTypeObj = this.allParksRecLocationTypes.find(type => type.id == locType);
+                if (locTypeObj) {
+                  row.features += `<br>${locTypeObj.location_type_name}`;
+                }
+              }
+            }
             if (row.facility_description) {
               row.features += `<br><div class="description">${row.facility_description.split('---')[0]}</div>`;
             }
