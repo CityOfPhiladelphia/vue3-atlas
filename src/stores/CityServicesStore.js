@@ -434,7 +434,8 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
         let query = `WITH pprf AS (SELECT * FROM ppr_facilities) `
         query += `SELECT pprf.location_type, pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, pprf.id, pprf.facility_type, pprf.facility_description, ${distQuery} as distance, ${latQuery} as lat, ${lngQuery} as lng FROM ppr_website_locatorpoints pprlp`
         query += ` LEFT JOIN pprf ON pprf.website_locator_points_link_id = pprlp.linkid`
-        query += ` WHERE pprf.facility_is_published='true' and ${distQuery} < 1609.34`;
+        query += ` WHERE ${distQuery} < 1609.34`;
+        // query += ` WHERE pprf.facility_is_published='true' and ${distQuery} < 1609.34`;
         query += ` GROUP BY pprf.location_type, pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, pprlp.the_geom, pprf.facility_type, pprf.facility_description, pprf.id`;
         // query += ` GROUP BY pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, pprlp.the_geom, pprf.facility_type, pprf.id`;
         query += ` ORDER BY distance`;
