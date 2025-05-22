@@ -398,10 +398,15 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
     },
     async fillAllParksRecLocationTypes() {
       try {
-        const response = await axios.get('https://phl.carto.com/api/v2/sql?&q=SELECT+*+FROM+ppr_location_types');
+        const params = {
+          where: '1=1',
+          outFields: '*',
+          f: 'geojson',
+        }
+        const response = await axios.get('https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/ppr_location_types_atlas/FeatureServer/0/query?', { params });
         if (response.status === 200) {
           const data = response.data;
-          this.allParksRecLocationTypes = data.rows;
+          this.allParksRecLocationTypes = data.features.map(feature => feature.properties);
         } else {
           if (import.meta.env.VITE_DEBUG == 'true') console.warn('parksRecLocationTypes - await resolved but HTTP status was not successful');
         }
@@ -457,13 +462,17 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
               row.location +=`<br>${row.location_contact_name}`;
             }
 
-            row.features = `Facility Type: ${row.facility_type}`;
-            row.features += `<br>Facility Location Types:`;
-            for (let locType of row.location_type) {
+            row.features = `Facilities: `;
+            for (const[i, locType] of row.location_type.entries()) {
               if (this.allParksRecLocationTypes) {
                 const locTypeObj = this.allParksRecLocationTypes.find(type => type.id == locType);
-                if (locTypeObj) {
-                  row.features += `<br>${locTypeObj.location_type_name}`;
+                console.log('i:', i, 'locType:', locType, 'locTypeObj:', locTypeObj);
+                if (locTypeObj && i === row.location_type.length - 1) {
+                  row.features += `${locTypeObj.display_location_type}`;
+                } else if (locTypeObj) {
+                  row.features += `${locTypeObj.display_location_type}, `;
+                } else {
+                  row.features += 'Swimming Pool';
                 }
               }
             }

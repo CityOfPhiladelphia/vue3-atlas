@@ -7,6 +7,8 @@ import { useGeocodeStore } from '@/stores/GeocodeStore.js'
 import useTransforms from '@/composables/useTransforms';
 const { rcoPrimaryContact, phoneNumber, date } = useTransforms();
 
+import { format } from 'date-fns';
+
 export const useZoningStore = defineStore('ZoningStore', {
   state: () => {
     return {
@@ -138,7 +140,10 @@ export const useZoningStore = defineStore('ZoningStore', {
 
             data.features.forEach(item => {
               item.properties.bill_number_link = `<a target='_blank' href='${item.properties.bill_url_updated}'>${item.properties.bill_number_txt} <i class='fas fa-external-link'></i></a>`;
-              if (!!item.properties.enacted_date && item.properties.remap_status == 'Enacted') {
+              if (format(item.properties.enacted_date, 'yyyy') === '1899') {
+                console.log('format(item.properties.enacted_date, "yyyy"):', format(item.properties.enacted_date, 'yyyy'));
+                item.properties.formatted_enacted_date = 'N/A';
+              } else if (!!item.properties.enacted_date && item.properties.remap_status == 'Enacted') {
                 item.properties.formatted_enacted_date = date(item.properties.enacted_date, 'MM/dd/yyyy');
               } else {
                 item.properties.formatted_enacted_date = 'N/A';
