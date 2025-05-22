@@ -138,7 +138,11 @@ export const useZoningStore = defineStore('ZoningStore', {
 
             data.features.forEach(item => {
               item.properties.bill_number_link = `<a target='_blank' href='${item.properties.bill_url_updated}'>${item.properties.bill_number_txt} <i class='fas fa-external-link'></i></a>`;
-              item.properties.formatted_enacted_date = date(item.properties.enacted_date, 'MM/dd/yyyy');
+              if (!!item.properties.enacted_date && item.properties.remap_status == 'Enacted') {
+                item.properties.formatted_enacted_date = date(item.properties.enacted_date, 'MM/dd/yyyy');
+              } else {
+                item.properties.formatted_enacted_date = 'N/A';
+              }
             })
 
             this.proposedZoning[feature.properties.OBJECTID] = data;
