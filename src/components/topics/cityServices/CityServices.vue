@@ -96,7 +96,7 @@ onMounted(() => {
       id="Nearby Facilities-description"
       class="topic-info"
     >
-      Find city services and facilities for your search address including schools, libraries, rec centers, trash schedules, police stations, and fire stations. Hover over a facility below to highlight it on the map.  See the full directory of city services at <a target="_blank" href="phila.gov/services">phila.gov/services</a>.
+      Find city services and facilities for your search address including schools, rec centers, police stations, and fire stations. Hover over a facility below to highlight it on the map.  See the full directory of city services at <a target="_blank" href="phila.gov/services">phila.gov/services</a>.
     </div>
 
     <div class="filter-div columns is-multiline">
