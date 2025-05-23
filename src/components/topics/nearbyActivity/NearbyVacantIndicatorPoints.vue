@@ -135,7 +135,7 @@ const nearbyVacantIndicatorsTableData = computed(() => {
       class="table-link"
       target="_blank"
       href="https://phl.maps.arcgis.com/apps/webappviewer/index.html?id=64ac160773d04952bc17ad895cc00680"
-    >See likely vacant properties citywide and learn more about the Philadelphia Vacant Properties Indicators Model <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
+    >See likely vacant properties citywide and learn more about the Philadelphia Vacant Properties Indicators Model <font-awesome-icon icon="fa-solid fa-external-link" /></a>
   </div>
 </template>
 

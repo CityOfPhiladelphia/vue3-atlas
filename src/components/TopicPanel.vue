@@ -201,7 +201,7 @@ const zipCode = computed(() => {
     <topic
       :topic-name="'City Services & Facilities'"
       :topic-slug="'city-services'"
-      :topic-icon="'fa-solid fa-map-marker-alt'"
+      :topic-icon="'fa-solid fa-location-dot'"
       :loading="!dataSourcesLoadedArray.includes('city-services')"
       :topic-index="7"
     >
@@ -213,7 +213,7 @@ const zipCode = computed(() => {
     <topic
       :topic-name="'Nearby Activity'"
       :topic-slug="'nearby-activity'"
-      :topic-icon="'fa-solid fa-map-marker-alt'"
+      :topic-icon="'fa-regular fa-location-dot'"
       :loading="!dataSourcesLoadedArray.includes('nearby-activity')"
       :topic-index="7"
     >

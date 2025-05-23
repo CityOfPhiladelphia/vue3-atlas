@@ -51,10 +51,11 @@ import { faBook } from '@fortawesome/free-solid-svg-icons';
 import { faWrench } from '@fortawesome/free-solid-svg-icons';
 import { faUniversity } from '@fortawesome/free-solid-svg-icons';
 import { faGavel } from '@fortawesome/free-solid-svg-icons';
-import { faMapMarkerAlt } from '@fortawesome/free-solid-svg-icons';
+import { faLocationDot } from '@fortawesome/free-solid-svg-icons';
+import { faLocationDot as farLocationDot } from '@fortawesome/pro-regular-svg-icons';
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { faBuilding } from '@fortawesome/free-solid-svg-icons';
-import { faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons';
+import { faExternalLink } from '@fortawesome/free-solid-svg-icons';
 import { faAngleDown } from '@fortawesome/free-solid-svg-icons';
 import { faCaretLeft } from '@fortawesome/free-solid-svg-icons';
 import { faCaretRight } from '@fortawesome/free-solid-svg-icons';
@@ -73,10 +74,11 @@ library.add(
   faWrench,
   faUniversity,
   faGavel,
-  faMapMarkerAlt,
+  faLocationDot,
+  farLocationDot,
   faSpinner,
   faBuilding,
-  faExternalLinkAlt,
+  faExternalLink,
   faAngleDown,
   faCaretLeft,
   faCaretRight,

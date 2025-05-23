@@ -142,7 +142,8 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
           id_field: 'id',
           info_field: 'public_name',
         },
-      }
+      },
+      allParksRecLocationTypes: null,
     }
   },
   actions: {
@@ -395,6 +396,24 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
         if (import.meta.env.VITE_DEBUG == 'true') console.error('nearbyFireStations - await never resolved, failed to fetch address data');
       }
     },
+    async fillAllParksRecLocationTypes() {
+      try {
+        const params = {
+          where: '1=1',
+          outFields: '*',
+          f: 'geojson',
+        }
+        const response = await axios.get('https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/ppr_location_types_atlas/FeatureServer/0/query?', { params });
+        if (response.status === 200) {
+          const data = response.data;
+          this.allParksRecLocationTypes = data.features.map(feature => feature.properties);
+        } else {
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('parksRecLocationTypes - await resolved but HTTP status was not successful');
+        }
+      } catch {
+        if (import.meta.env.VITE_DEBUG == 'true') console.error('parksRecLocationTypes - await never resolved, failed to fetch data');
+      }
+    },
     async fillNearbyRecreationFacilities() {
       try {
         const GeocodeStore = useGeocodeStore();
@@ -413,10 +432,11 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
         const lngQuery = "ST_X(pprlp.the_geom)";
 
         let query = `WITH pprf AS (SELECT * FROM ppr_facilities) `
-        query += `SELECT pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, pprf.id, pprf.facility_type, pprf.facility_description, ${distQuery} as distance, ${latQuery} as lat, ${lngQuery} as lng FROM ppr_website_locatorpoints pprlp`
+        query += `SELECT pprf.location_type, pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, pprf.id, pprf.facility_type, pprf.facility_description, ${distQuery} as distance, ${latQuery} as lat, ${lngQuery} as lng FROM ppr_website_locatorpoints pprlp`
         query += ` LEFT JOIN pprf ON pprf.website_locator_points_link_id = pprlp.linkid`
         query += ` WHERE pprf.facility_is_published='true' and ${distQuery} < 1609.34`;
-        query += ` GROUP BY pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, pprlp.the_geom, pprf.facility_type, pprf.facility_description, pprf.id`;
+        // query += ` WHERE pprf.facility_is_published='true' and ${distQuery} < 1609.34`;
+        query += ` GROUP BY pprf.location_type, pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, pprlp.the_geom, pprf.facility_type, pprf.facility_description, pprf.id`;
         // query += ` GROUP BY pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, pprlp.the_geom, pprf.facility_type, pprf.id`;
         query += ` ORDER BY distance`;
         
@@ -430,8 +450,11 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
           if (import.meta.env.VITE_DEBUG) console.log('nearbyRecreationFacilities, data:', data);
           data.rows.forEach(row => {
             row.distance_mi = (row.distance / 1609.34).toFixed(2) + ' mi';
-            row.location = `<a target="_blank" href="https://www.phila.gov/parks-rec-finder/#/location/${slugify(row.public_name.toLowerCase())}/${row.id}">${row.public_name}</a>
-            <br>${row.address.full}`
+            if (row.public_name) {
+              row.location = `<a target="_blank" href="https://www.phila.gov/parks-rec-finder/#/location/${slugify(row.public_name.toLowerCase())}/${row.id}">${row.public_name}</a><br>${row.address.full}`;
+            } else {
+              row.location = `<a target="_blank" href="https://www.phila.gov/parks-rec-finder/#/location/${row.public_name}/${row.id}">${row.public_name}</a><br>${row.address}`;
+            }
 
             if (row.contact_phone) {
               row.location += `<br>${phoneNumber(row.contact_phone)}`;
@@ -443,9 +466,25 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
               row.location +=`<br>${row.location_contact_name}`;
             }
 
-            row.features = `Facility Type: ${row.facility_type}`;
+            row.features = `Facilities: `;
+            if (row.location_type) {
+              for (const[i, locType] of row.location_type.entries()) {
+                if (this.allParksRecLocationTypes) {
+                  const locTypeObj = this.allParksRecLocationTypes.find(type => type.id == locType);
+                  if (import.meta.env.VITE_DEBUG) console.log('i:', i, 'locType:', locType, 'locTypeObj:', locTypeObj);
+                  if (locTypeObj && i === row.location_type.length - 1) {
+                    row.features += `${locTypeObj.display_location_type}`;
+                  } else if (locTypeObj) {
+                    row.features += `${locTypeObj.display_location_type}, `;
+                  } else {
+                    row.features += 'Swimming Pool';
+                  }
+                }
+              }
+            }
+            if (import.meta.env.VITE_DEBUG) console.log('after loop row.features:', row.features);
             if (row.facility_description) {
-              row.features += `<br><div class="description">${row.facility_description}</div>`;
+              row.features += `<br><div class="description">${row.facility_description.split('---')[0]}</div>`;
             }
 
           });

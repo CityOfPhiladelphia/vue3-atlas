@@ -152,7 +152,7 @@ const nearbyDemolitionPermitsTableData = computed(() => {
       class="table-link"
       target="_blank"
       href="https://iframe.publicstuff.com/#?client_id=242"
-    >Report complaints about construction or demolition activity to Philly311 <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
+    >Report complaints about construction or demolition activity to Philly311 <font-awesome-icon icon="fa-solid fa-external-link" /></a>
   </div>
 </template>
 

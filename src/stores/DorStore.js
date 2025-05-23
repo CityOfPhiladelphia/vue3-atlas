@@ -351,7 +351,7 @@ export const useDorStore = defineStore("DorStore", {
                 const data = response.data;
                 data.features.forEach((doc) => {
                   doc.attributes.date = date(doc.attributes.display_date);
-                  doc.attributes.link = `<a target='_blank' href='http://epay.phila-records.com/phillyepay/web/integration/document/InstrumentID=${doc.attributes.document_id}&Guest=true'>${doc.attributes.document_id}<i class='fa fa-external-link-alt'></i></a>`;
+                  doc.attributes.link = `<a target='_blank' href='http://epay.phila-records.com/phillyepay/web/integration/document/InstrumentID=${doc.attributes.document_id}&Guest=true'>${doc.attributes.document_id}<i class='fa fa-external-link'></i></a>`;
                 })
                 this.dorDocuments[feature.properties.OBJECTID] = data;
                 // return resolve();
