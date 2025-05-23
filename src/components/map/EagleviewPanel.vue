@@ -108,7 +108,7 @@ const popoutClicked = () => {
 
     <div class="eagleview-pop-out">
       <font-awesome-icon
-        icon="fa-external-link-alt"
+        icon="fa-external-link"
         @click="popoutClicked"
       ></font-awesome-icon>
     </div>

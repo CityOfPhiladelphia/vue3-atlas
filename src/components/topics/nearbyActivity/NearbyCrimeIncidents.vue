@@ -150,7 +150,7 @@ const nearbyCrimeIncidentsTableData = computed(() => {
       class="table-link"
       target="_blank"
       href="https://www.phillypolice.com/crime-data/crime-statistics/"
-    >See citywide crime statistics at PhillyPolice.com <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
+    >See citywide crime statistics at PhillyPolice.com <font-awesome-icon icon="fa-solid fa-external-link" /></a>
   </div>
 </template>
 

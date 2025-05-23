@@ -13,10 +13,11 @@
     "lint:fix": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .eslintignore"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-pro": "^5.15.4",
-    "@fortawesome/fontawesome-svg-core": "6.5.2",
-    "@fortawesome/free-solid-svg-icons": "^5.15.4",
-    "@fortawesome/vue-fontawesome": "^3.0.6",
+    "@fortawesome/fontawesome-pro": "6.7.2",
+    "@fortawesome/fontawesome-svg-core": "6.7.2",
+    "@fortawesome/free-solid-svg-icons": "6.7.2",
+    "@fortawesome/pro-regular-svg-icons": "^6.7.2",
+    "@fortawesome/vue-fontawesome": "^3.0.8",
     "@phila/phila-ui-app-footer": "^0.0.7",
     "@phila/phila-ui-app-header": "^0.0.21",
     "@phila/phila-ui-core": "^1.0.15",

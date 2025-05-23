@@ -449,7 +449,7 @@ const liAppealsTableData = computed(() => {
             <a
               target="_blank"
               :href="`https://li.phila.gov/Property-History/search?address=${encodeURIComponent(MainStore.currentAddress)}`"
-            >See all building certifications for this property at L&I Property History <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
+            >See all building certifications for this property at L&I Property History <font-awesome-icon icon="fa-solid fa-external-link" /></a>
           </div>
         </div>
       </div>
@@ -504,7 +504,7 @@ const liAppealsTableData = computed(() => {
         class="table-link"
         target="_blank"
         :href="`https://li.phila.gov/Property-History/search?address=${encodeURIComponent(MainStore.currentAddress)}`"
-      >See all permits at L&I Property History <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
+      >See all permits at L&I Property History <font-awesome-icon icon="fa-solid fa-external-link" /></a>
     </div>
     
     <!-- liAisZoningDocs and liEclipseZoningDocs Table-->
@@ -606,7 +606,7 @@ const liAppealsTableData = computed(() => {
         class="table-link"
         target="_blank"
         :href="`https://li.phila.gov/Property-History/search?address=${encodeURIComponent(MainStore.currentAddress)}`"
-      >See all inspections at L&I Property History <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
+      >See all inspections at L&I Property History <font-awesome-icon icon="fa-solid fa-external-link" /></a>
     </div>
     
     <!-- Li Violations Table -->
@@ -658,7 +658,7 @@ const liAppealsTableData = computed(() => {
         class="table-link"
         target="_blank"
         :href="`https://li.phila.gov/Property-History/search?address=${encodeURIComponent(MainStore.currentAddress)}`"
-      >See all violations at L&I Property History <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
+      >See all violations at L&I Property History <font-awesome-icon icon="fa-solid fa-external-link" /></a>
     </div>
 
     <!-- L&I Appeals Table -->
@@ -710,7 +710,7 @@ const liAppealsTableData = computed(() => {
         class="table-link"
         target="_blank"
         :href="`https://li.phila.gov/Property-History/search?address=${encodeURIComponent(MainStore.currentAddress)}`"
-      >See all appeals at L&I Property History <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
+      >See all appeals at L&I Property History <font-awesome-icon icon="fa-solid fa-external-link" /></a>
     </div>
 
     <!-- Li Business Licenses Table -->
@@ -762,7 +762,7 @@ const liAppealsTableData = computed(() => {
         class="table-link"
         target="_blank"
         :href="`https://li.phila.gov/Property-History/search?address=${encodeURIComponent(MainStore.currentAddress)}`"
-      >See all business licenses at L&I Property History <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
+      >See all business licenses at L&I Property History <font-awesome-icon icon="fa-solid fa-external-link" /></a>
     </div>
 
   </section>

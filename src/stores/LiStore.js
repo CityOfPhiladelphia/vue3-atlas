@@ -165,7 +165,7 @@ export const useLiStore = defineStore('LiStore', {
         if (response.ok) {
           let data = await response.json();
           data.rows.forEach((item) => {
-            item.link = `<a target='_blank' href='https://li.phila.gov/property-history/search/building-certification-detail?address="${encodeURIComponent(item.address)}"&Id=${item.bin}'>${item.buildingcerttype} <i class='fa fa-external-link-alt'></i></a>`;
+            item.link = `<a target='_blank' href='https://li.phila.gov/property-history/search/building-certification-detail?address="${encodeURIComponent(item.address)}"&Id=${item.bin}'>${item.buildingcerttype} <i class='fa fa-external-link'></i></a>`;
           })
           this.liBuildingCerts = data;
         } else {
@@ -198,7 +198,7 @@ export const useLiStore = defineStore('LiStore', {
         if (response.ok) {
           const data = await response.json();
           data.rows.forEach((permit) => {
-            permit.link = `<a target='_blank' href='https://li.phila.gov/Property-History/search/Permit-Detail?address="${encodeURIComponent(permit.address)}"&Id=${permit.permitnumber}'>${permit.permitnumber} <i class='fa fa-external-link-alt'></i></a>`;
+            permit.link = `<a target='_blank' href='https://li.phila.gov/Property-History/search/Permit-Detail?address="${encodeURIComponent(permit.address)}"&Id=${permit.permitnumber}'>${permit.permitnumber} <i class='fa fa-external-link'></i></a>`;
           });
           this.liPermits = data;
           this.loadingLiPermits = false;
@@ -241,7 +241,7 @@ export const useLiStore = defineStore('LiStore', {
                 + docId
                 + '.pdf">'
                 + docId
-                + ' <i class="fa fa-external-link-alt"></i>'
+                + ' <i class="fa fa-external-link"></i>'
                 + '</a>';
 
 
@@ -336,7 +336,7 @@ export const useLiStore = defineStore('LiStore', {
             if (item.unit_num && item.unit_num != null) {
               address += ' Unit ' + item.unit_num;
             }
-            item.link = "<a target='_blank' href='https://li.phila.gov/Property-History/search/Violation-Detail?address="+encodeURIComponent(address)+"&Id="+item.casenumber+"'>"+item.casenumber+" <i class='fa fa-external-link-alt'></i></a>";
+            item.link = "<a target='_blank' href='https://li.phila.gov/Property-History/search/Violation-Detail?address="+encodeURIComponent(address)+"&Id="+item.casenumber+"'>"+item.casenumber+" <i class='fa fa-external-link'></i></a>";
           
             let description;
             if (item.investigationtype) {
@@ -390,10 +390,10 @@ export const useLiStore = defineStore('LiStore', {
             if (item.unit_num && item.unit_num != null) {
               address += ' Unit ' + item.unit_num;
             }
-            item.link = "<a target='_blank' href='https://li.phila.gov/Property-History/search/Violation-Detail?address="+encodeURIComponent(address)+"&Id="+item.casenumber+"'>"+item.casenumber+" <i class='fa fa-external-link-alt'></i></a>";
+            item.link = "<a target='_blank' href='https://li.phila.gov/Property-History/search/Violation-Detail?address="+encodeURIComponent(address)+"&Id="+item.casenumber+"'>"+item.casenumber+" <i class='fa fa-external-link'></i></a>";
             item.novLink = null;
             if (item.publicnov) {
-              item.novLink = `<a target='_blank' href='${item.publicnov}'>${item.violationcodetitle} <i class='fa fa-external-link-alt'></i></a>`
+              item.novLink = `<a target='_blank' href='${item.publicnov}'>${item.violationcodetitle} <i class='fa fa-external-link'></i></a>`
             } else {
               item.novLink = item.violationcodetitle;
             }
@@ -445,7 +445,7 @@ export const useLiStore = defineStore('LiStore', {
             if (item.unit_num && item.unit_num != null) {
               address += ' Unit ' + item.unit_num;
             }
-            item.link = "<a target='_blank' href='https://li.phila.gov/Property-History/search/Business-License-Detail?address="+encodeURIComponent(address)+"&Id="+item.licensenum+"'>"+item.licensenum+" <i class='fa fa-external-link-alt'></i></a>";
+            item.link = "<a target='_blank' href='https://li.phila.gov/Property-History/search/Business-License-Detail?address="+encodeURIComponent(address)+"&Id="+item.licensenum+"'>"+item.licensenum+" <i class='fa fa-external-link'></i></a>";
           });
           this.liBusinessLicenses = data;
           this.loadingLiBusinessLicenses = false;
@@ -490,8 +490,8 @@ export const useLiStore = defineStore('LiStore', {
             if (item.unit_num && item.unit_num != null) {
               address += ' Unit ' + item.unit_num;
             }
-            item.appeallink = "<a target='_blank' href='https://li.phila.gov/Property-History/search/appeal-detail?address="+encodeURIComponent(address)+"&Id="+item.appealnumber+"'>"+item.appealnumber+" <i class='fa fa-external-link-alt'></i></a>";
-            item.calendarlink = "<a target='_blank' href='https://li.phila.gov/appeals-calendar/appeal?from=2-7-2000&to=4-7-2050&region=all&Id="+item.appealnumber+"'>"+date(item.scheduleddate, 'MM/dd/yyyy')+" <i class='fa fa-external-link-alt'></i></a>";
+            item.appeallink = "<a target='_blank' href='https://li.phila.gov/Property-History/search/appeal-detail?address="+encodeURIComponent(address)+"&Id="+item.appealnumber+"'>"+item.appealnumber+" <i class='fa fa-external-link'></i></a>";
+            item.calendarlink = "<a target='_blank' href='https://li.phila.gov/appeals-calendar/appeal?from=2-7-2000&to=4-7-2050&region=all&Id="+item.appealnumber+"'>"+date(item.scheduleddate, 'MM/dd/yyyy')+" <i class='fa fa-external-link'></i></a>";
             // item.calendarlink = date(item.scheduleddate, 'MM/dd/yyyy');
           });
           this.liAppeals = data;

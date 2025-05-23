@@ -168,7 +168,7 @@ const nearbyZoningAppealsTableData = computed(() => {
       class="table-link"
       target="_blank"
       href="https://li.phila.gov/zba-appeals-calendar"
-    >See zoning appeals citywide at the Zoning Board of Adjustment (ZBA) Appeals Calendar <font-awesome-icon icon="fa-solid fa-external-link-alt" /></a>
+    >See zoning appeals citywide at the Zoning Board of Adjustment (ZBA) Appeals Calendar <font-awesome-icon icon="fa-solid fa-external-link" /></a>
   </div>
 </template>
 
