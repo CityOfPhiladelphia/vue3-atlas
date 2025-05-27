@@ -376,14 +376,14 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
             // const distFeet = parseInt(dist * 5280);
             feature.properties.distance_mi = dist.toFixed(2) + ' mi';
             feature.properties.stationInfo = '<b>';
-            feature.properties.ENG && feature.properties.ENG != 0 ? feature.properties.stationInfo += 'Engine ' + feature.properties.ENG : '';
-            feature.properties.ENG && feature.properties.ENG != 0 && feature.properties.LAD && feature.properties.LAD != 0 ? feature.properties.stationInfo += ' / ' : '';
-            feature.properties.LAD && feature.properties.LAD != 0 ? feature.properties.stationInfo += 'Ladder ' + feature.properties.LAD : '';
-            feature.properties.LAD && feature.properties.LAD != 0 && feature.properties.MED && feature.properties.MED != 0 || feature.properties.ENG && feature.properties.ENG != 0 && feature.properties.MED && feature.properties.MED != 0 ? feature.properties.stationInfo += ' / ' : '';
-            feature.properties.MED && feature.properties.MED != 0 ? feature.properties.stationInfo += 'Medic ' + feature.properties.MED : '';
+            feature.properties.eng && feature.properties.eng != 0 ? feature.properties.stationInfo += 'Engine ' + feature.properties.eng : '';
+            feature.properties.eng && feature.properties.eng != 0 && feature.properties.lad && feature.properties.lad != 0 ? feature.properties.stationInfo += ' / ' : '';
+            feature.properties.lad && feature.properties.lad != 0 ? feature.properties.stationInfo += 'Ladder ' + feature.properties.lad : '';
+            feature.properties.lad && feature.properties.lad != 0 && feature.properties.med && feature.properties.med != 0 || feature.properties.eng && feature.properties.eng != 0 && feature.properties.med && feature.properties.med != 0 ? feature.properties.stationInfo += ' / ' : '';
+            feature.properties.med && feature.properties.med != 0 ? feature.properties.stationInfo += 'Medic ' + feature.properties.med : '';
             feature.properties.stationInfo += '</b>';
 
-            feature.properties.stationInfoAddress = feature.properties.stationInfo + '<br>' + feature.properties.LOCATION;// + '<br>Philadelphia, PA ';// + feature.properties.ZIP_CODE;
+            feature.properties.stationInfoAddress = feature.properties.stationInfo + '<br>' + feature.properties.location;// + '<br>Philadelphia, PA ';// + feature.properties.ZIP_CODE;
             return feature;
           });
 
