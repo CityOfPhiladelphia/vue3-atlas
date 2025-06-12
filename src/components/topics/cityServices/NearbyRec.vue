@@ -37,7 +37,7 @@ watch(() => nearbyRecreationFacilitiesGeojson.value, (newGeojson) => {
   if (import.meta.env.VITE_DEBUG) console.log('watch nearbyRecreationFacilities.value, feat:', feat);
   if (map.getSource) map.getSource('cityServices').setData(feat);
   const feat2 = featureCollection([currentAddress, ...newGeojson]);
-  const bounds = bbox(buffer(feat2, 2000, {units: 'feet'}));
+  const bounds = bbox(buffer(feat2, 5000, {units: 'feet'}));
   if (map.fitBounds) map.fitBounds(bounds);
 });
 
