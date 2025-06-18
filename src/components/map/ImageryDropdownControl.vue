@@ -45,6 +45,10 @@ const emitValue = (value) => {
       <div class="dropdown-content">
         <a
           class="dropdown-item"
+          @click="emitValue('2024')"
+        >2024</a>
+        <a
+          class="dropdown-item"
           @click="emitValue('2023')"
         >2023</a>
         <a
