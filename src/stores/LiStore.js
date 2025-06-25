@@ -28,6 +28,8 @@ export const useLiStore = defineStore('LiStore', {
       loadingLiBusinessLicenses: true,
       liAppeals: {},
       loadingLiAppeals: false,
+      liLeadCertification: {},
+      loadingLiLeadCertification: false,
       loadingLiData: true,
     };
   },
@@ -44,6 +46,7 @@ export const useLiStore = defineStore('LiStore', {
       this.fillLiViolations();
       this.fillLiBusinessLicenses();
       this.fillLiAppeals();
+      this.fillLiLeadCertification();
     },
     async clearAllLiData() {
       this.loadingLiData = true;
@@ -66,6 +69,8 @@ export const useLiStore = defineStore('LiStore', {
       this.loadingLiBusinessLicenses = true;
       this.liAppeals = {};
       this.loadingLiAppeals = true;
+      this.liLeadCertification = {};
+      this.loadingLiLeadCertification = true;
     },
     async fillLiBuildingFootprints() {
       // if (import.meta.env.VITE_DEBUG == 'true') console.log('fillLiBuildingFootprints is running');
@@ -501,9 +506,48 @@ export const useLiStore = defineStore('LiStore', {
           if (import.meta.env.VITE_DEBUG == 'true') console.warn('liAppeals - await resolved but HTTP status was not successful')
         }
       } catch {
-        this.loadingLiAppealss = false;
+        this.loadingLiAppeals = false;
         if (import.meta.env.VITE_DEBUG == 'true') console.error('liAppeals - await never resolved, failed to fetch address data')
       }
+    },
+
+    async fillLiLeadCertification() {
+      if (import.meta.env.VITE_DEBUG == 'true') console.log('fillLiLeadCertification is running');
+
+      try {
+        const GeocodeStore = useGeocodeStore();
+        const feature = GeocodeStore.aisData.features[0];
+        const opa_account_num = feature.properties.opa_account_num;
+        if (!opa_account_num) {
+          // console.error('no account num');
+          this.loadingLiLeadCertification = false;
+          return;
+        }
+        const url = `https://services.arcgis.com/fLeGjb7u4uXqeF9q/arcgis/rest/services/lhhp_lead_certifications/FeatureServer/0/query?where=opa_account=${opa_account_num}&outFields=*&outSR=4326&f=pjson`;
+        const response = await fetch(url);
+        // console.log('response:', response, 'response.ok:', response.ok, 'response.status:', response.status);
+        if (response.ok) {
+          const data = await response.json();
+          // data.rows.forEach((item) => {
+            // let address = item.address;
+            // if (item.unit_num && item.unit_num != null) {
+            //   address += ' Unit ' + item.unit_num;
+            // }
+            // item.appeallink = "<a target='_blank' href='https://li.phila.gov/Property-History/search/appeal-detail?address="+encodeURIComponent(address)+"&Id="+item.appealnumber+"'>"+item.appealnumber+" <i class='fa fa-external-link-alt'></i></a>";
+            // item.calendarlink = "<a target='_blank' href='https://li.phila.gov/appeals-calendar/appeal?from=2-7-2000&to=4-7-2050&region=all&Id="+item.appealnumber+"'>"+date(item.scheduleddate, 'MM/dd/yyyy')+" <i class='fa fa-external-link-alt'></i></a>";
+            // item.calendarlink = date(item.scheduleddate, 'MM/dd/yyyy');
+          // });
+          this.liLeadCertification = data;
+          this.loadingLiLeadCertification = false;
+        } else {
+          this.loadingLiLeadCertification = false;
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('liLeadCertification - await resolved but HTTP status was not successful')
+        }
+      } catch {
+        this.loadingLiLeadCertification = false;
+        if (import.meta.env.VITE_DEBUG == 'true') console.error('liLeadCertification - await never resolved, failed to fetch address data')
+      }
+      
     },
   },
   // keeping formatting getters here in the store only works if the data is not looped

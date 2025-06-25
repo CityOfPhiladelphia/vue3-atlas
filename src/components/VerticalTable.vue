@@ -17,12 +17,17 @@ defineProps({
     type: String,
     default: ''
   },
+  noDataMessage: {
+    type: String,
+    default: 'No data available'
+  }
 });
 
 </script>
 
 <template>
   <table
+    v-if="data && data.length > 0"
     :id="tableId"
     class="table vert-table"
   >
@@ -42,6 +47,12 @@ defineProps({
       </tr>
     </tbody>
   </table>
+  <div
+    v-else
+    class="no-data-message"
+  >
+    {{ noDataMessage }}
+  </div>
 </template>
 
 <style scoped>
@@ -71,6 +82,10 @@ td {
   padding-bottom: 6px;
   width: 70%;
   vertical-align: middle !important;
+}
+
+.no-data-message {
+  margin-top: 2rem;
 }
 
 </style>

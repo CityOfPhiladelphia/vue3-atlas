@@ -15,6 +15,8 @@ const MapStore = useMapStore();
 
 import VerticalTable from '../VerticalTable.vue';
 
+import { format } from 'date-fns';
+
 import useTransforms from '@/composables/useTransforms';
 const { prettyNumber } = useTransforms();
 
@@ -139,6 +141,57 @@ const buildingData = computed(() => {
     },
   ];
 });
+
+const leadCertificationData = computed(() => {
+
+  const features = LiStore.liLeadCertification.features;
+  let feature;
+  if (features) feature = features[0];
+
+  if (!feature) return []; // Return empty array if no features are available
+
+  const rentalLicense = feature.attributes.li_rl_status;
+  const rentalExpiration = format(feature.attributes.li_rl_expiration_date, 'MM/dd/yyyy');
+  let rentalString;
+  if (rentalLicense) rentalString = 'Rental - ' + rentalLicense;
+  if (rentalExpiration) rentalString += ` (${rentalExpiration})`;
+  
+  const childCareLicense = feature.attributes.li_cc_status;
+  const childCareExpiration = feature.attributes.li_cc_expiration_date;
+  let childCareString = null;
+  if (childCareLicense) childCareString = 'Child Care Facility - ' + childCareLicense;
+  if (childCareExpiration) childCareString += ` (${childCareExpiration})`;
+
+  const lodgingLicense = feature.attributes.li_llo_status;
+  const lodgingExpiration = feature.attributes.li_llo_expiration_date;
+  let lodgingString = null;
+  if (lodgingLicense) lodgingString = 'Limited Lodging Operator - ' + lodgingLicense;
+  if (lodgingExpiration) lodgingString += ` (${lodgingExpiration})`;
+
+  let finalString = '';
+  if (rentalString) finalString += rentalString + '<br>';
+  if (childCareString) finalString += childCareString + '<br>';
+  if (lodgingString) finalString += lodgingString;
+
+  return [
+    {
+      label: 'OPA account',
+      value: feature.attributes.opa_account,
+    },
+    {
+      label: 'Certification status',
+      value: feature.attributes.lhhp_certification_status + ' - ' + feature.attributes.lhhp_status_details,
+    },
+    {
+      label: 'Certification date',
+      value: feature.attributes.lhhp_cert_date,
+    },
+    {
+      label: 'License',
+      value: finalString,
+    },
+  ]
+})
 
 const buildingCertsTableData = ref({
   columns: [
@@ -763,6 +816,23 @@ const liAppealsTableData = computed(() => {
         target="_blank"
         :href="`https://li.phila.gov/Property-History/search?address=${encodeURIComponent(MainStore.currentAddress)}`"
       >See all business licenses at L&I Property History <font-awesome-icon icon="fa-solid fa-external-link" /></a>
+    </div>
+
+    <!-- Lead Certifications -->
+    <div class="data-section">
+      <h2 class="subtitle mb-3 is-5 table-title">
+        Lead Certification Details
+        <font-awesome-icon
+          v-if="LiStore.loadingLiLeadCertification"
+          icon="fa-solid fa-spinner"
+          spin
+        />
+      </h2>
+      <vertical-table
+        table-id="leadCertificationTable"
+        :data="leadCertificationData"
+        :no-data-message="'No lead certification details found for the selected property'"
+      />
     </div>
 
   </section>
