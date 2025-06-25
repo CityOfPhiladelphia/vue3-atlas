@@ -1136,11 +1136,12 @@ const removeAllCyclomediaMapLayers = () => {
 watch(
   () => route.query,
   async newQuery => {
-    if (import.meta.env.VITE_DEBUG) console.log('Map.vue watch route.query.streetview, newQuery:', newQuery, 'map.loaded():', map.loaded());
-    if (map.loaded()) {
-      if (newQuery.streetview) {
+    // if (import.meta.env.VITE_DEBUG) console.log('Map.vue watch route.query, newQuery:', newQuery, 'map:', map, 'map.loaded():', map.loaded());
+    // if (map.loaded()) {
+    if (map._loaded) {
+      if (newQuery.streetview == 'true') {
         turnOnCyclomedia();
-      } else if (newQuery.obliqueview) {
+      } else if (newQuery.obliqueview == 'true') {
         turnOnEagleview();
       } else {
         removeAllCyclomediaMapLayers();
