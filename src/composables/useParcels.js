@@ -105,11 +105,11 @@ export default function useParcels() {
       let distances = [];
       let areas = [];
       for (let coordsSet of coords) {
-        // if (import.meta.env.VITE_DEBUG == 'true') console.log('coordsSet:', coordsSet);
+        if (import.meta.env.VITE_DEBUG == 'true') console.log('coordsSet:', coordsSet);
         if (coordsSet.length > 2) {
           // if (import.meta.env.VITE_DEBUG == 'true') console.log('in multiPolygon loop');
           const turfPolygon = multiPolygon(coordsSet);
-          distances.push(this.getMultiPolyDistances(coordsSet).reduce(function(acc, val) {
+          distances.push(getMultiPolyDistances(coordsSet).reduce(function(acc, val) {
             return acc + val;
           }));
           areas.push(area(turfPolygon) * 10.7639);

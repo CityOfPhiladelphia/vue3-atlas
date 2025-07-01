@@ -472,6 +472,7 @@ watch(
   // if (import.meta.env.VITE_DEBUG == 'true') console.log('Map dorCoordinates watch, newCoords:', newCoords);
   let newParcel;
   if (newCoords.length > 3) {
+    // newParcel = polygon(newCoords);
     newParcel = polygon([ newCoords ]);
     map.getSource('dorParcel').setData(newParcel);
   } else {
