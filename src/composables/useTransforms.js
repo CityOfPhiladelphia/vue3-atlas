@@ -15,7 +15,7 @@ export default function useTransforms() {
   const date = (value) => {
     if (!value) return;
     let valueTransformed;
-    if (import.meta.env.VITE_DEBUG == 'true') console.log('date transform running, value:', value, 'typeof value:', typeof value);
+    // if (import.meta.env.VITE_DEBUG == 'true') console.log('date transform running, value:', value, 'typeof value:', typeof value);
     // if (typeof value === 'string') {
       // console.log('date transform parseISO(value):', parseISO(value));
     valueTransformed = formatInTimeZone(value, 'America/New_York', 'MM/dd/yyyy');

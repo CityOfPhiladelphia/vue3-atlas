@@ -454,14 +454,9 @@ const dorCoordinates = computed(() => {
   // if (import.meta.env.VITE_DEBUG == 'true') console.log('computed dorCoordinates, selectedParcelId.value:', selectedParcelId.value, 'ParcelsStore.dor', ParcelsStore.dor);
   if (selectedParcelId.value && ParcelsStore.dor.features && ParcelsStore.dor.features.filter(parcel => parcel.id === selectedParcelId.value)[0]) {
     const parcel = ParcelsStore.dor.features.filter(parcel => parcel.id === selectedParcelId.value)[0];
-    // if (import.meta.env.VITE_DEBUG == 'true') console.log('computed, not watch, selectedParcelId.value:', selectedParcelId.value, 'ParcelsStore.dor.features.filter(parcel => parcel.id === selectedParcelId.value)[0]:', ParcelsStore.dor.features.filter(parcel => parcel.id === selectedParcelId.value)[0]);
-    if (parcel.geometry.type === 'Polygon') {
-      value = parcel.geometry.coordinates[0];
-    } else if (parcel.geometry.type === 'MultiPolygon') {
-      value = parcel.geometry.coordinates;
-    }
+    value = parcel.geometry;
   } else {
-    value = [[0,0], [0,1], [1,1], [1,0], [0,0]];
+    value = polygon([[[0,0], [0,1], [1,1], [1,0], [0,0]]]);
   }
   return value;
 });
@@ -469,17 +464,9 @@ const dorCoordinates = computed(() => {
 watch(
   () => dorCoordinates.value,
   newCoords => {
-  // if (import.meta.env.VITE_DEBUG == 'true') console.log('Map dorCoordinates watch, newCoords:', newCoords);
-  let newParcel;
-  if (newCoords.length > 3) {
-    // newParcel = polygon(newCoords);
-    newParcel = polygon([ newCoords ]);
-    map.getSource('dorParcel').setData(newParcel);
-  } else {
-    newParcel = multiPolygon(newCoords);
-    map.getSource('dorParcel').setData(newParcel);
+    map.getSource('dorParcel').setData(newCoords);
   }
-});
+);
 
 watch(
   () => MainStore.currentNearbyTimeInterval,
@@ -497,11 +484,12 @@ watch(
   () => route.params.topic,
   async newTopic => {
     MainStore.currentTopic = route.params.topic;
-    if (import.meta.env.VITE_DEBUG == 'true') console.log('Map route.params.topic watch, newTopic:', newTopic);
+    // if (import.meta.env.VITE_DEBUG == 'true') console.log('Map route.params.topic watch, newTopic:', newTopic);
     const popup = document.getElementsByClassName('maplibregl-popup');
     if (popup.length) {
       popup[0].remove();
     }
+
     if (newTopic) {
       map.setStyle($config[$config.topicStyles[newTopic]]);
       if (MapStore.imageryOn) {
@@ -509,26 +497,11 @@ watch(
         map.addLayer($config.mapLayers.imageryLabels, 'cyclomediaRecordings')
         map.addLayer($config.mapLayers.imageryParcelOutlines, 'cyclomediaRecordings')
       }
-      const addressMarker = map.getSource('addressMarker');
-      const dorParcel = map.getSource('dorParcel');
-      if (addressMarker && pwdCoordinates.value.length) {
-        if (import.meta.env.VITE_DEBUG == 'true') console.log('pwdCoordinates.value:', pwdCoordinates.value);
-        // if (import.meta.env.VITE_DEBUG == 'true') console.log('1 map.layers:', map.getStyle().layers, map.getStyle().sources);
-        addressMarker.setData(point(pwdCoordinates.value));
+
+      if ($config.parcelLayerForTopic[newTopic] == 'dor') {
+        map.getSource('dorParcel').setData(dorCoordinates.value);
       }
-      if (dorParcel) {
-        if ($config.parcelLayerForTopic[newTopic] == 'dor') {
-          let newParcel;
-          if (dorCoordinates.value.length > 3) {
-            newParcel = polygon([ dorCoordinates.value ]);
-            map.getSource('dorParcel').setData(newParcel);
-          } else {
-            newParcel = multiPolygon(dorCoordinates.value);
-            map.getSource('dorParcel').setData(newParcel);
-          }
-        }
-        if (import.meta.env.VITE_DEBUG == 'true') console.log('2 map.layers:', map.getStyle().layers, map.getStyle().sources);
-      }
+
       if (newTopic === 'li') {
         if (selectedLiBuildingNumber.value) {
           map.setPaintProperty(
@@ -544,32 +517,15 @@ watch(
         }
       }
       MapStore.selectedRegmap = null;
+
     } else {
       if (!MapStore.imageryOn) {
         map.setStyle($config.pwdDrawnMapStyle);
       }
-      const addressMarker = map.getSource('addressMarker');
-      const dorParcel = map.getSource('dorParcel');
-      if (addressMarker) {
-        // if (import.meta.env.VITE_DEBUG == 'true') console.log('1 map.layers:', map.getStyle().layers, map.getStyle().sources);
-        if (pwdCoordinates.value.length) {
-          addressMarker.setData(point(pwdCoordinates.value));
-        }
-        if (import.meta.env.VITE_DEBUG == 'true') console.log('dorCoordinates.value:', dorCoordinates.value);
-      }
-      if (dorParcel) {
-        let newParcel;
-        if ($config.parcelLayerForTopic[newTopic] == 'dor') {
-          if (dorCoordinates.value.length > 3) {
-            newParcel = polygon([ dorCoordinates.value ]);
-            map.getSource('dorParcel').setData(newParcel);
-          } else {
-            newParcel = multiPolygon(dorCoordinates.value);
-            map.getSource('dorParcel').setData(newParcel);
-          }
-        }
-        if (import.meta.env.VITE_DEBUG == 'true') console.log('2 map.layers:', map.getStyle().layers, map.getStyle().sources);
-      }
+    }
+
+    if (pwdCoordinates.value.length) {
+      map.getSource('addressMarker').setData(point(pwdCoordinates.value));
     }
     if (MapStore.cyclomediaOn) {
       updateCyclomediaCameraAngle();
