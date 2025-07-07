@@ -29,7 +29,7 @@ const nearbyVacantIndicatorPoints = computed(() => {
   if (NearbyActivityStore.nearbyVacantIndicatorPoints.rows) {
     data = [ ...NearbyActivityStore.nearbyVacantIndicatorPoints.rows].filter(item => {
       // if (import.meta.env.VITE_DEBUG == 'true') console.log('item.properties.ADDRESS:', item.properties.ADDRESS, 'props.textSearch:', props.textSearch);
-      return item.properties.ADDRESS.toLowerCase().includes(props.textSearch.toLowerCase()) || item.properties.VACANT_FLAG.toLowerCase().includes(props.textSearch.toLowerCase());
+      return item.properties.address.toLowerCase().includes(props.textSearch.toLowerCase()) || item.properties.vacant_flag.toLowerCase().includes(props.textSearch.toLowerCase());
     });
     data.sort((a, b) => a.distance_ft - b.distance_ft)
   }
