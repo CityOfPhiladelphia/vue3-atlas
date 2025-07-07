@@ -2,6 +2,7 @@
 import { computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { point, featureCollection, feature } from '@turf/helpers';
 
+
 import { useNearbyActivityStore } from '@/stores/NearbyActivityStore';
 const NearbyActivityStore = useNearbyActivityStore();
 import { useMainStore } from '@/stores/MainStore';
