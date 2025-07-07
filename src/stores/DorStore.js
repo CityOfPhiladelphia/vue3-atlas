@@ -122,7 +122,7 @@ export const useDorStore = defineStore("DorStore", {
                   row.condo_parcel = row.recmap + '-' + row.condoparcel;
                   row.unit_number = 'Unit #' + row.condounit;
                 }
-                this.dorCondos[feature.properties.OBJECTID] = data;
+                this.dorCondos[feature.properties.objectid] = data;
                 return resolve();
               } else {
                 if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillDorCondos - await resolved but HTTP status was not successful');
@@ -254,7 +254,7 @@ export const useDorStore = defineStore("DorStore", {
             // REVIEW if the parcel has no address, we don't want to query
             // WHERE ADDRESS = 'null' (doesn't make sense), so use this for now
             if (!parcelBaseAddress || parcelBaseAddress === 'null'){
-              where = "matched_regmap = '" + ParcelsStore.dor.features[0].properties.BASEREG + "'";
+              where = "matched_regmap = '" + ParcelsStore.dor.features[0].properties.basereg + "'";
             } else {
               // TODO make these all camel case
               var props = GeocodeStore.aisData.features[0].properties,
@@ -307,8 +307,8 @@ export const useDorStore = defineStore("DorStore", {
               }
               
               // where += ")";
-              where += ") or matched_regmap = '" + ParcelsStore.dor.features[0].properties.BASEREG + "'";
-              where += " or reg_map_id = '" + ParcelsStore.dor.features[0].properties.BASEREG + "'";
+              where += ") or matched_regmap = '" + ParcelsStore.dor.features[0].properties.basereg + "'";
+              where += " or reg_map_id = '" + ParcelsStore.dor.features[0].properties.basereg + "'";
             }
 
             if (import.meta.env.VITE_DEBUG == 'true') console.log('address_low:', address_low, 'address_floor:', address_floor,
@@ -317,7 +317,7 @@ export const useDorStore = defineStore("DorStore", {
               'geocode.address_low_suffix:', geocode.address_low_suffix,
               'geocode.address_low_frac:', geocode.address_low_frac,
               'geocode.street_postdir:', geocode.street_postdir, 'unitNum:', unitNum,
-              'unitNum2:', unitNum2, 'ParcelsStore.dor.features[0].properties.BASEREG:', ParcelsStore.dor.features[0].properties.BASEREG,
+              'unitNum2:', unitNum2, 'ParcelsStore.dor.features[0].properties.basereg:', ParcelsStore.dor.features[0].properties.basereg,
               'where:', where
             )
           
@@ -353,7 +353,8 @@ export const useDorStore = defineStore("DorStore", {
                   doc.attributes.date = date(doc.attributes.display_date);
                   doc.attributes.link = `<a target='_blank' href='http://epay.phila-records.com/phillyepay/web/integration/document/InstrumentID=${doc.attributes.document_id}&Guest=true'>${doc.attributes.document_id}<i class='fa fa-external-link'></i></a>`;
                 })
-                this.dorDocuments[feature.properties.OBJECTID] = data;
+                this.dorDocuments[feature.properties.objectid] = data;
+                // this.dorDocuments[feature.properties.objectid] = data;
                 // return resolve();
               } else {
                 if (import.meta.env.VITE_DEBUG == 'true') console.warn('dorDocs - await resolved but HTTP status was not successful')

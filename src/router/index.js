@@ -90,8 +90,8 @@ const getParcelsAndPutInStore = async(lng, lat) => {
   const otherParcelLayer = parcelLayer === 'pwd' ? 'dor' : 'pwd';
   const addressField = parcelLayer === 'pwd' ? 'ADDRESS' : 'ADDR_SOURCE';
   const otherAddressField = otherParcelLayer === 'pwd' ? 'ADDRESS' : 'ADDR_SOURCE';
-  const geocodeParameterField = parcelLayer === 'pwd' ? 'PARCELID' : 'MAPREG';
-  const otherGeocodeParameterField = otherParcelLayer === 'pwd' ? 'PARCELID' : 'MAPREG';
+  const geocodeParameterField = parcelLayer === 'pwd' ? 'PARCELID' : 'mapreg';
+  const otherGeocodeParameterField = otherParcelLayer === 'pwd' ? 'PARCELID' : 'mapreg';
   
   // if (import.meta.env.VITE_DEBUG == 'true') console.log('parcelLayer:', parcelLayer);
   if (ParcelsStore[parcelLayer].features) {
