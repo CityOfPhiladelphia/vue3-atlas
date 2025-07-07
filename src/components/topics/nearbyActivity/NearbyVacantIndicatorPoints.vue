@@ -73,11 +73,11 @@ const nearbyVacantIndicatorsTableData = computed(() => {
     columns: [
       {
         label: 'Address',
-        field: 'properties.ADDRESS',
+        field: 'properties.address',
       },
       {
         label: 'Property',
-        field: 'properties.VACANT_FLAG',
+        field: 'properties.vacant_flag',
       },
       {
         label: 'Distance',
