@@ -220,7 +220,7 @@ const rcosTableData = computed(() => {
   </div>
   <div :class="selectedParcel ? 'mb-5' : 'mb-6'">
     <collection-summary
-      :value="'STATUS'"
+      :value="'status'"
       :descriptor="'parcel'"
     />
   </div>
