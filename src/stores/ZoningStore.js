@@ -58,7 +58,7 @@ export const useZoningStore = defineStore('ZoningStore', {
         if (!features) return;
         for (let feature of features) {
           let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
-          const mapreg = feature.properties.MAPREG;
+          const mapreg = feature.properties.mapreg;
           const query = "\
             WITH all_zoning AS \
               ( \
@@ -99,7 +99,7 @@ export const useZoningStore = defineStore('ZoningStore', {
           const url = baseUrl += query;
           const response = await fetch(url);
           if (response.ok) {
-            this.zoningBase[feature.properties.OBJECTID] = await response.json();
+            this.zoningBase[feature.properties.objectid] = await response.json();
             this.loadingZoningBase = false;
           } else {
             this.loadingZoningBase = false;
@@ -150,7 +150,7 @@ export const useZoningStore = defineStore('ZoningStore', {
               }
             })
 
-            this.proposedZoning[feature.properties.OBJECTID] = data;
+            this.proposedZoning[feature.properties.objectid] = data;
             this.loadingProposedZoning = false;
           } else {
             this.loadingProposedZoning = false;
@@ -169,7 +169,7 @@ export const useZoningStore = defineStore('ZoningStore', {
       for (let feature of features) {
         try {
           let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
-          const mapreg = feature.properties.MAPREG;
+          const mapreg = feature.properties.mapreg;
           const query = "WITH all_zoning AS \
               ( SELECT * FROM phl.zoning_overlays ), \
             parcel AS \
@@ -186,7 +186,7 @@ export const useZoningStore = defineStore('ZoningStore', {
             data.rows.forEach(row => {
               row.link = `<a target='_blank' href='${row.code_section_link}'>${row.code_section}<i class='fas fa-external-link'></i></a>`
             });
-            this.zoningOverlays[feature.properties.OBJECTID] = data;
+            this.zoningOverlays[feature.properties.objectid] = data;
             this.loadingZoningOverlays = false;
           } else {
             this.loadingZoningOverlays = false;
@@ -206,7 +206,7 @@ export const useZoningStore = defineStore('ZoningStore', {
         return;
       }
       for (let feature of features) {
-        let featureId = feature.properties.OBJECTID,
+        let featureId = feature.properties.objectid,
           target = this.zoningBase[featureId] || {},
           data = target.data || {};
 

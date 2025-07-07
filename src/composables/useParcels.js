@@ -19,8 +19,8 @@ export default function useParcels() {
     for (let featureSorted of featuresSorted) {
       // if (import.meta.env.VITE_DEBUG == 'true') console.log('featureSorted:', featureSorted);
       const geometry = calculateAreaAndPerimeter(featureSorted);
-      featureSorted.properties.TURF_PERIMETER = geometry.perimeter;
-      featureSorted.properties.TURF_AREA = geometry.area;
+      featureSorted.properties.turf_perimeter = geometry.perimeter;
+      featureSorted.properties.turf_area = geometry.area;
     }
 
     // at this point there is definitely a feature or features - put it in state
@@ -42,8 +42,8 @@ export default function useParcels() {
 
     // first sort by mapreg (descending)
     features.sort((a, b) => {
-      const mapregA = a.properties.MAPREG;
-      const mapregB = b.properties.MAPREG;
+      const mapregA = a.properties.mapreg;
+      const mapregB = b.properties.mapreg;
 
       if (mapregA < mapregB) {
         return 1;

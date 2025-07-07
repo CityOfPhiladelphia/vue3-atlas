@@ -77,7 +77,7 @@ const regmaps = computed(() => {
 onBeforeMount(() => {
   if (import.meta.env.VITE_DEBUG == 'true') console.log('Deeds.vue onBeforeMount');
   if (ParcelsStore.dor.features && ParcelsStore.dor.features.length > 0) {
-    MainStore.selectedParcelId = ParcelsStore.dor.features[0].properties.OBJECTID;
+    MainStore.selectedParcelId = ParcelsStore.dor.features[0].properties.objectid;
   }
 });
 
@@ -109,7 +109,7 @@ const deededCondosExist = computed(() => {
 });
 
 const getAddress = (address) => {
-  if (import.meta.env.VITE_DEBUG == 'true') console.log('address:', address, address.length);
+  if (import.meta.env.VITE_DEBUG == 'true') console.log('address:', address);//, address.length);
   if (address && address.length > 2) {
     return address;
   } else {
@@ -120,39 +120,39 @@ const getAddress = (address) => {
 const parcelData = computed(() => [
   {
     label: 'Map Registry #',
-    value: selectedParcel.value ? selectedParcel.value.properties.MAPREG : '',
+    value: selectedParcel.value ? selectedParcel.value.properties.mapreg : '',
   },
   {
     label: 'Parcel Address',
-    value: selectedParcel.value ? getAddress(selectedParcel.value.properties.ADDR_SOURCE) : '',
+    value: selectedParcel.value ? getAddress(selectedParcel.value.properties.addr_source) : '',
   },
   {
     label: 'Status',
-    value: selectedParcel.value ? statusKey[selectedParcel.value.properties.STATUS] : '',
+    value: selectedParcel.value ? statusKey[selectedParcel.value.properties.status] : '',
   },
   {
     label: 'Origination Date',
-    value: selectedParcel.value ? date(selectedParcel.value.properties.ORIG_DATE) || 'None' : 'None',
+    value: selectedParcel.value ? date(selectedParcel.value.properties.orig_date) || 'None' : 'None',
   },
   {
     label: 'Inactive Date',
-    value: selectedParcel.value ? date(selectedParcel.value.properties.INACTDATE) || 'None' : 'None',
+    value: selectedParcel.value ? date(selectedParcel.value.properties.inactdate) || 'None' : 'None',
   },
   {
     label: 'Has Air Rights',
-    value: selectedParcel.value ? selectedParcel.value.properties.SUFFIX ? 'Yes' : 'No' : '',
+    value: selectedParcel.value ? selectedParcel.value.properties.suffix ? 'Yes' : 'No' : '',
   },
   {
     label: 'Is Condo',
-    value: selectedParcel.value ? !selectedParcel.value.properties.CONDOFLAG ? 'No' : 'Yes' : '',
+    value: selectedParcel.value ? !selectedParcel.value.properties.condoflag ? 'No' : 'Yes' : '',
   },
   {
     label: 'Perimeter',
-    value: selectedParcel.value ? prettyNumber(integer(selectedParcel.value.properties.TURF_PERIMETER)) + ' ft' : '',
+    value: selectedParcel.value ? prettyNumber(integer(selectedParcel.value.properties.turf_perimeter)) + ' ft' : '',
   },
   {
     label: 'Area',
-    value: selectedParcel.value ? prettyNumber(integer(selectedParcel.value.properties.TURF_AREA)) + ' sq ft' : '',
+    value: selectedParcel.value ? prettyNumber(integer(selectedParcel.value.properties.turf_area)) + ' sq ft' : '',
   },
 ]);
 
@@ -220,7 +220,7 @@ const dorDocsTableData = computed(() => {
     Deed information and document transactions for this address. The map faithfully reflects property boundaries as described in recorded deeds including multiple types of easements. The property boundaries displayed on the map are for reference only and should not be used in place of the recorded deeds or land surveys. Source: Department of Records
   </div>
   <collection-summary
-    :value="'STATUS'"
+    :value="'status'"
     :descriptor="'parcel'"
   />
   <div
@@ -232,12 +232,12 @@ const dorDocsTableData = computed(() => {
       <div class="columns is-multiline is-mobile">
         <button
           v-for="parcel in ParcelsStore.dor.features"
-          :key="parcel.properties.OBJECTID"
+          :key="parcel.properties.objectid"
           class="dor-parcel-select column is-one-quarter-desktop is-half-mobile has-text-centered add-borders p-2"
-          :class="{ 'is-selected': parcel.properties.OBJECTID === selectedParcelId }"
-          @click="MainStore.selectedParcelId = parcel.properties.OBJECTID"
+          :class="{ 'is-selected': parcel.properties.objectid === selectedParcelId }"
+          @click="MainStore.selectedParcelId = parcel.properties.objectid"
         >
-          {{ parcel.properties.MAPREG }}
+          {{ parcel.properties.mapreg }}
         </button>
       </div>
 

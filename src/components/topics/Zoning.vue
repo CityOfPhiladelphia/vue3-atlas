@@ -43,7 +43,7 @@ const zoningAppeals = computed(() => {
 onBeforeMount(() => {
   // if (import.meta.env.VITE_DEBUG == 'true') console.log('Zoning.vue onBeforeMount');
   if (ParcelsStore.dor.features && ParcelsStore.dor.features.length > 0) {
-    MainStore.selectedParcelId = ParcelsStore.dor.features[0].properties.OBJECTID;
+    MainStore.selectedParcelId = ParcelsStore.dor.features[0].properties.objectid;
   }
 });
 
@@ -233,12 +233,12 @@ const rcosTableData = computed(() => {
       <div class="columns is-multiline is-mobile">
         <button
           v-for="parcel in ParcelsStore.dor.features"
-          :key="parcel.properties.OBJECTID"
+          :key="parcel.properties.objectid"
           class="dor-parcel-select column is-one-quarter-desktop is-half-mobile has-text-centered add-borders p-2"
-          :class="{ 'is-selected': parcel.properties.OBJECTID === selectedParcelId }"
-          @click="MainStore.selectedParcelId = parcel.properties.OBJECTID"
+          :class="{ 'is-selected': parcel.properties.objectid === selectedParcelId }"
+          @click="MainStore.selectedParcelId = parcel.properties.objectid"
         >
-          {{ parcel.properties.MAPREG }}
+          {{ parcel.properties.mapreg }}
         </button>
       </div>
 
