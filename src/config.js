@@ -1536,7 +1536,7 @@ const ZONING_CODE_MAP = {
     color: '#FF8138',
   },
   'RMX-3': {
-    description: 'Residential (Center City) Mixed-Use-3',
+    description: 'Residential Mixed-Use-3',
     color: '#FF8138',
   },
   'CA-1': {
