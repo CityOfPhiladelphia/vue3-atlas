@@ -117,9 +117,25 @@ export const useZoningStore = defineStore('ZoningStore', {
       const features = ParcelsStore.dor.features;
       if (!features) return;
       for (let feature of features) {
-        try {
+        // try {
           console.log('feature:', feature);
           let url = '//services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/Proposed_Zoning_Implementation_Public/FeatureServer/0/query';
+
+          let xyCoordsReduced = [];
+          let xyCoords = feature.geometry.coordinates[0];
+
+          for (let i = 0; i < xyCoords.length; i++) {
+            let newXyCoordReduced;
+            if (xyCoords.length > 20 && i%3 == 0) {
+              if (import.meta.env.VITE_DEBUG) console.log('i:', i, 'xyCoords.length:', xyCoords.length, 'i%3:', i%3);
+              newXyCoordReduced = [ parseFloat(xyCoords[i][0].toFixed(6)), parseFloat(xyCoords[i][1].toFixed(6)) ];
+              xyCoordsReduced.push(newXyCoordReduced);
+            } else if (xyCoords.length <= 20) {
+              if (import.meta.env.VITE_DEBUG) console.log('i:', i, 'xyCoords[i]:', xyCoords[i]);
+              newXyCoordReduced = [ parseFloat(xyCoords[i][0].toFixed(6)), parseFloat(xyCoords[i][1].toFixed(6)) ];
+              xyCoordsReduced.push(newXyCoordReduced);
+            }
+          }
 
           let params = {
             'returnGeometry': false,
@@ -130,7 +146,7 @@ export const useZoningStore = defineStore('ZoningStore', {
             'geometryType': 'esriGeometryPolygon',
             'spatialRel': 'esriSpatialRelIntersects',
             'f': 'geojson',
-            'geometry': JSON.stringify({ "rings": feature.geometry.coordinates, "spatialReference": { "wkid": 4326 }}),
+            'geometry': JSON.stringify({ "rings": [xyCoordsReduced], "spatialReference": { "wkid": 4326 }}),
             // 'geometry': JSON.stringify({ "x": feature.geometry.coordinates[0], "y": feature.geometry.coordinates[1], "spatialReference": { "wkid": 4326 }}),
           };
 
@@ -156,10 +172,10 @@ export const useZoningStore = defineStore('ZoningStore', {
             this.loadingProposedZoning = false;
             if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillProposedZoning - await resolved but HTTP status was not successful');
           }
-        } catch {
-          this.loadingProposedZoning = false;
-          if (import.meta.env.VITE_DEBUG == 'true') console.error('fillProposedZoning - await never resolved, failed to fetch data');
-        }
+        // } catch {
+        //   this.loadingProposedZoning = false;
+        //   if (import.meta.env.VITE_DEBUG == 'true') console.error('fillProposedZoning - await never resolved, failed to fetch data');
+        // }
       }
     },
     async fillZoningOverlays() {
