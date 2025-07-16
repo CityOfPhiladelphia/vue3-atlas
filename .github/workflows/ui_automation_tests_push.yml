@@ -1,0 +1,27 @@
+name: Vue3 Atlas Continuous Automation Test
+
+on:
+  push:
+    branches:
+      - fix/testing
+
+jobs:
+  e2e-testing:
+    runs-on: ubuntu-latest
+    environment: development
+
+    steps:
+      - name: Use Node.js 20.x
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.x'
+
+      - name: Install dependencies and run automation tests
+        run: |
+          cd automationtests
+          npm install
+          npm test
+
