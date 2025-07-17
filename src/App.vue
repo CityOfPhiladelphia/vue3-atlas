@@ -27,6 +27,10 @@ const router = useRouter();
 
 import { onMounted, computed, getCurrentInstance, watch } from 'vue';
 
+// import '@phila/auto-translator'; // This imports the auto-translator library, which is built with Vite and can be used in this Vue app.
+// import { diff } from '@phila/auto-translator';
+// console.log('diff:', diff);
+
 // COMPONENTS
 import TopicPanel from '@/components/TopicPanel.vue';
 import MapPanel from '@/components/MapPanel.vue';
