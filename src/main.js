@@ -101,8 +101,8 @@ const messages = i18nFromFiles.i18n.data.messages;
 if (import.meta.env.VITE_DEBUG == 'true') console.log('i18nFromFiles:', i18nFromFiles, 'messages:', messages);
 const i18n = createI18n({
   legacy: false,
-  locale: 'en-US',
-  fallbackLocale: 'en-US',
+  locale: 'en',
+  fallbackLocale: 'en',
   messages: messages
 })
 

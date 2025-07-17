@@ -112,7 +112,7 @@ watch(
         if (newLang) {
           instance.appContext.config.globalProperties.$i18n.locale = newLang;
         } else {
-          instance.appContext.config.globalProperties.$i18n.locale = 'en-US';
+          instance.appContext.config.globalProperties.$i18n.locale = 'en';
         }
       }
     }
@@ -126,7 +126,7 @@ watch(
     let startQuery = { ...route.query };
     if (newLocale === MainStore.currentLang) {
       return;
-    } else if (newLocale && newLocale != 'en-US') {
+    } else if (newLocale && newLocale != 'en') {
       MainStore.currentLang = newLocale;
       router.push({ query: { ...startQuery, 'lang': newLocale }});
     } else {

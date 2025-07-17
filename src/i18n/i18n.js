@@ -1,5 +1,5 @@
 
-import en from './en-us';
+import en from './en';
 import es from './es';
 
 let i18n = {
@@ -10,7 +10,7 @@ let i18n = {
     topics: [ 'voting' ],
     languages: [
       {
-        language: 'en-US',
+        language: 'en',
         title: 'English',
       },
       {
@@ -20,9 +20,9 @@ let i18n = {
     ],
     footer: true,
     data: {
-      locale: 'en-US',
+      locale: 'en',
       messages: {
-        'en-US': en,
+        'en': en,
         es: es,
       },
     },

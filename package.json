@@ -10,7 +10,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --ignore-path .eslintignore",
-    "lint:fix": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .eslintignore"
+    "lint:fix": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .eslintignore",
+    "translate": "tsx ./node_modules/@phila/auto-translator/src/diff.ts"
   },
   "dependencies": {
     "@fortawesome/fontawesome-pro": "6.7.2",
