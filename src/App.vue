@@ -4,7 +4,7 @@ if (import.meta.env.VITE_DEBUG == 'true') console.log('App.vue setup is running 
 import isMobileDevice from './util/is-mobile-device';
 import isMac from './util/is-mac'; // this can probably be removed from App.vue, and only run in main.js
 
-import i18nFromFiles from './i18n/i18n.js';
+import i18nFromFiles from './i18n.js';
 const languages = i18nFromFiles.i18n.languages;
 
 // STORES

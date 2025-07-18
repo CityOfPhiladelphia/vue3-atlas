@@ -1,8 +1,7 @@
-
-export default {
+{
   "language": "Español",
   "app": {
-    "title": "Atlas",
+    "title": "Atlas"
   },
   "voting": {
     "introPage": {
@@ -15,7 +14,7 @@ export default {
         "li1": "La dirección y la ubicación en el mapa de su lugar de votación.",
         "li2": "La Información sobre estacionamiento y accesibilidad al edificio.",
         "li3": "Una vista previa de las boletas de la próxima elección.",
-        "li4": "Sus funcionarios electos y su información de contacto.",
+        "li4": "Sus funcionarios electos y su información de contacto."
       },
       "p4_b": "Horario: ",
       "p4": "Todos los lugares de votación estarán abiertos el día de la elección de 7 a.m. a 8 p.m.",
@@ -23,7 +22,7 @@ export default {
       "relatedContent": "Contenido relacionado",
       "link2": "Averigue dónde conseguir y entregar las boletas de voto por correo en persona.",
       "link3": "Consulte el estado de su boleta de voto por correo.",
-      "link4": "Confirme que está registrado para votar.",
+      "link4": "Confirme que está registrado para votar."
     },
     "topic": {
       "exclamationCallout1": {
@@ -34,14 +33,14 @@ export default {
         "p2_a": "conseguir y entregar las boletas de voto por correo",
         "p2_2": "en persona.",
         "p4": "Solicitar una boleta de voto por correo.",
-        "p5": "Si planea ir a votar en persona, confirme su lugar de votación y haga los arreglos necesarios para la votación antes de la elección.",
+        "p5": "Si planea ir a votar en persona, confirme su lugar de votación y haga los arreglos necesarios para la votación antes de la elección."
       },
       "badge1": {
         "specialElection": "Próxima Elección Elegible: Elección Especial",
         "primaryElection": "Próxima Elección Elegible: Elección Primaria",
         "generalElection": "Próxima Elección Elegible: Elección General",
         "header": "La próxima elección es el",
-        "content": "3 de noviembre de 2020",
+        "content": "3 de noviembre de 2020"
       },
       "hours": "Horario",
       "previewBallot": "Vista previa de la boleta [PDF] ",
@@ -65,23 +64,23 @@ export default {
         "alternateEntrance": "Entrada alternativa",
         "buildingAccessibleWithRamp": "Edificio accesible con rampa",
         "buildingNotAccessible": "Edificio no accesible",
-        "informationNotAvailable": "Información no disponible",
+        "informationNotAvailable": "Información no disponible"
       },
       "parkingCodes": {
         "noParking": "Sin estacionamiento",
         "generalParking": "Estacionamiento general",
-        "loadingZone": "Zona de carga",
+        "loadingZone": "Zona de carga"
       },
       "callout1": {
-        "text": "La fecha límite para registrarse para la próxima elección es 15 días antes de la elección. Puede confirmar su registro y obtener información sobre cómo registrarse para votar en <a target='_blank' href='https://www.philadelphiavotes.com/'>www.philadelphiavotes.com</a>.",
+        "text": "La fecha límite para registrarse para la próxima elección es 15 días antes de la elección. Puede confirmar su registro y obtener información sobre cómo registrarse para votar en <a target='_blank' href='https://www.philadelphiavotes.com/'>www.philadelphiavotes.com</a>."
       },
       "pollingPlace": "Lugar de votación",
       "verticalTable1": {
-        "link": "Obtenga información sobre sus opciones para votar si no puede ir a votar en persona el día de la elección ",
+        "link": "Obtenga información sobre sus opciones para votar si no puede ir a votar en persona el día de la elección "
       },
       "verticalTable2": {
-        "link": "Vea todos los representantes federales, estatales y de la ciudad ",
-      },
-    },
-  },
-};
+        "link": "Vea todos los representantes federales, estatales y de la ciudad "
+      }
+    }
+  }
+}

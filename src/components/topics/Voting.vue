@@ -12,7 +12,7 @@ const VotingStore = useVotingStore();
 import VerticalTable from '@/components/VerticalTable.vue';
 
 const instance = getCurrentInstance();
-import i18nFromFiles from '@/i18n/i18n.js';
+import i18nFromFiles from '@/i18n.js';
 const messages = computed(() => {
   return i18nFromFiles.i18n.data.messages[instance.appContext.config.globalProperties.$i18n.locale];
 })

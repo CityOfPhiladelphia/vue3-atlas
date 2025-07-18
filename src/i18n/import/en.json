@@ -1,8 +1,7 @@
-
-export default {
+{
   "language": "English",
   "app": {
-    "title": "Atlas",
+    "title": "Atlas"
   },
   "voting": {
     "introPage": {
@@ -15,7 +14,7 @@ export default {
         "li1": "Your polling place address and map location.",
         "li2": "Accessibility and parking information for the building.",
         "li3": "A preview of the upcoming election ballot.",
-        "li4": "Your elected officials and their contact information.",
+        "li4": "Your elected officials and their contact information."
       },
       "p4_b": "Hours: ",
       "p4": "All polling places will be open on election day from 7 a.m. to 8 p.m.",
@@ -23,7 +22,7 @@ export default {
       "relatedContent": "Related content",
       "link2": "Find where to get and return mail-in ballots in person",
       "link3": "Check the status of your mail-in ballot",
-      "link4": "Confirm that you're registered to vote",
+      "link4": "Confirm that you're registered to vote"
     },
     "topic": {
       "exclamationCallout1": {
@@ -34,14 +33,14 @@ export default {
         "p2_a": "get and return mail-in ballots",
         "p2_2": "in person.",
         "p4": "Request a mail-in ballot.",
-        "p5": "If you are planning on voting in person, please confirm your polling place and make voting arrangements prior to the election.",
+        "p5": "If you are planning on voting in person, please confirm your polling place and make voting arrangements prior to the election."
       },
       "badge1": {
         "specialElection": "Next Eligible Election: Special Election",
         "primaryElection": "Next Eligible Election: Primary Election",
         "generalElection": "Next Eligible Election: General Election",
         "header": "Next Eligible Election Is",
-        "content": "November 3, 2020",
+        "content": "November 3, 2020"
       },
       "hours": "Hours",
       "previewBallot": "Preview ballot [PDF] ",
@@ -65,23 +64,23 @@ export default {
         "alternateEntrance": "Alternate Entrance",
         "buildingAccessibleWithRamp": "Building Accessible With Ramp",
         "buildingNotAccessible": "Building Not Accessible",
-        "informationNotAvailable": "Information not available",
+        "informationNotAvailable": "Information not available"
       },
       "parkingCodes": {
         "noParking": "No Parking",
         "generalParking": "General Parking",
-        "loadingZone": "Loading Zone",
+        "loadingZone": "Loading Zone"
       },
       "callout1": {
-        "text": "The deadline to register for the next election is 15 days prior to the election. You can confirm your registration and learn about registering to vote at <a target='_blank' href='https://vote.phila.gov/'>vote.phila.gov</a>.",
+        "text": "The deadline to register for the next election is 15 days prior to the election. You can confirm your registration and learn about registering to vote at <a target='_blank' href='https://vote.phila.gov/'>vote.phila.gov</a>."
       },
       "pollingPlace": "Polling Place",
       "verticalTable1": {
-        "link": "Learn about your voting options if you cannot vote in person on Election Day ",
+        "link": "Learn about your voting options if you cannot vote in person on Election Day "
       },
       "verticalTable2": {
-        "link": "See all citywide, state, and federal representatives ",
-      },
-    },
-  },
-};
+        "link": "See all citywide, state, and federal representatives "
+      }
+    }
+  }
+}

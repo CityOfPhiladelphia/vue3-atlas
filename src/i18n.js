@@ -1,6 +1,6 @@
 
-import en from './en';
-import es from './es';
+import en from './i18n/en.json';
+import es from './i18n/es.json';
 
 let i18n = {
   i18n: {

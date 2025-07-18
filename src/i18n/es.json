@@ -1,4 +1,4 @@
-{
+export default{
   "language": "Español",
   "app": {
     "title": "Atlas"

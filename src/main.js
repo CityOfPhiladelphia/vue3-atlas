@@ -96,7 +96,7 @@ app.component('FontAwesomeIcon', FontAwesomeIcon)
 import VueGoodTablePlugin from 'vue-good-table-next';
 app.use(VueGoodTablePlugin);
 
-import i18nFromFiles from './i18n/i18n.js';
+import i18nFromFiles from './i18n.js';
 const messages = i18nFromFiles.i18n.data.messages;
 if (import.meta.env.VITE_DEBUG == 'true') console.log('i18nFromFiles:', i18nFromFiles, 'messages:', messages);
 const i18n = createI18n({
