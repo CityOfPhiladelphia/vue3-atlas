@@ -113,7 +113,7 @@ export const useDorStore = defineStore("DorStore", {
           parcels.forEach(async(feature) => {
             try {
               if (import.meta.env.VITE_DEBUG == 'true') console.log('feature:', feature);
-              const url = baseUrl + `select * from condominium where mapref = '${ feature.properties.MAPREG }' and status in (1,3)`;
+              const url = baseUrl + `select * from condominium where mapref = '${ feature.properties.mapreg }' and status in (1,3)`;
               const response = await fetch(url);
               if (response.ok) {
                 const data = await response.json();
