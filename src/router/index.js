@@ -92,7 +92,7 @@ const getParcelsAndPutInStore = async(lng, lat) => {
   const otherAddressField = otherParcelLayer === 'pwd' ? 'ADDRESS' : 'ADDR_SOURCE';
   const geocodeParameterField = parcelLayer === 'pwd' ? 'PARCELID' : 'mapreg';
   const otherGeocodeParameterField = otherParcelLayer === 'pwd' ? 'PARCELID' : 'mapreg';
-  
+
   // if (import.meta.env.VITE_DEBUG == 'true') console.log('parcelLayer:', parcelLayer);
   if (ParcelsStore[parcelLayer].features) {
     MainStore.currentParcelAddress = ParcelsStore[parcelLayer].features[0].properties[addressField];
@@ -161,13 +161,13 @@ const dataFetch = async(to, from) => {
       MainStore.currentTopic = to.params.topic.toLowerCase();
     }
   }
-  
+
   let address, topic;
   if (to.params.address) { address = to.params.address } else if (to.query.address) { address = to.query.address }
   if (to.params.topic) { topic = to.params.topic.toLowerCase() }
 
   if (import.meta.env.VITE_DEBUG == 'true') console.log('address:', address, 'to.params.address:', to.params.address, 'from.params.address:', from.params.address, 'GeocodeStore.aisData.normalized:', GeocodeStore.aisData.normalized);
-  
+
   let routeAddressChanged;
   if (from.params.address) {
     routeAddressChanged = to.params.address.trim() !== from.params.address.trim();
@@ -213,7 +213,7 @@ const dataFetch = async(to, from) => {
     MainStore.datafetchRunning = false;
     return;
   }
-  
+
   // check for condos
   const CondosStore = useCondosStore();
   CondosStore.loadingCondosData = true;
@@ -244,7 +244,7 @@ const dataFetch = async(to, from) => {
 
 const topicDataFetch = async (topic, data) => {
   if (import.meta.env.VITE_DEBUG == 'true') console.log('topicDataFetch is running, topic:', topic);
-  
+
   if (topic === 'property') {
     const OpaStore = useOpaStore();
     await OpaStore.fillOpaData();
@@ -388,7 +388,7 @@ const router = createRouter({
         MainStore.addressSearchRunning = true;
         if (MainStore.datafetchRunning) {
           return false;
-        } else if (address && address !== '') {
+        } else if (address) {
           if (import.meta.env.VITE_DEBUG == 'true') console.log('search route beforeEnter, address:', address);
           MainStore.setLastSearchMethod('address');
           await clearStoreData();
@@ -407,6 +407,7 @@ const router = createRouter({
           await checkParcelInAis();
           routeApp(router, to);
         } else {
+          MainStore.addressSearchRunning = false;
           return false;
         }
       },
