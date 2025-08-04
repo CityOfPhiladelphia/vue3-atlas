@@ -15,7 +15,6 @@ import { useStormwaterStore } from '@/stores/StormwaterStore.js'
 import { useNearbyActivityStore } from '@/stores/NearbyActivityStore.js'
 import { useCityServicesStore } from '@/stores/CityServicesStore.js'
 import { useMainStore } from '@/stores/MainStore.js'
-
 import useRouting from '@/composables/useRouting';
 const { routeApp } = useRouting();
 
@@ -24,7 +23,6 @@ const clearStoreData = async() => {
   if (import.meta.env.VITE_DEBUG == 'true') console.log('clearStoreData is running');
   const MainStore = useMainStore();
   MainStore.clearDataSourcesLoadedArray();
-
   const OpaStore = useOpaStore();
   OpaStore.clearAllOpaData();
   const DorStore = useDorStore();
@@ -41,7 +39,6 @@ const clearStoreData = async() => {
   NearbyActivityStore.clearAllNearbyActivityData();
   const CityServicesStore = useCityServicesStore();
   CityServicesStore.clearAllCityServicesData();
-
   const CondosStore = useCondosStore();
   CondosStore.lastPageUsed = 1;
   CondosStore.condosData.pages = { page_1: { features: [] } };
@@ -206,7 +203,6 @@ const dataFetch = async(to, from) => {
     if (import.meta.env.VITE_DEBUG == 'true') console.log('dataFetch is still going, MainStore.currentNearbyActivityDataType:', MainStore.currentNearbyActivityDataType, 'to.params.data:', to.params.data);
     MainStore.datafetchRunning = false;
     return;
-  // } else if (to.params.topic === 'city-services' && dataSourcesLoadedArray.includes(to.params.data)) {
   } else if (to.params.topic === 'city-services' && dataSourcesLoadedArray.includes(to.params.data)) {
     MainStore.currentCityServicesDataType = to.params.data;
     if (import.meta.env.VITE_DEBUG == 'true') console.log('dataFetch is still going, MainStore.currentCityServicesDataType:', MainStore.currentCityServicesDataType, 'to.params.data:', to.params.data);
@@ -243,69 +239,70 @@ const dataFetch = async(to, from) => {
 }
 
 const topicDataFetch = async (topic, data) => {
-  if (import.meta.env.VITE_DEBUG == 'true') console.log('topicDataFetch is running, topic:', topic);
-
-  if (topic === 'property') {
-    const OpaStore = useOpaStore();
-    await OpaStore.fillOpaData();
-    if (import.meta.env.VITE_VERSION == 'cityatlas') {
-      await OpaStore.fillAssessmentHistory();
+  switch (topic) {
+    case 'property': {
+      const OpaStore = useOpaStore();
+      await OpaStore.fillOpaData();
+      if (import.meta.env.VITE_VERSION == 'cityatlas') {
+        await OpaStore.fillAssessmentHistory();
+      }
+      OpaStore.loadingOpaData = false;
+      return;
     }
-    OpaStore.loadingOpaData = false;
-  }
-
-  if (topic === 'li') {
-    const LiStore = useLiStore();
-    await LiStore.fillAllLiData();
-    LiStore.loadingLiData = false;
-  }
-
-  if (topic === 'deeds') {
-    const DorStore = useDorStore();
-    if (import.meta.env.VITE_DEBUG == 'true') console.log('topic deeds before promise')
-    await Promise.all([DorStore.fillDorDocuments(),
+    case 'li': {
+      const LiStore = useLiStore();
+      await LiStore.fillAllLiData();
+      LiStore.loadingLiData = false;
+      return;
+    }
+    case 'deeds': {
+      const DorStore = useDorStore();
+      await Promise.all([DorStore.fillDorDocuments(),
       DorStore.fillRegmaps(),
       DorStore.fillDorCondos()
-    ]);
-    if (import.meta.env.VITE_DEBUG == 'true') console.log('topic deeds after promise')
-    DorStore.loadingDorData = false;
-  }
-
-  if (topic === 'zoning') {
-    const ZoningStore = useZoningStore();
-    await ZoningStore.fillAllZoningData();
-    ZoningStore.loadingZoningData = false;
-  }
-
-  if (topic === 'voting') {
-    const VotingStore = useVotingStore();
-    await VotingStore.fillAllVotingData();
-    VotingStore.loadingVotingData = false;
-  }
-
-  if (topic === 'city311') {
-    const City311Store = useCity311Store();
-    if (!City311Store.agoToken) {
-      await City311Store.getAgoToken();
+      ]);
+      DorStore.loadingDorData = false;
+      return;
     }
-    await City311Store.fillCity311(data);
-  }
-
-  if (topic === 'stormwater') {
-    const StormwaterStore = useStormwaterStore();
-    await StormwaterStore.fillStormwaterData();
-    // await StormwaterStore.fillStormwaterCapData();
-    StormwaterStore.loadingStormwaterData = false;
-  }
-
-  if (topic === 'nearby-activity') {
-    const NearbyActivityStore = useNearbyActivityStore();
-    await NearbyActivityStore.fetchData(data);
-  }
-
-  if (topic === 'city-services') {
-    const CityServicesStore = useCityServicesStore();
-    await CityServicesStore.fetchData(data);
+    case 'zoning': {
+      const ZoningStore = useZoningStore();
+      await ZoningStore.fillAllZoningData();
+      ZoningStore.loadingZoningData = false;
+      return;
+    }
+    case 'voting': {
+      const VotingStore = useVotingStore();
+      await VotingStore.fillAllVotingData();
+      VotingStore.loadingVotingData = false;
+      return;
+    }
+    case 'city311': {
+      const City311Store = useCity311Store();
+      if (!City311Store.agoToken) {
+        await City311Store.getAgoToken();
+      }
+      await City311Store.fillCity311(data);
+      return;
+    }
+    case 'stormwater': {
+      const StormwaterStore = useStormwaterStore();
+      await StormwaterStore.fillStormwaterData();
+      StormwaterStore.loadingStormwaterData = false;
+      return;
+    }
+    case 'nearby-activity': {
+      const NearbyActivityStore = useNearbyActivityStore();
+      await NearbyActivityStore.fetchData(data);
+      return;
+    }
+    case 'city-services': {
+      const CityServicesStore = useCityServicesStore();
+      await CityServicesStore.fetchData(data);
+      return;
+    }
+    default: {
+      return;
+    }
   }
 }
 
