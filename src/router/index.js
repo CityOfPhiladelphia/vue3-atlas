@@ -108,7 +108,6 @@ const getParcelsAndPutInStore = async(lng, lat) => {
 // it should only show an address at the top that has been found in AIS for the top line address, so, if map clicked, it
 // goes through all of the clicked parcel info, running it against AIS until it gets a match
 const checkParcelInAis = async() => {
-  // if (import.meta.env.VITE_DEBUG == 'true') console.log('checkParcelInAis starting');
   const GeocodeStore = useGeocodeStore();
   const MainStore = useMainStore();
   const parcelData = [
