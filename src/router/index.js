@@ -111,28 +111,19 @@ const checkParcelInAis = async() => {
   // if (import.meta.env.VITE_DEBUG == 'true') console.log('checkParcelInAis starting');
   const GeocodeStore = useGeocodeStore();
   const MainStore = useMainStore();
-  await GeocodeStore.checkAisData(MainStore.currentParcelGeocodeParameter);
-  if (GeocodeStore.aisDataChecked.features) {
-    MainStore.currentAddress = GeocodeStore.aisDataChecked.features[0].properties.street_address;
-  } else {
-    // if (import.meta.env.VITE_DEBUG == 'true') console.log('checkParcelInAis, noAisData currentParcelGeocodeParameter');
-    await GeocodeStore.checkAisData(MainStore.otherParcelGeocodeParameter);
+  const parcelData = [
+    MainStore.currentParcelGeocodeParameter,
+    MainStore.otherParcelGeocodeParameter,
+    MainStore.currentParcelAddress,
+    MainStore.otherParcelAddress
+  ];
+
+  // loop through parcels' geocodes and addresses and check each in AIS, return on first the AIS match
+  for (const item of parcelData) {
+    await GeocodeStore.checkAisData(item);
     if (GeocodeStore.aisDataChecked.features) {
       MainStore.currentAddress = GeocodeStore.aisDataChecked.features[0].properties.street_address;
-    } else {
-      // if (import.meta.env.VITE_DEBUG == 'true') console.log('checkParcelInAis, noAisData otherParcelGeocodeParameter');
-      await GeocodeStore.checkAisData(MainStore.currentParcelAddress);
-      if (GeocodeStore.aisDataChecked.features) {
-        MainStore.currentAddress = GeocodeStore.aisDataChecked.features[0].properties.street_address;
-      } else {
-        // if (import.meta.env.VITE_DEBUG == 'true') console.log('checkParcelInAis, noAisData currentParcelAddress');
-        await GeocodeStore.checkAisData(MainStore.otherParcelAddress);
-        if (GeocodeStore.aisDataChecked.features) {
-          MainStore.currentAddress = GeocodeStore.aisDataChecked.features[0].properties.street_address;
-        } else {
-          // if (import.meta.env.VITE_DEBUG == 'true') console.log('checkParcelInAis, noAisData otherParcelAddress');
-        }
-      }
+      return;
     }
   }
 }
