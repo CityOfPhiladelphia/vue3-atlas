@@ -81,7 +81,7 @@ const setNewLocation = async (coords) => {
     )
     let viewer = response[0];
     if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue setNewLocation, viewer:', viewer, 'response:', response);
-    // viewer.toggleNavbarExpanded(navBarExpanded.value);
+    viewer.toggleNavbarExpanded(navBarExpanded.value);
     viewer.toggleButtonEnabled('panorama.elevation', false);
     viewer.toggleButtonEnabled('panorama.reportBlurring', false);
 
