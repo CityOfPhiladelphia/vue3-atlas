@@ -493,6 +493,7 @@ watch(
     if (newTopic) {
       map.setStyle($config[$config.topicStyles[newTopic]]);
       if (MapStore.imageryOn) {
+        // applying topic styles uses pwd basemap by default, so must me reset to imagery layer if imagery is on
         setImagery(imagerySelected.value);
       }
       if ($config.parcelLayerForTopic[newTopic] == 'dor') {
@@ -534,35 +535,39 @@ const imagerySelected = computed(() => {
 })
 
 const toggleImagery = () => {
-  // if (import.meta.env.VITE_DEBUG == 'true') console.log('toggleImagery, map.getStyle:', map.getStyle());
+  // if imagery is going from 'off' to 'on'
   if (!MapStore.imageryOn) {
     MapStore.imageryOn = true;
+    // if a year has already been selected, use that as the current year. If not, then get the more recent year with a satelite map from the mapLayers
     const currentYear = imagerySelected.value ? imagerySelected.value : Object.keys($config.mapLayers).at(-11);
     setImagery(currentYear);
   }
+  // if imagery is going from 'on' to 'off'
   else {
     MapStore.imageryOn = false;
+    // remove the imagery layer, and remove the lables and outlines if they exist
     map.removeLayer(imagerySelected.value);
     if (map.getLayer('imageryLabels')) {
       map.removeLayer('imageryLabels');
       map.removeLayer('imageryParcelOutlines')
     }
-
+    // if no topic is selected, render the default map
     if (!route.params.topic) {
       map.setStyle($config['pwdDrawnMapStyle']);
       if (pwdCoordinates.value.length) {
         map.getSource('addressMarker').setData(point(pwdCoordinates.value));
       }
     }
+    // if there is a topic selected, then load the pwd map and lables layer below the topic layers
     else {
       map.addLayer($config.mapLayers.pwd, 'cyclomediaRecordings')
       map.addLayer($config.mapLayers.pwdLabels, 'cyclomediaRecordings')
-      if (import.meta.env.VITE_DEBUG == 'true') console.log('AFTER:', map.getLayersOrder());
     }
   }
 }
 
 const setImagery = async (newImagery) => {
+  // remove default basemaps
   if (map.getLayer('pwd')) {
     map.removeLayer('pwd')
     map.removeLayer('pwdLabels')
@@ -574,12 +579,16 @@ const setImagery = async (newImagery) => {
   if (map.getLayer(oldLayer)) {
     map.removeLayer(oldLayer);
   }
+  // check if year selected will load a satelite map and add parcel outlines and lables if true
   if (parseInt(imagerySelected.value) > 1990 && !map.getLayer($config.mapLayers.imageryLabels.id)) {
     map.addLayer($config.mapLayers.imageryLabels, 'cyclomediaRecordings')
     map.addLayer($config.mapLayers.imageryParcelOutlines, 'cyclomediaRecordings')
   }
+
+  // add the imagery layer below imageryLabels layer if satelite map, or below cyclomediaRecordings layer if historical
   map.getLayer('imageryLabels') ? map.addLayer($config.mapLayers[imagerySelected.value], 'imageryLabels') : map.addLayer($config.mapLayers[imagerySelected.value], 'cyclomediaRecordings')
 
+  // remove the imageryLables and parcelOutline layers if they exist and the map is historical
   if (parseInt(imagerySelected.value) < 1990 && map.getLayer($config.mapLayers.imageryLabels.id)) {
     map.removeLayer($config.mapLayers.imageryLabels.id)
     map.removeLayer($config.mapLayers.imageryParcelOutlines.id)
