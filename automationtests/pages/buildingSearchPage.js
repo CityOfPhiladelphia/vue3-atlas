@@ -5,7 +5,7 @@ const fs = require("fs");
 const chrome = require("selenium-webdriver/chrome");
 const searchData = require("../helpers/searchData");
 const browserSelect = searchData.BROWSER;
-const URL = searchData.URL; 
+const URL = searchData.URL;
 const isHeadless = searchData.HEADLESS_MODE; // Toggle headless mode in searchData.js (true for headless, false for non-headless)
 
 describe("Building Search Page | Tests are in progress", function () {

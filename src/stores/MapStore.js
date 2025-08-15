@@ -16,7 +16,7 @@ export const useMapStore = defineStore("MapStore", {
       initialized: false,
       draw: null,
       imageryOn: false,
-      imagerySelected: '2024',
+      imagerySelected: '',
       cyclomediaOn: false,
       cyclomediaInitialized: false,
       cyclomediaRecordingsOn: false,

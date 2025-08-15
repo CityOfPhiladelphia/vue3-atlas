@@ -1305,9 +1305,9 @@ const $config = {
     districts: 'pwd',
   },
   mapLayers: {
-    pwdBasemap: {
-      id: 'pwdBasemap',
-      source: 'pwdBasemap',
+    pwd: {
+      id: 'pwd',
+      source: 'pwd',
       type: 'raster',
     },
     pwdLabels: {
@@ -1594,7 +1594,7 @@ const ZONING_CODE_MAP = {
   'IRMX': {
     description: 'Industrial Residential Mixed-Use',
     color: '#EC8EF5',
-  },  
+  },
   'SP-ENT': {
     description: 'Commercial Entertainment (Casinos)', // should this be "Entertainment"?
     color: '#805624',

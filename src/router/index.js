@@ -130,43 +130,39 @@ const checkParcelInAis = async() => {
 // this is called on every route change, including address searches, topic changes, initial app load, and back button clicks
 // when it is called, it may have some of the data it needs already in the store (after a geocode), or it may need to fetch everything (e.g. initial app load)
 const dataFetch = async(to, from) => {
+  // exit dataFetch is route is 'not-found'
+  if (to.name === 'not-found') {
+    MainStore.datafetchRunning = false;
+    return;
+  }
+
   if (import.meta.env.VITE_DEBUG == 'true') console.log('dataFetch is starting, to:', to, 'from:', from, 'to.params.address:', to.params.address, 'from.params.address:', from.params.address, 'to.params.topic:', to.params.topic, 'from.params.topic:', from.params.topic);
   const MainStore = useMainStore();
   MainStore.datafetchRunning = true;
   const GeocodeStore = useGeocodeStore();
   const ParcelsStore = useParcelsStore();
   const dataSourcesLoadedArray = MainStore.dataSourcesLoadedArray;
-  if (to.name === 'not-found') {
-    MainStore.datafetchRunning = false;
-    return;
-  }
 
+   // if to.params.address or to.query.address, set address to to.params.address or to.query.address, otherwise null
+  const address = to.params.address ? to.params.address : (to.query.address ? to.query.address : null);
+  const topic = to.params.topic ? to.params.topic.toLowerCase() : null;
+
+  // set main store's current topic
   if (to.name === 'address') {
     MainStore.currentTopic = '';
-  } else {
-    if (!MainStore.currentTopic && to.params.topic) {
-      MainStore.currentTopic = to.params.topic.toLowerCase();
-    }
+  } else if (!MainStore.currentTopic && topic) {
+    MainStore.currentTopic = topic;
   }
 
-  let address, topic;
-  if (to.params.address) { address = to.params.address } else if (to.query.address) { address = to.query.address }
-  if (to.params.topic) { topic = to.params.topic.toLowerCase() }
-
+  // check if trimmed addresses are the same, or if both are null
   if (import.meta.env.VITE_DEBUG == 'true') console.log('address:', address, 'to.params.address:', to.params.address, 'from.params.address:', from.params.address, 'GeocodeStore.aisData.normalized:', GeocodeStore.aisData.normalized);
-
-  let routeAddressChanged;
-  if (from.params.address) {
-    routeAddressChanged = to.params.address.trim() !== from.params.address.trim();
-  } else {
-    routeAddressChanged = to.params.address !== from.params.address;
-  }
+  const routeAddressChanged = from.params.address ? (to.params.address.trim() !== from.params.address.trim()) : (to.params.address !== from.params.address);
 
   // In the config, there is a list called "addressDoubles" of addresses we know of that are used by multiple properties.
   // An exception has to be made for them, in the case that someone clicks from one of them to the other.
-  if ($config.addressDoubles.includes(address) || routeAddressChanged) {
+  if (routeAddressChanged || $config.addressDoubles.includes(address)) {
     // if there is no geocode or the geocode does not match the address in the route, get the geocode
-    if (!GeocodeStore.aisData.normalized || GeocodeStore.aisData.normalized && GeocodeStore.aisData.normalized !== address) {
+    if (!GeocodeStore.aisData.normalized || (GeocodeStore.aisData.normalized && GeocodeStore.aisData.normalized !== address)) {
       if (import.meta.env.VITE_DEBUG == 'true') console.log('in datafetch, routeAddressChanged:', routeAddressChanged, 'right before geocode, GeocodeStore.aisData:', GeocodeStore.aisData);
       await clearStoreData();
       if (GeocodeStore.aisDataChecked.features) {
@@ -184,18 +180,25 @@ const dataFetch = async(to, from) => {
       await ParcelsStore.fillPwdParcelData();
       await ParcelsStore.fillDorParcelData();
     }
+  }
 
-  } else if (to.params.topic !== 'nearby-activity' && to.params.topic !== 'city-services' && dataSourcesLoadedArray.includes(topic)) {
-    MainStore.datafetchRunning = false;
-    return;
-  } else if (to.params.topic === 'nearby-activity' && dataSourcesLoadedArray.includes(to.params.data)) {
-    MainStore.currentNearbyActivityDataType = to.params.data;
-    if (import.meta.env.VITE_DEBUG == 'true') console.log('dataFetch is still going, MainStore.currentNearbyActivityDataType:', MainStore.currentNearbyActivityDataType, 'to.params.data:', to.params.data);
-    MainStore.datafetchRunning = false;
-    return;
-  } else if (to.params.topic === 'city-services' && dataSourcesLoadedArray.includes(to.params.data)) {
-    MainStore.currentCityServicesDataType = to.params.data;
-    if (import.meta.env.VITE_DEBUG == 'true') console.log('dataFetch is still going, MainStore.currentCityServicesDataType:', MainStore.currentCityServicesDataType, 'to.params.data:', to.params.data);
+  else if (dataSourcesLoadedArray.includes(to.params.data)) {
+    if (topic === 'nearby-activity') {
+      if (import.meta.env.VITE_DEBUG == 'true') console.log('dataFetch is still going, MainStore.currentNearbyActivityDataType:', MainStore.currentNearbyActivityDataType, 'to.params.data:', to.params.data);
+      MainStore.currentNearbyActivityDataType = to.params.data;
+      MainStore.datafetchRunning = false;
+      return;
+    }
+    if (topic === 'city-services') {
+      if (import.meta.env.VITE_DEBUG == 'true') console.log('dataFetch is still going, MainStore.currentCityServicesDataType:', MainStore.currentCityServicesDataType, 'to.params.data:', to.params.data);
+      MainStore.currentCityServicesDataType = to.params.data;
+      MainStore.datafetchRunning = false;
+      return;
+    }
+  }
+
+  // if topic is not 'nearby-activity' or 'city-services' and data scources already includes topic
+  else if (dataSourcesLoadedArray.includes(topic) && topic !== 'nearby-activity' && topic !== 'city-services') {
     MainStore.datafetchRunning = false;
     return;
   }
