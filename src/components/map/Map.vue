@@ -97,7 +97,7 @@ const hoveredPoliceStationId = computed(() => { return MainStore.hoveredPoliceSt
 
 onMounted(async () => {
   // if (import.meta.env.VITE_DEBUG == 'true') console.log('Map.vue onMounted route.params.topic:', route.params.topic, 'route.params.address:', route.params.address);
-  
+
   // create the maplibre map
   let currentTopicMapStyle = route.params.topic ? $config.topicStyles[route.params.topic] : 'pwdDrawnMapStyle';
   let zoom = route.params.address ? 17 : 12;
@@ -196,7 +196,7 @@ onMounted(async () => {
   map.on('click', 'cyclomediaRecordings', (e) => {
     // if (import.meta.env.VITE_DEBUG == 'true') console.log('cyclomediaRecordings click, e:', e, 'e.features[0]:', e.features[0]);
     e.clickOnLayer = true;
-    MapStore.clickedCyclomediaRecordingCoords = [ e.lngLat.lng, e.lngLat.lat ];
+    MapStore.clickedCyclomediaRecordingCoords = [e.lngLat.lng, e.lngLat.lat];
   });
 
   map.on('mouseenter', 'cyclomediaRecordings', (e) => {
@@ -333,7 +333,7 @@ onMounted(async () => {
     const idField = CityServicesStore.dataFields[properties.type].id_field;
     const infoField = CityServicesStore.dataFields[properties.type].info_field;
     const row = CityServicesStore[properties.type].filter(row => row[idField] === properties.id)[0];
-    
+
     MainStore.clickedMarkerId = e.features[0].properties.id;
     MainStore.hoveredStateId = e.features[0].properties.id;
     if (row.properties) {
@@ -373,12 +373,12 @@ onMounted(async () => {
       return;
     }
     // router.push({ name: 'search', query: { lng: e.lngLat.lng, lat: e.lngLat.lat }})
-    let drawLayers = map.queryRenderedFeatures(e.point).filter(feature => [ 'mapbox-gl-draw-cold', 'mapbox-gl-draw-hot' ].includes(feature.source));
+    let drawLayers = map.queryRenderedFeatures(e.point).filter(feature => ['mapbox-gl-draw-cold', 'mapbox-gl-draw-hot'].includes(feature.source));
     // if (import.meta.env.VITE_DEBUG == 'true') console.log('Map.vue handleMapClick, e:', e, 'drawLayers:', drawLayers, 'drawMode:', drawMode, 'e:', e, 'map.getStyle():', map.getStyle(), 'MapStore.drawStart:', MapStore.drawStart);
     if (!drawLayers.length && draw.getMode() !== 'draw_polygon') {
       MainStore.lastClickCoords = [e.lngLat.lng, e.lngLat.lat];
       let startQuery = { ...route.query };
-      router.replace({ name: 'search', query: { ...startQuery, lng: e.lngLat.lng, lat: e.lngLat.lat }})
+      router.replace({ name: 'search', query: { ...startQuery, lng: e.lngLat.lng, lat: e.lngLat.lat } })
     }
     if (draw.getMode() === 'draw_polygon') {
       distanceMeasureControlRef.value.getDrawDistances(e);
@@ -419,7 +419,7 @@ watch(
         map.setZoom(17);
       }
       MapStore.currentAddressCoords = newCoords;
-  
+
       const popup = document.getElementsByClassName('maplibregl-popup');
       if (popup.length) {
         popup[0].remove();
@@ -440,12 +440,12 @@ const pwdCoordinates = computed(() => {
 watch(
   () => pwdCoordinates.value,
   newCoords => {
-  // if (import.meta.env.VITE_DEBUG == 'true') console.log('Map pwdCoordinates watch, newCoords:', newCoords, 'MapStore.addressMarker:', MapStore.addressMarker);
-  if (newCoords.length) {
-    const address = point(newCoords);
-    map.getSource('addressMarker').setData(address);
-  }
-});
+    // if (import.meta.env.VITE_DEBUG == 'true') console.log('Map pwdCoordinates watch, newCoords:', newCoords, 'MapStore.addressMarker:', MapStore.addressMarker);
+    if (newCoords.length) {
+      const address = point(newCoords);
+      map.getSource('addressMarker').setData(address);
+    }
+  });
 
 // watch dor parcel coordinates for moving dor parcel
 const selectedParcelId = computed(() => { return MainStore.selectedParcelId; });
@@ -456,7 +456,7 @@ const dorCoordinates = computed(() => {
     const parcel = ParcelsStore.dor.features.filter(parcel => parcel.id === selectedParcelId.value)[0];
     value = parcel.geometry;
   } else {
-    value = polygon([[[0,0], [0,1], [1,1], [1,0], [0,0]]]);
+    value = polygon([[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]]);
   }
   return value;
 });
@@ -493,35 +493,28 @@ watch(
     if (newTopic) {
       map.setStyle($config[$config.topicStyles[newTopic]]);
       if (MapStore.imageryOn) {
-        map.addLayer($config.mapLayers[imagerySelected.value], 'cyclomediaRecordings')
-        map.addLayer($config.mapLayers.imageryLabels, 'cyclomediaRecordings')
-        map.addLayer($config.mapLayers.imageryParcelOutlines, 'cyclomediaRecordings')
+        // applying topic styles uses pwd basemap by default, so must me reset to imagery layer if imagery is on
+        setImagery(imagerySelected.value);
       }
-
       if ($config.parcelLayerForTopic[newTopic] == 'dor') {
         map.getSource('dorParcel').setData(dorCoordinates.value);
       }
-
-      if (newTopic === 'li') {
-        if (selectedLiBuildingNumber.value) {
-          map.setPaintProperty(
-            'liBuildingFootprints',
-            'fill-color',
-            ['match',
+      else if (newTopic === 'li' && selectedLiBuildingNumber.value) {
+        map.setPaintProperty(
+          'liBuildingFootprints',
+          'fill-color',
+          ['match',
             ['get', 'id'],
             selectedLiBuildingNumber.value,
             '#FFFA80',
             /* other */ '#C2B7FF'
-            ],
-          )
-        }
+          ],
+        )
       }
       MapStore.selectedRegmap = null;
-
-    } else {
-      if (!MapStore.imageryOn) {
-        map.setStyle($config.pwdDrawnMapStyle);
-      }
+    }
+    else if (!MapStore.imageryOn) {
+      map.setStyle($config.pwdDrawnMapStyle);
     }
 
     if (pwdCoordinates.value.length) {
@@ -542,36 +535,64 @@ const imagerySelected = computed(() => {
 })
 
 const toggleImagery = () => {
-  // if (import.meta.env.VITE_DEBUG == 'true') console.log('toggleImagery, map.getStyle:', map.getStyle());
+  // if imagery is going from 'off' to 'on'
   if (!MapStore.imageryOn) {
     MapStore.imageryOn = true;
-    map.addLayer($config.mapLayers[imagerySelected.value], 'cyclomediaRecordings')
-    map.addLayer($config.mapLayers.imageryLabels, 'cyclomediaRecordings')
-    map.addLayer($config.mapLayers.imageryParcelOutlines, 'cyclomediaRecordings')
-  } else {
-    if (import.meta.env.VITE_DEBUG == 'true') console.log('map.getStyle().layers:', map.getStyle().layers);
+    // if a year has already been selected, use that as the current year. If not, then get the more recent year with a satelite map from the mapLayers
+    const currentYear = imagerySelected.value ? imagerySelected.value : Object.keys($config.mapLayers).at(-11);
+    setImagery(currentYear);
+  }
+  // if imagery is going from 'on' to 'off'
+  else {
     MapStore.imageryOn = false;
+    // remove the imagery layer, and remove the lables and outlines if they exist
     map.removeLayer(imagerySelected.value);
-    map.removeLayer('imageryLabels');
-    map.removeLayer('imageryParcelOutlines')
+    if (map.getLayer('imageryLabels')) {
+      map.removeLayer('imageryLabels');
+      map.removeLayer('imageryParcelOutlines')
+    }
+    // if no topic is selected, render the default map
     if (!route.params.topic) {
       map.setStyle($config['pwdDrawnMapStyle']);
       if (pwdCoordinates.value.length) {
         map.getSource('addressMarker').setData(point(pwdCoordinates.value));
       }
     }
+    // if there is a topic selected, then load the pwd map and lables layer below the topic layers
+    else {
+      map.addLayer($config.mapLayers.pwd, 'cyclomediaRecordings')
+      map.addLayer($config.mapLayers.pwdLabels, 'cyclomediaRecordings')
+    }
   }
 }
 
 const setImagery = async (newImagery) => {
-  const oldLayer = imagerySelected.value;
-  if (oldLayer == newImagery) {
-    return;
+  // remove default basemaps
+  if (map.getLayer('pwd')) {
+    map.removeLayer('pwd')
+    map.removeLayer('pwdLabels')
   }
+
+  const oldLayer = imagerySelected.value;
   // if (import.meta.env.VITE_DEBUG == 'true') console.log('setImagery, newImagery:', newImagery, 'oldLayer:', oldLayer, 'imagerySelected.value:', imagerySelected.value);
   MapStore.imagerySelected = newImagery;
-  await map.addLayer($config.mapLayers[imagerySelected.value], 'imageryLabels')
-  map.removeLayer(oldLayer);
+  if (map.getLayer(oldLayer)) {
+    map.removeLayer(oldLayer);
+  }
+  // check if year selected will load a satelite map and add parcel outlines and lables if true
+  if (parseInt(imagerySelected.value) > 1990 && !map.getLayer($config.mapLayers.imageryLabels.id)) {
+    map.addLayer($config.mapLayers.imageryLabels, 'cyclomediaRecordings')
+    map.addLayer($config.mapLayers.imageryParcelOutlines, 'cyclomediaRecordings')
+  }
+
+  // add the imagery layer below imageryLabels layer if satelite map, or below cyclomediaRecordings layer if historical
+  map.getLayer('imageryLabels') ? map.addLayer($config.mapLayers[imagerySelected.value], 'imageryLabels') : map.addLayer($config.mapLayers[imagerySelected.value], 'cyclomediaRecordings')
+
+  // remove the imageryLables and parcelOutline layers if they exist and the map is historical
+  if (parseInt(imagerySelected.value) < 1990 && map.getLayer($config.mapLayers.imageryLabels.id)) {
+    map.removeLayer($config.mapLayers.imageryLabels.id)
+    map.removeLayer($config.mapLayers.imageryParcelOutlines.id)
+  }
 }
 
 // for Deeds topic, watch selectedRegmap for adding and changing regmap layer
@@ -592,7 +613,7 @@ watch(
         map.removeSource('regmap');
       }
       if (import.meta.env.VITE_DEBUG == 'true') console.log('add newRegmap:', newRegmap);
-      const tiles =  `https://ags-regmaps.phila.gov/arcgis/rest/services/RegMaps/MapServer/export?dpi=96&layerDefs=0:NAME='g${newRegmap.toLowerCase().trim()}.tif'&transparent=true&format=png24&bbox={bbox-epsg-3857}&bboxSR=3857&imageSR=3857&size=700,700&f=image&layers=show%3A0`;
+      const tiles = `https://ags-regmaps.phila.gov/arcgis/rest/services/RegMaps/MapServer/export?dpi=96&layerDefs=0:NAME='g${newRegmap.toLowerCase().trim()}.tif'&transparent=true&format=png24&bbox={bbox-epsg-3857}&bboxSR=3857&imageSR=3857&size=700,700&f=image&layers=show%3A0`;
       $config.dorDrawnMapStyle.sources.regmap = {
         type: 'raster',
         tiles: [tiles],
@@ -609,7 +630,7 @@ watch(
     } else {
       map.removeLayer('regmap');
       map.removeSource('regmap');
-      const tiles =  `https://ags-regmaps.phila.gov/arcgis/rest/services/RegMaps/MapServer/export?dpi=96&layerDefs=0:NAME='g${newRegmap.toLowerCase().trim()}.tif'&transparent=true&format=png24&bbox={bbox-epsg-3857}&bboxSR=3857&imageSR=3857&size=700,700&f=image&layers=show%3A0`;
+      const tiles = `https://ags-regmaps.phila.gov/arcgis/rest/services/RegMaps/MapServer/export?dpi=96&layerDefs=0:NAME='g${newRegmap.toLowerCase().trim()}.tif'&transparent=true&format=png24&bbox={bbox-epsg-3857}&bboxSR=3857&imageSR=3857&size=700,700&f=image&layers=show%3A0`;
       $config.dorDrawnMapStyle.sources.regmap = {
         type: 'raster',
         tiles: [tiles],
@@ -630,31 +651,31 @@ watch(
 // Opacity changes
 // for Deeds topic, change opacity of regmap layer
 const handleRegmapOpacityChange = (opacity) => {
-  MapStore.regmapOpacity = opacity/100;
+  MapStore.regmapOpacity = opacity / 100;
   map.setPaintProperty(
     'regmap',
     'raster-opacity',
-    parseFloat(opacity/100),
+    parseFloat(opacity / 100),
   );
 }
 
 // for Zoning topic, change opacity of zoning layer
 const handleZoningOpacityChange = (opacity) => {
-  MapStore.zoningOpacity = opacity/100;
+  MapStore.zoningOpacity = opacity / 100;
   map.setPaintProperty(
     'zoning',
     'raster-opacity',
-    opacity/100,
+    opacity / 100,
   );
 }
 
 // for Cityatlas Stormwater topic, change opacity of stormwater layer
 const handleStormwaterOpacityChange = (opacity) => {
-  MapStore.stormwaterOpacity = opacity/100;
+  MapStore.stormwaterOpacity = opacity / 100;
   map.setPaintProperty(
     'stormwater',
     'raster-opacity',
-    opacity/100,
+    opacity / 100,
   );
 }
 
@@ -676,9 +697,9 @@ watch(
       'liBuildingFootprints',
       'fill-color',
       ['match',
-      ['get', 'id'],
-      newSelectedLiBuildingNumber,
-      '#FFFA80',
+        ['get', 'id'],
+        newSelectedLiBuildingNumber,
+        '#FFFA80',
       /* other */ '#C2B7FF'
       ],
     )
@@ -686,37 +707,31 @@ watch(
 )
 
 // for Voting topic, watch voting division and polling place for changing map center and zoom
-const votingDivision = computed(() => { 
+const votingDivision = computed(() => {
   if (import.meta.env.VITE_VOTING_DATA_SOURCE == 'carto') {
     if (VotingStore.divisions.rows) {
       return JSON.parse(VotingStore.divisions.rows[0].st_asgeojson);
     } else {
-      return [[0,0], [0,1], [1,1], [1,0], [0,0]];
+      return [[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]];
     }
   } else if (import.meta.env.VITE_VOTING_DATA_SOURCE == 'arcgis') {
     if (VotingStore.divisions.features) {
       return VotingStore.divisions.features[0].geometry.coordinates[0];
     } else {
-      return [[0,0], [0,1], [1,1], [1,0], [0,0]];
+      return [[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]];
     }
   } else {
-    return [[0,0], [0,1], [1,1], [1,0], [0,0]];
+    return [[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]];
   }
 });
 const pollingPlaceCoordinates = computed(() => {
-  if (import.meta.env.VITE_VOTING_DATA_SOURCE == 'carto') {
-    if (VotingStore.pollingPlaces.rows) {
-      return [ VotingStore.pollingPlaces.rows[0].lng, VotingStore.pollingPlaces.rows[0].lat] ;
-    } else {
-      return [];
-    }
-  } else if (import.meta.env.VITE_VOTING_DATA_SOURCE == 'arcgis') {
-    if (VotingStore.pollingPlaces.features) {
-      return VotingStore.pollingPlaces.features[0].geometry.coordinates;
-    } else {
-      return [];
-    }
+  if (import.meta.env.VITE_VOTING_DATA_SOURCE == 'carto' && VotingStore.pollingPlaces.rows) {
+    return [VotingStore.pollingPlaces.rows[0].lng, VotingStore.pollingPlaces.rows[0].lat];
   }
+  if (import.meta.env.VITE_VOTING_DATA_SOURCE == 'arcgis' && VotingStore.pollingPlaces.features) {
+    return VotingStore.pollingPlaces.features[0].geometry.coordinates;
+  }
+  return [];
 });
 
 watchEffect(() => {
@@ -729,7 +744,7 @@ watchEffect(() => {
     map.getSource('buildingColumnsMarker').setData(newPollingPlace);
     $config.votingDrawnMapStyle.sources.buildingColumnsMarker.data = newPollingPlace;
     const theFeatureCollection = featureCollection([newDivision, newPollingPlace]);
-    const bounds = bbox(buffer(theFeatureCollection, 400, {units: 'feet'}));
+    const bounds = bbox(buffer(theFeatureCollection, 400, { units: 'feet' }));
     map.fitBounds(bounds);
   }
 });
@@ -744,7 +759,7 @@ watchEffect(() => {
     map.getSource('buildingColumnsMarker').setData(newPollingPlace);
     $config.votingDrawnMapStyle.sources.buildingColumnsMarker.data = newPollingPlace;
     const theFeatureCollection = featureCollection([newDivision, newPollingPlace]);
-    const bounds = bbox(buffer(theFeatureCollection, 400, {units: 'feet'}));
+    const bounds = bbox(buffer(theFeatureCollection, 400, { units: 'feet' }));
     map.fitBounds(bounds);
   }
 });
@@ -813,10 +828,10 @@ watch(
         'schoolMarkers',
         'icon-size',
         ['match',
-        ['get', 'SCHOOL_NUM'],
-        parseInt(newHoveredSchoolId),
-        0.09,
-        0.05,
+          ['get', 'SCHOOL_NUM'],
+          parseInt(newHoveredSchoolId),
+          0.09,
+          0.05,
         ]
       )
     } else {
@@ -876,40 +891,40 @@ watch(
           'nearbyActivity',
           'circle-stroke-color',
           ['match',
-          ['get', 'id'],
-          newHoveredStateId,
-          'black',
-          'white',
+            ['get', 'id'],
+            newHoveredStateId,
+            'black',
+            'white',
           ]
         )
         map.setPaintProperty(
-          'nearbyActivity', 
+          'nearbyActivity',
           'circle-color',
           ['match',
-          ['get', 'id'],
-          newHoveredStateId,
-          "#F3D661",
-          ['match',
-          ['get', 'type'],
-          'nearby311',
-          '#FF0000',
-          'city311',
-          '#FF0000',
-          'nearbyCrimeIncidents',
-          '#0096FF',
-          'nearbyZoningAppeals',
-          '#009900',
-          'nearbyVacantIndicatorPoints',
-          '#9400c6',
-          'nearbyConstructionPermits',
-          '#FF0000',
-          'nearbyDemolitionPermits',
-          '#0096FF',
-          'nearbyUnsafeBuildings',
-          '#009900',
+            ['get', 'id'],
+            newHoveredStateId,
+            "#F3D661",
+            ['match',
+              ['get', 'type'],
+              'nearby311',
+              '#FF0000',
+              'city311',
+              '#FF0000',
+              'nearbyCrimeIncidents',
+              '#0096FF',
+              'nearbyZoningAppeals',
+              '#009900',
+              'nearbyVacantIndicatorPoints',
+              '#9400c6',
+              'nearbyConstructionPermits',
+              '#FF0000',
+              'nearbyDemolitionPermits',
+              '#0096FF',
+              'nearbyUnsafeBuildings',
+              '#009900',
           /* other */ '#000000'
+            ]
           ]
-        ]
         );
       } else if (MainStore.currentTopic == 'city-services') {
         // if (import.meta.env.VITE_DEBUG) console.log('map.getStyle().sources.cityServices.data.features:', map.getStyle().sources.cityServices.data.features);
@@ -922,30 +937,30 @@ watch(
           'cityServices',
           'circle-stroke-color',
           ['match',
-          ['get', 'id'],
-          newHoveredStateId,
-          'black',
-          'white',
+            ['get', 'id'],
+            newHoveredStateId,
+            'black',
+            'white',
           ]
         )
         map.setPaintProperty(
-          'cityServices', 
+          'cityServices',
           'circle-color',
           ['match',
-          ['get', 'id'],
-          newHoveredStateId,
-          "#F3D661",
-          ['match',
-          ['get', 'type'],
-          'nearbySchools',
-          '#9400c6',
-          'nearbyFireStations',
-          '#FF0000',
-          'nearbyRecreationFacilities',
-          '#0096FF',
+            ['get', 'id'],
+            newHoveredStateId,
+            "#F3D661",
+            ['match',
+              ['get', 'type'],
+              'nearbySchools',
+              '#9400c6',
+              'nearbyFireStations',
+              '#FF0000',
+              'nearbyRecreationFacilities',
+              '#0096FF',
           /* other */ '#000000'
+            ]
           ]
-        ]
         );
       }
 
@@ -958,26 +973,26 @@ watch(
           'white',
         )
         map.setPaintProperty(
-          'nearbyActivity', 
-          'circle-color', 
+          'nearbyActivity',
+          'circle-color',
           ['match',
-          ['get', 'type'],
-          'nearby311',
-          '#FF0000',
-          'city311',
-          '#FF0000',
-          'nearbyCrimeIncidents',
-          '#0096FF',
-          'nearbyZoningAppeals',
-          '#009900',
-          'nearbyVacantIndicatorPoints',
-          '#9400c6',
-          'nearbyConstructionPermits',
-          '#FF0000',
-          'nearbyDemolitionPermits',
-          '#0096FF',
-          'nearbyUnsafeBuildings',
-          '#009900',
+            ['get', 'type'],
+            'nearby311',
+            '#FF0000',
+            'city311',
+            '#FF0000',
+            'nearbyCrimeIncidents',
+            '#0096FF',
+            'nearbyZoningAppeals',
+            '#009900',
+            'nearbyVacantIndicatorPoints',
+            '#9400c6',
+            'nearbyConstructionPermits',
+            '#FF0000',
+            'nearbyDemolitionPermits',
+            '#0096FF',
+            'nearbyUnsafeBuildings',
+            '#009900',
           /* other */ '#000000'
           ]
         );
@@ -988,16 +1003,16 @@ watch(
           'white',
         )
         map.setPaintProperty(
-          'cityServices', 
-          'circle-color', 
+          'cityServices',
+          'circle-color',
           ['match',
-          ['get', 'type'],
-          'nearbySchools',
-          '#9400c6',
-          'nearbyFireStations',
-          '#FF0000',
-          'nearbyRecreationFacilities',
-          '#0096FF',
+            ['get', 'type'],
+            'nearbySchools',
+            '#9400c6',
+            'nearbyFireStations',
+            '#FF0000',
+            'nearbyRecreationFacilities',
+            '#0096FF',
           /* other */ '#000000'
           ]
         );
@@ -1058,19 +1073,19 @@ watch(
 
 const setLabelLayers = (newLabelLayers) => {
   if (import.meta.env.VITE_DEBUG == 'true') console.log('Map.vue setLabelLayers, newLabelLayers:', newLabelLayers, 'map.getStyle().layers:', map.getStyle().layers);
-    if (newLabelLayers.length) {
-      newLabelLayers.forEach(layer => {
-        if (!map.getSource(layer.id)) {
-          // if (import.meta.env.VITE_DEBUG == 'true') console.log('Map.vue setLabelLayers, NOT THERE, layer:', layer, 'layer.id:', layer.id, 'JSON.parse(JSON.stringify(layer.source)):', JSON.parse(JSON.stringify(layer.source)));
-          map.addSource(layer.id, JSON.parse(JSON.stringify(layer.source)));
-          map.addLayer(layer.layer, 'cyclomediaRecordings');
-        } else {
-          // if (import.meta.env.VITE_DEBUG == 'true') console.log('Map.vue setLabelLayers, YES THERE, layer:', layer, 'layer.id:', layer.id, 'JSON.parse(JSON.stringify(layer.source)):', JSON.parse(JSON.stringify(layer.source)));
-          map.getSource(layer.id).setData(layer.source.data);
-        }
-      })
-    }
-    // if (import.meta.env.VITE_DEBUG == 'true') console.log('Map.vue setLabelLayers, map.getStyle:', map.getStyle(), 'map.getStyle().layers:', map.getStyle().layers, 'map.getStyle().sources:', map.getStyle().sources);
+  if (newLabelLayers.length) {
+    newLabelLayers.forEach(layer => {
+      if (!map.getSource(layer.id)) {
+        // if (import.meta.env.VITE_DEBUG == 'true') console.log('Map.vue setLabelLayers, NOT THERE, layer:', layer, 'layer.id:', layer.id, 'JSON.parse(JSON.stringify(layer.source)):', JSON.parse(JSON.stringify(layer.source)));
+        map.addSource(layer.id, JSON.parse(JSON.stringify(layer.source)));
+        map.addLayer(layer.layer, 'cyclomediaRecordings');
+      } else {
+        // if (import.meta.env.VITE_DEBUG == 'true') console.log('Map.vue setLabelLayers, YES THERE, layer:', layer, 'layer.id:', layer.id, 'JSON.parse(JSON.stringify(layer.source)):', JSON.parse(JSON.stringify(layer.source)));
+        map.getSource(layer.id).setData(layer.source.data);
+      }
+    })
+  }
+  // if (import.meta.env.VITE_DEBUG == 'true') console.log('Map.vue setLabelLayers, map.getStyle:', map.getStyle(), 'map.getStyle().layers:', map.getStyle().layers, 'map.getStyle().sources:', map.getStyle().sources);
 }
 
 const removeAllCyclomediaMapLayers = () => {
@@ -1081,10 +1096,10 @@ const removeAllCyclomediaMapLayers = () => {
   map.getSource('cyclomediaRecordings').setData(recordingsGeojson);
   $config.dorDrawnMapStyle.sources.cyclomediaRecordings.data.features = [];
 
-  let cameraGeojson = point([0,0]);
+  let cameraGeojson = point([0, 0]);
   map.getSource('cyclomediaCamera').setData(cameraGeojson);
   $config.dorDrawnMapStyle.sources.cyclomediaCamera.data = cameraGeojson;
-  let viewConeGeojson = polygon([[[0,0], [0,0], [0,0], [0,0]]]);
+  let viewConeGeojson = polygon([[[0, 0], [0, 0], [0, 0], [0, 0]]]);
   map.getSource('cyclomediaViewcone').setData(viewConeGeojson);
   $config.dorDrawnMapStyle.sources.cyclomediaViewcone.data = viewConeGeojson;
   MapStore.setCyclomediaCameraLngLat(MapStore.cyclomediaCameraLngLat, null);
@@ -1110,7 +1125,7 @@ watch(
 )
 
 // turn cyclomedia on
-const turnOnCyclomedia = async() => {
+const turnOnCyclomedia = async () => {
   if (import.meta.env.VITE_DEBUG == 'true') console.log('Map.vue cyclo turnOnCyclomedia, map.getStyle().sources:', map.getStyle().sources, 'map.getStyle().layers:', map.getStyle().layers);
   MapStore.cyclomediaOn = true;
   MapStore.eagleviewOn = false;
@@ -1128,7 +1143,7 @@ const turnOnCyclomedia = async() => {
   }
 }
 
-// an object class called CyclomediaRecordingsClient is used for adding the cyclomedia recordings circles to the map 
+// an object class called CyclomediaRecordingsClient is used for adding the cyclomedia recordings circles to the map
 let cyclomediaRecordingsClient = new CyclomediaRecordingsClient(
   'https://atlasapi.cyclomedia.com/api/recording/wfs',
   import.meta.env.VITE_CYCLOMEDIA_USERNAME,
@@ -1231,17 +1246,17 @@ const updateCyclomediaCameraViewcone = (cycloHFov, cycloYaw) => {
   }
   if (import.meta.env.VITE_DEBUG == 'true') console.log('cyclomediaCameraLngLat:', cyclomediaCameraLngLat);
 
-  var destination1 = destination([ cyclomediaCameraLngLat[0], cyclomediaCameraLngLat[1] ], distance, angle1, options);
-  var destination2 = destination([ cyclomediaCameraLngLat[0], cyclomediaCameraLngLat[1] ], distance, angle2, options);
+  var destination1 = destination([cyclomediaCameraLngLat[0], cyclomediaCameraLngLat[1]], distance, angle1, options);
+  var destination2 = destination([cyclomediaCameraLngLat[0], cyclomediaCameraLngLat[1]], distance, angle2, options);
   let data = {
     type: 'Feature',
     geometry: {
       type: 'Polygon',
       coordinates: [[
-        [ cyclomediaCameraLngLat[0], cyclomediaCameraLngLat[1] ],
-        [ destination1.geometry.coordinates[0], destination1.geometry.coordinates[1] ],
-        [ destination2.geometry.coordinates[0], destination2.geometry.coordinates[1] ],
-        [ cyclomediaCameraLngLat[0], cyclomediaCameraLngLat[1] ],
+        [cyclomediaCameraLngLat[0], cyclomediaCameraLngLat[1]],
+        [destination1.geometry.coordinates[0], destination1.geometry.coordinates[1]],
+        [destination2.geometry.coordinates[0], destination2.geometry.coordinates[1]],
+        [cyclomediaCameraLngLat[0], cyclomediaCameraLngLat[1]],
       ]],
     }
   }
@@ -1303,8 +1318,8 @@ const turnOnEagleview = () => {
     <!-- the distance measure control uses a ref, so that functions within the component can be called from this file -->
     <DistanceMeasureControl
       ref="distanceMeasureControlRef"
-      @drawDelete="drawDelete"
-      @drawCancel="drawCancel"
+      @draw-delete="drawDelete"
+      @draw-cancel="drawCancel"
     />
     <OverlayLegend
       v-show="!MapStore.imageryOn && ['stormwater'].includes(MainStore.currentTopic)"
@@ -1325,19 +1340,15 @@ const turnOnEagleview = () => {
       @update-camera-lng-lat="updateCyclomediaCameraLngLat"
     />
   </KeepAlive>
-    <!-- @turn-off-cyclomedia="turnOffCyclomedia" -->
+  <!-- @turn-off-cyclomedia="turnOffCyclomedia" -->
   <KeepAlive>
-    <EagleviewPanel
-      v-if="MapStore.eagleviewOn"
-    />
+    <EagleviewPanel v-if="MapStore.eagleviewOn" />
   </KeepAlive>
   <!-- @toggle-eagleview="turnOnEagleview" -->
 </template>
 
 <style>
-
 .center-spinner {
   color: #333333;
 }
-
 </style>
