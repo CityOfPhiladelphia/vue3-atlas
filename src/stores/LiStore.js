@@ -84,13 +84,12 @@ export const useLiStore = defineStore('LiStore', {
             }
           }
           where = "bin IN ('" + bin + "')";
-          if (import.meta.env.VITE_DEBUG == 'true') console.log('after loop, bin:', bin);
+          // if (import.meta.env.VITE_DEBUG == 'true') console.log('after loop, bin:', bin);
         } else {
           data = feature.properties.li_parcel_id;
           where = "parcel_id_num = '" + data + "'";
-          if (import.meta.env.VITE_DEBUG == 'true') console.log('where:', where);
         }
-
+        // if (import.meta.env.VITE_DEBUG == 'true') console.log('where:', where);
         const params = {
           where: where,
           outFields: '*',
