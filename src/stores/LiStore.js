@@ -83,11 +83,11 @@ export const useLiStore = defineStore('LiStore', {
               bin += "', '";
             }
           }
-          where = "BIN IN ('" + bin + "')";
+          where = "bin IN ('" + bin + "')";
           // if (import.meta.env.VITE_DEBUG == 'true') console.log('after loop, bin:', bin);
         } else {
           data = feature.properties.li_parcel_id;
-          where = "PARCEL_ID_NUM = '" + data + "'";
+          where = "parcel_id_num = '" + data + "'";
         }
         // if (import.meta.env.VITE_DEBUG == 'true') console.log('where:', where);
         const params = {
@@ -126,7 +126,7 @@ export const useLiStore = defineStore('LiStore', {
           }
           // if (import.meta.env.VITE_DEBUG == 'true') console.log('after loop, bin:', bin);
         } else if (this.liBuildingFootprints.data.features.length) {
-          bin = this.liBuildingFootprints.data.features[0].attributes.BIN;//.replace(/\|/g, "', '");
+          bin = this.liBuildingFootprints.data.features[0].attributes.bin;//.replace(/\|/g, "', '");
         } else {
           bin = '';
         }
@@ -156,7 +156,7 @@ export const useLiStore = defineStore('LiStore', {
             }
           }
         } else if (this.liBuildingFootprints.data.features.length) {
-          bin = this.liBuildingFootprints.data.features[0].attributes.BIN;//.replace(/\|/g, "', '");
+          bin = this.liBuildingFootprints.data.features[0].attributes.bin;//.replace(/\|/g, "', '");
         } else {
           bin = '';
         }
@@ -322,12 +322,12 @@ export const useLiStore = defineStore('LiStore', {
         const opaQuery = feature.properties.opa_account_num ? ` OR opa_account_num IN ('${ feature.properties.opa_account_num}')` : ``;
         const pwd_parcel_id = feature.properties.pwd_parcel_id;
         const addressId = feature.properties.li_address_key.replace(/\|/g, "', '");
-  
+
         const url = baseUrl += `SELECT * FROM case_investigations WHERE (address = '${ streetaddress }' or addressobjectid IN ('${ addressId }')) \
             AND systemofrecord IN ('HANSEN') ${ opaQuery } UNION SELECT * FROM case_investigations WHERE \
             addressobjectid IN ('${ eclipse_location_id }') OR parcel_id_num IN ( '${ pwd_parcel_id }' ) \
             AND systemofrecord IN ('ECLIPSE') ${ opaQuery }`;
-  
+
         const response = await fetch(url);
         if (response.ok) {
           const data = await response.json();
@@ -337,7 +337,7 @@ export const useLiStore = defineStore('LiStore', {
               address += ' Unit ' + item.unit_num;
             }
             item.link = "<a target='_blank' href='https://li.phila.gov/Property-History/search/Violation-Detail?address="+encodeURIComponent(address)+"&Id="+item.casenumber+"'>"+item.casenumber+" <i class='fa fa-external-link'></i></a>";
-          
+
             let description;
             if (item.investigationtype) {
               description = item.investigationtype;
