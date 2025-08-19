@@ -84,12 +84,13 @@ export const useLiStore = defineStore('LiStore', {
             }
           }
           where = "bin IN ('" + bin + "')";
-          // if (import.meta.env.VITE_DEBUG == 'true') console.log('after loop, bin:', bin);
+          if (import.meta.env.VITE_DEBUG == 'true') console.log('after loop, bin:', bin);
         } else {
           data = feature.properties.li_parcel_id;
           where = "parcel_id_num = '" + data + "'";
+          if (import.meta.env.VITE_DEBUG == 'true') console.log('where:', where);
         }
-        // if (import.meta.env.VITE_DEBUG == 'true') console.log('where:', where);
+
         const params = {
           where: where,
           outFields: '*',
@@ -126,7 +127,7 @@ export const useLiStore = defineStore('LiStore', {
           }
           // if (import.meta.env.VITE_DEBUG == 'true') console.log('after loop, bin:', bin);
         } else if (this.liBuildingFootprints.data.features.length) {
-          bin = this.liBuildingFootprints.data.features[0].attributes.BIN;//.replace(/\|/g, "', '");
+          bin = this.liBuildingFootprints.data.features[0].attributes.bin;//.replace(/\|/g, "', '");
         } else {
           bin = '';
         }
@@ -156,7 +157,7 @@ export const useLiStore = defineStore('LiStore', {
             }
           }
         } else if (this.liBuildingFootprints.data.features.length) {
-          bin = this.liBuildingFootprints.data.features[0].attributes.BIN;//.replace(/\|/g, "', '");
+          bin = this.liBuildingFootprints.data.features[0].attributes.bin;//.replace(/\|/g, "', '");
         } else {
           bin = '';
         }
