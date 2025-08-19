@@ -47,11 +47,11 @@ watch (liBuildingFootprints,
 
 const setLiBuildingFootprints = async(footprints) => {
   if (!footprints.features.length) return;
-  LiStore.selectedLiBuildingNumber = footprints.features[0].attributes.BIN;
-    
+  LiStore.selectedLiBuildingNumber = footprints.features[0].attributes.bin;
+
   let features = [];
   for (let item of footprints.features) {
-    features.push(polygon([item.geometry.rings[0]], { id: item.attributes.BIN, type: 'liBuildingFootprints' }));
+    features.push(polygon([item.geometry.rings[0]], { id: item.attributes.bin, type: 'liBuildingFootprints' }));
   }
   let geojson = featureCollection(features);
   // if (import.meta.env.VITE_DEBUG == 'true') console.log('geojson:', geojson, 'map.getSource("liBuildingFootprints"):', map.getSource('liBuildingFootprints'), 'map.getLayer("liBuildingFootprints"):', map.getLayer('liBuildingFootprints'));
@@ -64,7 +64,7 @@ const setLiBuildingFootprints = async(footprints) => {
 const selectedLiBuildingNumber = computed(() => LiStore.selectedLiBuildingNumber);
 const selectedLiBuilding = computed(() => {
   if (!LiStore.liBuildingFootprints.features) return;
-  return LiStore.liBuildingFootprints.features.filter(feature => feature.attributes.BIN === selectedLiBuildingNumber.value)[0];
+  return LiStore.liBuildingFootprints.features.filter(feature => feature.attributes.bin === selectedLiBuildingNumber.value)[0];
 });
 
 const handleBinClick = (bin) => {
@@ -115,11 +115,11 @@ const liAppealsLength = computed(() => liAppeals.value && liAppeals.value.length
 // TABLES
 
 const buildingData = computed(() => {
-  const selectedLiBuilding = LiStore.liBuildingFootprints.features.filter(feature => feature.attributes.BIN === selectedLiBuildingNumber.value)[0];
+  const selectedLiBuilding = LiStore.liBuildingFootprints.features.filter(feature => feature.attributes.bin === selectedLiBuildingNumber.value)[0];
   return [
     {
       label: 'Building ID',
-      value: selectedLiBuilding.attributes.BIN || 'N/A',
+      value: selectedLiBuilding.attributes.bin || 'N/A',
     },
     {
       label: 'Building Name',
@@ -379,12 +379,12 @@ const liAppealsTableData = computed(() => {
           <div class="columns is-multiline is-mobile">
             <button
               v-for="footprint in LiStore.liBuildingFootprints.features"
-              :key="footprint.attributes.BIN"
+              :key="footprint.attributes.bin"
               class="li-building-select column is-2-desktop is-3-mobile has-text-centered add-borders pl-1 pr-1"
-              :class="{ 'is-selected': footprint.attributes.BIN === selectedLiBuildingNumber }"
-              @click="handleBinClick(footprint.attributes.BIN)"
+              :class="{ 'is-selected': footprint.attributes.bin === selectedLiBuildingNumber }"
+              @click="handleBinClick(footprint.attributes.bin)"
             >
-              {{ footprint.attributes.BIN }}
+              {{ footprint.attributes.bin }}
             </button>
           </div>
 
@@ -506,7 +506,7 @@ const liAppealsTableData = computed(() => {
         :href="`https://li.phila.gov/Property-History/search?address=${encodeURIComponent(MainStore.currentAddress)}`"
       >See all permits at L&I Property History <font-awesome-icon icon="fa-solid fa-external-link" /></a>
     </div>
-    
+
     <!-- liAisZoningDocs and liEclipseZoningDocs Table-->
     <div class="data-section">
       <h2 class="subtitle mb-3 is-5 table-title">
@@ -608,7 +608,7 @@ const liAppealsTableData = computed(() => {
         :href="`https://li.phila.gov/Property-History/search?address=${encodeURIComponent(MainStore.currentAddress)}`"
       >See all inspections at L&I Property History <font-awesome-icon icon="fa-solid fa-external-link" /></a>
     </div>
-    
+
     <!-- Li Violations Table -->
     <div class="data-section">
       <h2 class="subtitle mb-3 is-5 table-title">
@@ -795,7 +795,7 @@ const liAppealsTableData = computed(() => {
   font-size: .95rem
 }
 
-@media 
+@media
 only screen and (max-width: 768px),
 (min-device-width: 768px) and (max-device-width: 1024px)  {
 
@@ -804,7 +804,7 @@ only screen and (max-width: 768px),
   }
 
 	/* Label the data */
-    
+
 	#building-certs {
 
     td {
