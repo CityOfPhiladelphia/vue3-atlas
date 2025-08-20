@@ -19,11 +19,10 @@ const options = {
   method: 'POST',
   headers: {
     'Authorization': 'Basic ' + btoa(clientId + ':' + clientSecret),
-    'Accept': 'application/json',
     'content-type': 'application/x-www-form-urlencoded'
   },
   data: 'grant_type=client_credentials',
-  url: 'https://api.eagleview.com/auth-service/v1/token',
+  url: 'https://apicenter.eagleview.com/oauth2/v1/token',
 };
 
 const currentAddressCoords = computed(() => {
@@ -105,19 +104,17 @@ const popoutClicked = () => {
 
 <template>
   <div class="eagleview-panel">
-
     <div class="eagleview-pop-out">
       <font-awesome-icon
         icon="fa-external-link"
         @click="popoutClicked"
-      ></font-awesome-icon>
+      />
     </div>
 
     <div
       id="eagleview"
       class="eagleview-div"
     />
-
   </div>
 </template>
 
@@ -148,7 +145,7 @@ const popoutClicked = () => {
   border-radius: 2px;
 }
 
-@media 
+@media
 only screen and (max-width: 768px),
 (min-device-width: 768px) and (max-device-width: 1024px)  {
   .eagleview-div {

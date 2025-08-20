@@ -173,6 +173,7 @@ onMounted( async() => {
         database: 'CMDatabase',
       },
     })
+
     if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue onMounted, cyclomedia initialized');
     cyclomediaInitialized.value = true;
   }
@@ -232,7 +233,7 @@ const popoutClicked = () => {
   border-radius: 2px;
 }
 
-@media 
+@media
 only screen and (max-width: 768px),
 (min-device-width: 768px) and (max-device-width: 1024px)  {
   .cyclomedia-panel {
