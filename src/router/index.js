@@ -371,6 +371,7 @@ const router = createRouter({
         const ParcelsStore = useParcelsStore();
         MainStore.addressSearchRunning = true;
         if (MainStore.datafetchRunning) {
+          MainStore.addressSearchRunning = false;
           return false;
         } else if (address) {
           if (import.meta.env.VITE_DEBUG == 'true') console.log('search route beforeEnter, address:', address);
