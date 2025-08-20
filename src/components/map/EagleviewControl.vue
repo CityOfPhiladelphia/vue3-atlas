@@ -41,7 +41,7 @@ const toggleEagleview = () => {
       type="button"
       @click="toggleEagleview"
     >
-    <!-- @click="$emit('toggleEagleview')" -->
+      <!-- @click="$emit('toggleEagleview')" -->
       <img
         class="img-src"
         alt="oblique-view"
@@ -84,12 +84,12 @@ button {
   margin-left: -2px;
 }
 
-@media 
+@media
 only screen and (max-width: 768px),
 (min-device-width: 768px) and (max-device-width: 1024px)  {
 
   @supports (-webkit-touch-callout: none) {
-    /* CSS specific to iOS devices */ 
+    /* CSS specific to iOS devices */
     .img-src {
       margin-left: -8px !important;
     }
