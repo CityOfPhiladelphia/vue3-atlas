@@ -13,102 +13,6 @@ import slugify from 'slugify';
 import useTransforms from '@/composables/useTransforms';
 const { phoneNumber } = useTransforms();
 
-const evaluateParams = (feature, dataSource) => {
-  const params = {};
-  if (!dataSource.options.params) {
-    return params; 
-  }
-  // if (import.meta.env.VITE_DEBUG == 'true') console.log("dataSource: ", dataSource);
-  const paramEntries = Object.entries(dataSource.options.params);
-
-  for (let [ key, valOrGetter ] of paramEntries) {
-    let val;
-
-    if (typeof valOrGetter === 'function') {
-      val = valOrGetter(feature);
-    } else {
-      val = valOrGetter;
-    }
-    params[key] = val;
-  }
-  // if (import.meta.env.VITE_DEBUG == 'true') console.log("params: ", params)
-  return params;
-}
-
-// this was the fetch function from @phila/vue-datafetch http-client.js
-const fetchNearby = (feature, dataSource) => {
-  const params = evaluateParams(feature, dataSource);
-  const options = dataSource.options;
-  // const srid = options.srid || 4326;
-  const table = options.table;
-  // TODO generalize these options into something like a `sql` param that
-  // returns a sql statement
-  const dateMinNum = options.dateMinNum || null;
-  const dateMinType = options.dateMinType || null;
-  // if (import.meta.env.VITE_DEBUG == 'true') console.log('dateMinType:', dateMinType);
-  const dateField = options.dateField || null;
-  const distances = options.distances || 250;
-  if (import.meta.env.VITE_DEBUG == 'true') console.log('fetchNearby options:', options, 'distances:', distances);
-  const extraWhere = options.where || null;
-
-  const groupby = options.groupby || null;
-
-  const distQuery = "(ST_Distance(the_geom::geography, ST_SetSRID(ST_Point("
-                  + feature.geometry.coordinates[0]
-                  + "," + feature.geometry.coordinates[1]
-                  + "),4326)::geography))";
-
-  const latQuery = "ST_Y(the_geom)";
-  const lngQuery = "ST_X(the_geom)";
-
-  let select;
-  
-  if (!groupby) {
-    select = '*';
-  } else {
-    select = groupby + ', the_geom';
-  }
-  // if (calculateDistance) {
-  select = select + ", " + distQuery + 'as distance,' + latQuery + 'as lat, ' + lngQuery + 'as lng';
-  // }
-
-  params['q'] = "select " + select + " from " + table + " where " + distQuery + " < " + distances;
-
-  let subFn;
-  if (dateMinNum) {
-    // let subFn, addFn;
-    switch (dateMinType) {
-    case 'hour':
-      subFn = subHours;
-      break;
-    case 'day':
-      subFn = subDays;
-      break;
-    case 'week':
-      subFn = subWeeks;
-      break;
-    case 'month':
-      subFn = subMonths;
-      break;
-    case 'year':
-      subFn = subYears;
-      break;
-    }
-
-    // let test = format(subFn(new Date(), dateMinNum), 'YYYY-MM-DD');
-    params['q'] = params['q'] + " and " + dateField + " > '" + format(subFn(new Date(), dateMinNum), 'yyyy-MM-dd') + "'";
-  }
-
-  if (extraWhere) {
-    params['q'] = params['q'] + " and " + extraWhere;
-  }
-
-  if (groupby) {
-    params['q'] = params['q'] + " group by " + groupby + ", the_geom";
-  }
-  return params
-}
-
 export const useCityServicesStore = defineStore('CityServicesStore', {
   state: () => {
     return {
@@ -130,7 +34,7 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
         nearbySchools: {
           title: 'Nearby Schools',
           id_field: 'id',
-          info_field: 'SCHOOL_NAME_LABEL',
+          info_field: 'school_name_label',
         },
         nearbyFireStations: {
           title: 'Nearby Fire Stations',
@@ -190,7 +94,8 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
           this.setDataError(true);
         }
 
-        const msResponse = await axios.get('https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/SchoolDist_Catchments_ES/FeatureServer/0/query?', { params });
+
+        const msResponse = await axios.get('https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/SchoolDist_Catchments_MS/FeatureServer/0/query?', { params });
         if (msResponse.status === 200) {
           const data = msResponse.data;
           this.msCatchments = data;
@@ -201,7 +106,7 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
           this.setDataError(true);
         }
 
-        const hsResponse = await axios.get('https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/SchoolDist_Catchments_ES/FeatureServer/0/query?', { params });
+        const hsResponse = await axios.get('https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/SchoolDist_Catchments_HS/FeatureServer/0/query?', { params });
         if (hsResponse.status === 200) {
           const data = hsResponse.data;
           this.hsCatchments = data;
@@ -265,6 +170,8 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
       }
     },
     async fillNearbySchools() {
+
+      //let response;
       try {
         this.setLoadingData(true);
         const GeocodeStore = useGeocodeStore();
@@ -273,36 +180,34 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
         const url = 'https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/Schools/FeatureServer/0/query?';
         const params = {
           'returnGeometry': true,
-          'where': "TYPE_SPECIFIC IN ('DISTRICT', 'CHARTER')",
+          'where': "type_specific IN ('district', 'charter')",
           'outSR': 4326,
           'outFields': '*',
           'inSr': 4326,
           'geometryType': 'esriGeometryPolygon',
           'spatialRel': 'esriSpatialRelContains',
           'f': 'geojson',
-          'geometry': JSON.stringify({ "rings": buffer, "spatialReference": { "wkid": 4326 }}),
+          'geometry': JSON.stringify({ "rings": buffer, "spatialReference": { "wkid": 4326 } }),
         };
-
         const response = await axios.get(url, { params });
         if (response.status === 200) {
-          // if (import.meta.env.VITE_DEBUG) console.log('this.elementarySchool:', this.elementarySchool.id, 'this.middleSchool:', this.middleSchool.id, 'this.highSchool:', this.highSchool.id);
+          if (import.meta.env.VITE_DEBUG) console.log('this.elementarySchool:', this.elementarySchool, 'this.middleSchool:', this.middleSchool, 'this.highSchool:', this.highSchool);
           const designatedSchools = [this.elementarySchool.id, this.middleSchool.id, this.highSchool.id];
-          const data = await response.data;
+          const data = response.data;
 
           let features = (data || {}).features;
           const feature = GeocodeStore.aisData.features[0];
           const from = point(feature.geometry.coordinates);
 
           features = features.filter(feature => !designatedSchools.includes(feature.id)).map(feature => {
-            // if (import.meta.env.VITE_DEBUG) console.log('feature:', feature);
             const featureCoords = feature.geometry.coordinates;
             let dist;
             if (Array.isArray(featureCoords[0])) {
               let instance;
               if (feature.geometry.type === 'LineString') {
-                instance = lineString([ featureCoords[0], featureCoords[1] ], { name: 'line 1' });
+                instance = lineString([featureCoords[0], featureCoords[1]], { name: 'line 1' });
               } else {
-                instance = polygon([ featureCoords[0] ]);
+                instance = polygon([featureCoords[0]]);
               }
               const vertices = explode(instance);
               const closestVertex = nearest(from, vertices);
@@ -313,7 +218,7 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
             }
             // const distFeet = parseInt(dist * 5280);
             feature.properties.distance_mi = dist.toFixed(2) + ' mi';
-            feature.properties.schoolInfo = '<b>' + feature.properties.SCHOOL_NAME_LABEL + '</b><br>' + feature.properties.STREET_ADDRESS + '<br>Philadelphia, PA ' + feature.properties.ZIP_CODE + '<br>' + feature.properties.PHONE_NUMBER;
+            feature.properties.schoolInfo = '<b>' + feature.properties.school_name_label + '</b><br>' + feature.properties.street_address + '<br>Philadelphia, PA ' + feature.properties.zip_code + '<br>' + feature.properties.phone_number;
             return feature;
           });
 
@@ -325,6 +230,7 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
       } catch {
         if (import.meta.env.VITE_DEBUG == 'true') console.error('nearbySchools - await never resolved, failed to fetch address data');
       }
+
     },
     async fillNearbyFireStations() {
       try {
@@ -342,29 +248,26 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
           'geometryType': 'esriGeometryPolygon',
           'spatialRel': 'esriSpatialRelContains',
           'f': 'geojson',
-          'geometry': JSON.stringify({ "rings": buffer, "spatialReference": { "wkid": 4326 }}),
+          'geometry': JSON.stringify({ "rings": buffer, "spatialReference": { "wkid": 4326 } }),
         };
 
         const response = await axios.get(url, { params });
         if (response.status === 200) {
-          // if (import.meta.env.VITE_DEBUG) console.log('this.elementarySchool:', this.elementarySchool.id, 'this.middleSchool:', this.middleSchool.id, 'this.highSchool:', this.highSchool.id);
-          // const designatedSchools = [this.elementarySchool.id, this.middleSchool.id, this.highSchool.id];
-          const data = await response.data;
+          const data = response.data;
 
           let features = (data || {}).features;
           const feature = GeocodeStore.aisData.features[0];
           const from = point(feature.geometry.coordinates);
 
           features = features.map(feature => {
-            // if (import.meta.env.VITE_DEBUG) console.log('feature:', feature);
             const featureCoords = feature.geometry.coordinates;
             let dist;
             if (Array.isArray(featureCoords[0])) {
               let instance;
               if (feature.geometry.type === 'LineString') {
-                instance = lineString([ featureCoords[0], featureCoords[1] ], { name: 'line 1' });
+                instance = lineString([featureCoords[0], featureCoords[1]], { name: 'line 1' });
               } else {
-                instance = polygon([ featureCoords[0] ]);
+                instance = polygon([featureCoords[0]]);
               }
               const vertices = explode(instance);
               const closestVertex = nearest(from, vertices);
@@ -383,7 +286,7 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
             feature.properties.med && feature.properties.med != 0 ? feature.properties.stationInfo += 'Medic ' + feature.properties.med : '';
             feature.properties.stationInfo += '</b>';
 
-            feature.properties.stationInfoAddress = feature.properties.stationInfo + '<br>' + feature.properties.location;// + '<br>Philadelphia, PA ';// + feature.properties.ZIP_CODE;
+            feature.properties.stationInfoAddress = feature.properties.stationInfo + '<br>' + feature.properties.location;
             return feature;
           });
 
@@ -424,9 +327,9 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
         };
 
         const distQuery = "(ST_Distance(pprlp.the_geom::geography, ST_SetSRID(ST_Point("
-                + feature.geometry.coordinates[0]
-                + "," + feature.geometry.coordinates[1]
-                + "),4326)::geography))";
+          + feature.geometry.coordinates[0]
+          + "," + feature.geometry.coordinates[1]
+          + "),4326)::geography))";
 
         const latQuery = "ST_Y(pprlp.the_geom)";
         const lngQuery = "ST_X(pprlp.the_geom)";
@@ -439,7 +342,7 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
         query += ` GROUP BY pprf.location_type, pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, pprlp.the_geom, pprf.facility_type, pprf.facility_description, pprf.id`;
         // query += ` GROUP BY pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, pprlp.the_geom, pprf.facility_type, pprf.id`;
         query += ` ORDER BY distance`;
-        
+
         let params = {
           q: query,
         };
@@ -459,16 +362,16 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
             if (row.contact_phone) {
               row.location += `<br>${phoneNumber(row.contact_phone)}`;
             }
-            
+
             if (row.location_contact_name && row.location_contact_name.includes('@')) {
-              row.location +=`<br><a href="mailto:${row.location_contact_name}">${row.location_contact_name}</a>`;
+              row.location += `<br><a href="mailto:${row.location_contact_name}">${row.location_contact_name}</a>`;
             } else if (row.location_contact_name) {
-              row.location +=`<br>${row.location_contact_name}`;
+              row.location += `<br>${row.location_contact_name}`;
             }
 
             row.features = `Facilities: `;
             if (row.location_type) {
-              for (const[i, locType] of row.location_type.entries()) {
+              for (const [i, locType] of row.location_type.entries()) {
                 if (this.allParksRecLocationTypes) {
                   const locTypeObj = this.allParksRecLocationTypes.find(type => type.id == locType);
                   if (import.meta.env.VITE_DEBUG) console.log('i:', i, 'locType:', locType, 'locTypeObj:', locTypeObj);

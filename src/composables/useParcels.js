@@ -1,6 +1,4 @@
-import { point, polygon, multiPolygon } from '@turf/helpers';
 import length from '@turf/length';
-import distance from '@turf/distance';
 import area from '@turf/area';
 import { segmentReduce } from '@turf/meta';
 
