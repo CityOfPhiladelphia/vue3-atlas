@@ -85,22 +85,10 @@ const getParcelsAndPutInStore = async (lng, lat) => {
 
   // collects 4 things to attempt to geocode from the parcels clicked
   const otherParcelLayer = parcelLayer === 'pwd' ? 'dor' : 'pwd';
-  let addressField = parcelLayer === 'pwd' ? 'address' : 'addr_std';
-  let otherAddressField = otherParcelLayer === 'pwd' ? 'address' : 'addr_std';
-  let geocodeParameterField = parcelLayer === 'pwd' ? 'parcelid' : 'mapreg';
-  let otherGeocodeParameterField = otherParcelLayer === 'pwd' ? 'parcelid' : 'mapreg';
-
-  console.log("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-  console.log(ParcelsStore[parcelLayer].features[0].properties.OBJECTID)
-  if (ParcelsStore[parcelLayer].features[0].properties.OBJECTID) {
-    addressField = addressField.toLocaleUpperCase();
-    otherAddressField = otherAddressField.toLocaleUpperCase();
-    geocodeParameterField = geocodeParameterField.toLocaleUpperCase();
-    otherGeocodeParameterField = otherGeocodeParameterField.toLocaleUpperCase();
-  }
-  //console.log(ParcelsStore[parcelLayer].features[0].properties)
-  //console.log(ParcelsStore[otherParcelLayer].features[0].properties)
-  //console.log(ParcelsStore[otherParcelLayer].features[0].properties)
+  const addressField = parcelLayer === 'pwd' ? 'address' : 'addr_std';
+  const otherAddressField = otherParcelLayer === 'pwd' ? 'address' : 'addr_std';
+  const geocodeParameterField = parcelLayer === 'pwd' ? 'parcelid' : 'mapreg';
+  const otherGeocodeParameterField = otherParcelLayer === 'pwd' ? 'parcelid' : 'mapreg';
 
   if (ParcelsStore[parcelLayer].features) {
     MainStore.currentParcelAddress = ParcelsStore[parcelLayer].features[0].properties[addressField];
