@@ -65,15 +65,21 @@ watch(
   }
 );
 
-onMounted( async() => {
+onMounted(async () => {
   const response = await axios(options);
-  localStorage.clear();
-  map = new window.ev.EmbeddedExplorer().mount('eagleview', { authToken: response.data.access_token });
-  map.enableMeasurementPanel(false);
-  map.enableSearchBar(false);
-  map.setView({ lonLat: currentAddressCoords.value, zoom: 17, pitch: 0, rotation: 0 }, (value) => {
-    if (import.meta.env.VITE_DEBUG == 'true') console.log('eagleview view has been set, value:', value)
-  });
+  const config = {
+    authToken: response.data.access_token,
+    measurementPanelEnabled: false,
+    searchBarEnabled: false,
+    enableDualPaneButton: false,
+    view: {
+      lonLat: currentAddressCoords.value,
+      zoom: 17,
+      pitch: 0,
+      rotation: 0
+    }
+  }
+  map = new window.ev.EmbeddedExplorer().mount('eagleview', config);
   if (MapStore.currentAddressCoords.length) {
     map.addFeatures({
       geoJson: [
@@ -86,10 +92,10 @@ onMounted( async() => {
   }
 
   // map.on('onViewUpdate', (value) => {
-    // if (import.meta.env.VITE_DEBUG == 'true') console.log('eagleview view has been updated, value:', value);
-    // if (value.zoom < 18) {
-      // map.setView({ zoom: 18, lonLat: value.lonLat, pitch: value.pitch, rotation: value.rotation });
-    // }
+  // if (import.meta.env.VITE_DEBUG == 'true') console.log('eagleview view has been updated, value:', value);
+  // if (value.zoom < 18) {
+  // map.setView({ zoom: 18, lonLat: value.lonLat, pitch: value.pitch, rotation: value.rotation });
+  // }
   // });
 });
 
@@ -97,7 +103,7 @@ const popoutClicked = () => {
   window.open('//pictometry.phila.gov/?lat=' + MapStore.currentAddressCoords[1] + '&lng=' + MapStore.currentAddressCoords[0], '_blank');
   let startQuery = { ...route.query };
   delete startQuery['obliqueview'];
-  router.push({ query: { ...startQuery }});
+  router.push({ query: { ...startQuery } });
 }
 
 </script>
@@ -105,21 +111,14 @@ const popoutClicked = () => {
 <template>
   <div class="eagleview-panel">
     <div class="eagleview-pop-out">
-      <font-awesome-icon
-        icon="fa-external-link"
-        @click="popoutClicked"
-      />
+      <font-awesome-icon icon="fa-external-link" @click="popoutClicked" />
     </div>
 
-    <div
-      id="eagleview"
-      class="eagleview-div"
-    />
+    <div id="eagleview" class="eagleview-div" />
   </div>
 </template>
 
 <style>
-
 .eagleview-panel {
   position: relative;
   height: 100%;
@@ -145,9 +144,8 @@ const popoutClicked = () => {
   border-radius: 2px;
 }
 
-@media
-only screen and (max-width: 768px),
-(min-device-width: 768px) and (max-device-width: 1024px)  {
+@media only screen and (max-width: 768px),
+(min-device-width: 768px) and (max-device-width: 1024px) {
   .eagleview-div {
     height: 250px;
   }
@@ -158,5 +156,4 @@ only screen and (max-width: 768px),
   height: 100%;
   width: 100%;
 }
-
 </style>
