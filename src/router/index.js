@@ -85,24 +85,20 @@ const getParcelsAndPutInStore = async (lng, lat) => {
 
   // collects 4 things to attempt to geocode from the parcels clicked
   const otherParcelLayer = parcelLayer === 'pwd' ? 'dor' : 'pwd';
-  const addressField = parcelLayer === 'pwd' ? 'ADDRESS' : 'ADDR_SOURCE';
-  const otherAddressField = otherParcelLayer === 'pwd' ? 'ADDRESS' : 'ADDR_SOURCE';
-  const geocodeParameterField = parcelLayer === 'pwd' ? 'PARCELID' : 'mapreg';
-  const otherGeocodeParameterField = otherParcelLayer === 'pwd' ? 'PARCELID' : 'mapreg';
+  const addressField = parcelLayer === 'pwd' ? 'address' : 'addr_std';
+  const otherAddressField = otherParcelLayer === 'pwd' ? 'address' : 'addr_std';
+  const geocodeParameterField = parcelLayer === 'pwd' ? 'parcelid' : 'mapreg';
+  const otherGeocodeParameterField = otherParcelLayer === 'pwd' ? 'parcelid' : 'mapreg';
 
-  // if (import.meta.env.VITE_DEBUG == 'true') console.log('parcelLayer:', parcelLayer);
   if (ParcelsStore[parcelLayer].features) {
     MainStore.currentParcelAddress = ParcelsStore[parcelLayer].features[0].properties[addressField];
     MainStore.currentParcelGeocodeParameter = ParcelsStore[parcelLayer].features[0].properties[geocodeParameterField]
-    // if (import.meta.env.VITE_DEBUG == 'true') console.log('ParcelsStore[parcelLayer].features[i].properties[geocodeParameterField]:', ParcelsStore[parcelLayer].features[0].properties[geocodeParameterField], 'ParcelsStore[parcelLayer].features[i].properties[otherGeocodeParameterField]:', ParcelsStore[parcelLayer].features[0].properties[otherGeocodeParameterField]);
-    // if (import.meta.env.VITE_DEBUG == 'true') console.log('MainStore.currentParcelAddress:', MainStore.currentParcelAddress);
   }
+
   if (ParcelsStore[otherParcelLayer].features) {
     MainStore.otherParcelAddress = ParcelsStore[otherParcelLayer].features[0].properties[otherAddressField];
     MainStore.otherParcelGeocodeParameter = ParcelsStore[otherParcelLayer].features[0].properties[otherGeocodeParameterField]
-    // if (import.meta.env.VITE_DEBUG == 'true') console.log('else MainStore.otherParcelAddress:', MainStore.otherParcelAddress);
   }
-  // MainStore.addressSearchRunning = false;
 }
 
 // it should only show an address at the top that has been found in AIS for the top line address, so, if map clicked, it
@@ -381,6 +377,7 @@ const router = createRouter({
           if (!GeocodeStore.aisData.features) {
             MainStore.currentTopic = null;
           }
+          MainStore.addressSearchRunning = false;
           routeApp(router, to);
         } else if (lat && lng) {
           MainStore.setLastSearchMethod('mapClick');
@@ -390,6 +387,7 @@ const router = createRouter({
             return false;
           }
           await checkParcelInAis();
+          MainStore.addressSearchRunning = false;
           routeApp(router, to);
         } else {
           MainStore.addressSearchRunning = false;
