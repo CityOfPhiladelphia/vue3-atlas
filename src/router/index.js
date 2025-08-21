@@ -19,7 +19,7 @@ import useRouting from '@/composables/useRouting';
 const { routeApp } = useRouting();
 
 // this runs on address search and as part of datafetch()
-const clearStoreData = async() => {
+const clearStoreData = async () => {
   if (import.meta.env.VITE_DEBUG == 'true') console.log('clearStoreData is running');
   const MainStore = useMainStore();
   MainStore.clearDataSourcesLoadedArray();
@@ -44,7 +44,7 @@ const clearStoreData = async() => {
   CondosStore.condosData.pages = { page_1: { features: [] } };
 }
 
-const getGeocodeAndPutInStore = async(address) => {
+const getGeocodeAndPutInStore = async (address) => {
   const GeocodeStore = useGeocodeStore();
   const MainStore = useMainStore();
   await GeocodeStore.fillAisData(address);
@@ -67,7 +67,7 @@ const getGeocodeAndPutInStore = async(address) => {
 }
 
 // this ONLY runs on map click
-const getParcelsAndPutInStore = async(lng, lat) => {
+const getParcelsAndPutInStore = async (lng, lat) => {
   if (import.meta.env.VITE_DEBUG == 'true') console.log('getParcelsAndPutInStore is running');
   const MainStore = useMainStore();
   let currentTopic = MainStore.currentTopic;
@@ -107,7 +107,7 @@ const getParcelsAndPutInStore = async(lng, lat) => {
 
 // it should only show an address at the top that has been found in AIS for the top line address, so, if map clicked, it
 // goes through all of the clicked parcel info, running it against AIS until it gets a match
-const checkParcelInAis = async() => {
+const checkParcelInAis = async () => {
   const GeocodeStore = useGeocodeStore();
   const MainStore = useMainStore();
   const parcelData = [
@@ -129,13 +129,7 @@ const checkParcelInAis = async() => {
 
 // this is called on every route change, including address searches, topic changes, initial app load, and back button clicks
 // when it is called, it may have some of the data it needs already in the store (after a geocode), or it may need to fetch everything (e.g. initial app load)
-const dataFetch = async(to, from) => {
-  // exit dataFetch is route is 'not-found'
-  if (to.name === 'not-found') {
-    MainStore.datafetchRunning = false;
-    return;
-  }
-
+const dataFetch = async (to, from) => {
   if (import.meta.env.VITE_DEBUG == 'true') console.log('dataFetch is starting, to:', to, 'from:', from, 'to.params.address:', to.params.address, 'from.params.address:', from.params.address, 'to.params.topic:', to.params.topic, 'from.params.topic:', from.params.topic);
   const MainStore = useMainStore();
   MainStore.datafetchRunning = true;
@@ -143,7 +137,7 @@ const dataFetch = async(to, from) => {
   const ParcelsStore = useParcelsStore();
   const dataSourcesLoadedArray = MainStore.dataSourcesLoadedArray;
 
-   // if to.params.address or to.query.address, set address to to.params.address or to.query.address, otherwise null
+  // if to.params.address or to.query.address, set address to to.params.address or to.query.address, otherwise null
   const address = to.params.address ? to.params.address : (to.query.address ? to.query.address : null);
   const topic = to.params.topic ? to.params.topic.toLowerCase() : null;
 
@@ -321,7 +315,7 @@ const router = createRouter({
       beforeEnter: async (to, from) => {
         if (import.meta.env.VITE_DEBUG === 'true') console.log('address-or-topic route beforeEnter, to:', to, 'from:', from, to.params.addressOrTopic.toLowerCase());
         const MainStore = useMainStore();
-        const topics = [ 'voting' ];
+        const topics = ['voting'];
         if (topics.includes(to.params.addressOrTopic.toLowerCase())) {
           if (import.meta.env.VITE_DEBUG === 'true') console.log('inside if, routing to topic');
           MainStore.currentTopic = to.params.addressOrTopic;
@@ -377,6 +371,7 @@ const router = createRouter({
         const ParcelsStore = useParcelsStore();
         MainStore.addressSearchRunning = true;
         if (MainStore.datafetchRunning) {
+          MainStore.addressSearchRunning = false;
           return false;
         } else if (address) {
           if (import.meta.env.VITE_DEBUG == 'true') console.log('search route beforeEnter, address:', address);
@@ -411,24 +406,36 @@ router.afterEach(async (to, from) => {
   if (to.query.lang !== from.query.lang) {
     MainStore.currentLang = to.query.lang;
   }
-  if (to.name === 'address-or-topic') {
-    return;
-  } else if (to.name !== 'not-found' && to.name !== 'search') {
-    MainStore.addressSearchRunning = false;
-    await dataFetch(to, from);
-    // let pageTitle = MainStore.appVersion + '.phila.gov';
-    let pageTitle = MainStore.appVersion.charAt(0).toUpperCase() + MainStore.appVersion.slice(1);
-    for (let param of Object.keys(to.params)) {
-      pageTitle += ' | ' + to.params[param];
+  switch (to.name) {
+    case ('not-found'): {
+      MainStore.currentTopic = "property"
+      MainStore.currentAddress = null;
+      MainStore.currentParcelGeocodeParameter = null;
+      MainStore.currentParcelAddress = null;
+      MainStore.otherParcelAddress = null;
+      MainStore.otherParcelGeocodeParameter = null;
+      return;
     }
-    MainStore.pageTitle = pageTitle;
-  } else if (to.name == 'not-found') {
-    MainStore.currentTopic = "property"
-    MainStore.currentAddress = null;
-    MainStore.currentParcelGeocodeParameter = null;
-    MainStore.currentParcelAddress = null;
-    MainStore.otherParcelAddress = null;
-    MainStore.otherParcelGeocodeParameter = null;
+    case ('address-or-topic'): {
+      return;
+    }
+    case ('search'): {
+      return;
+    }
+    default: {
+      MainStore.addressSearchRunning = false;
+      // if data portion of URI is not the same, get new data
+      if (to.fullPath.split('?')[0] !== from.fullPath.split('?')[0]) {
+        MainStore.datafetchRunning = true;
+        await dataFetch(to, from);
+        MainStore.datafetchRunning = false;
+        let pageTitle = MainStore.appVersion.charAt(0).toUpperCase() + MainStore.appVersion.slice(1);
+        for (let param of Object.keys(to.params)) {
+          pageTitle += ' | ' + to.params[param];
+        }
+        MainStore.pageTitle = pageTitle
+      }
+    }
   }
 });
 
