@@ -83,7 +83,7 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
           outFields: '*',
           f: 'geojson',
         }
-        const esResponse = await axios.get('https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/SchoolDist_Catchments_ES_TEST/FeatureServer/0/query?', { params });
+        const esResponse = await axios.get('https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/SchoolDist_Catchments_ES/FeatureServer/0/query?', { params });
         if (esResponse.status === 200) {
           const data = esResponse.data;
           this.esCatchments = data;

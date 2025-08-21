@@ -37,7 +37,7 @@ export const useVotingStore = defineStore("VotingStore", {
         const feature = GeocodeStore.aisData.features[0];
         if (import.meta.env.VITE_VOTING_DATA_SOURCE === 'carto') {
           let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
-          const url = baseUrl += `SELECT *, ST_AsGeoJSON(the_geom) FROM political_divisions WHERE ST_Intersects(the_geom, ST_SetSRID(ST_Point(${feature.geometry.coordinates[0]}, ${feature.geometry.coordinates[1]}), 4326))`;          
+          const url = baseUrl += `SELECT *, ST_AsGeoJSON(the_geom) FROM political_divisions WHERE ST_Intersects(the_geom, ST_SetSRID(ST_Point(${feature.geometry.coordinates[0]}, ${feature.geometry.coordinates[1]}), 4326))`;
           const response = await fetch(url);
           if (response.ok) {
             this.divisions = await response.json();
@@ -93,7 +93,7 @@ export const useVotingStore = defineStore("VotingStore", {
           let baseUrl = 'https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/POLLING_PLACES/FeatureServer/0/query';
           let params = {
             'returnGeometry': true,
-            'where': `PRECINCT = '${precinct}'`,
+            'where': `precinct = '${precinct}'`,
             'outSR': 4326,
             'outFields': '*',
             'inSr': 4326,
@@ -116,7 +116,7 @@ export const useVotingStore = defineStore("VotingStore", {
     async fillElectedOfficials() {
       if (import.meta.env.VITE_DEBUG == 'true') console.log('fillElectedOfficials is running');
       const GeocodeStore = useGeocodeStore();
-      
+
       try {
         const feature = GeocodeStore.aisData.features[0];
         if (import.meta.env.VITE_VOTING_DATA_SOURCE === 'carto') {
@@ -160,7 +160,7 @@ export const useVotingStore = defineStore("VotingStore", {
     async fillElectionSplit() {
       if (import.meta.env.VITE_DEBUG == 'true') console.log('fillElectionSplit is running');
       const GeocodeStore = useGeocodeStore();
-      
+
       try {
         const feature = GeocodeStore.aisData.features[0];
         let precinct;

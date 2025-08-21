@@ -54,6 +54,7 @@ const electedOfficials = computed(() => {
     if (!VotingStore.electedOfficials.features || !VotingStore.electedOfficials.features.length) return null;
     return VotingStore.electedOfficials.features.map((feature) => feature.properties);
   }
+  return null;
 });
 
 const council = computed(() => {
@@ -76,12 +77,14 @@ const electionSplit = computed(() => {
       return VotingStore.electionSplit.features[0].properties;
     }
   }
+  return {};
 });
 
 const ballotFileId = computed(() => {
   if (electionSplit.value) {
     return electionSplit.value[fieldNames.ballot_file_id];
   }
+  return '';
 });
 
 const councilMember = computed(() => {
@@ -89,6 +92,7 @@ const councilMember = computed(() => {
     return '<a href="http://' + council.value[0][fieldNames.website] + '" target="_blank">' +
       council.value[0][fieldNames.first_name] +" " +council.value[0][fieldNames.last_name] + " - " + nth(council.value[0][fieldNames.district]) + " Council District </a>";
   }
+  return '';
 });
 
 const office = computed(() => {
@@ -98,12 +102,14 @@ const office = computed(() => {
       F: '+ phoneNumber(council.value[0][fieldNames.main_contact_fax]) + ' <br>\
       <b><a href=mailto:"' + council.value[0][fieldNames.email] + '">' + council.value[0][fieldNames.email] + '</a></b>';
   }
+  return '';
 });
 
 const term = computed(() => {
   if (council.value && council.value[0]) {
     return council.value[0][fieldNames.next_election] - 4 + ' - ' + council.value[0][fieldNames.next_election];
   }
+  return '';
 });
 
 const pollingPlacesData = computed(() => {
@@ -116,6 +122,7 @@ const pollingPlacesData = computed(() => {
       return VotingStore.pollingPlaces.features[0].properties;
     }
   }
+  return {};
 });
 
 const accessibility = computed(() => {
@@ -130,6 +137,7 @@ const accessibility = computed(() => {
       'informationNotAvailable';
     return answer;
   }
+  return '';
 });
 
 const parking = computed(() => {
@@ -141,6 +149,7 @@ const parking = computed(() => {
       'informationNotAvailable';
     return parking;
   }
+  return '';
 });
 
 const pollingPlaceTableData = computed(() => {
@@ -166,6 +175,7 @@ const pollingPlaceTableData = computed(() => {
       },
     ];
   }
+  return '';
 });
 
 const electedRepsData = computed(() => [
@@ -192,13 +202,8 @@ const electionTypes = {
 const electionDate = computed(() => {
   if (electionSplit.value) {
     return formatInTimeZone(electionSplit.value[fieldNames.election_date], 'America/New_York', 'MMMM d, yyyy');
-    // if (import.meta.env.VITE_VOTING_DATA_SOURCE === 'carto') {
-    //   if (import.meta.env.VITE_DEBUG == 'true') console.log('typeof electionSplit.value[fieldNames.election_date]:', typeof electionSplit.value[fieldNames.election_date]);
-    //   return formatInTimeZone(electionSplit.value[fieldNames.election_date], 'America/New_York', 'MMMM d, yyyy');
-    // } else if (import.meta.env.VITE_VOTING_DATA_SOURCE === 'arcgis') {
-    //   return formatInTimeZone(electionSplit.value[fieldNames.election_date], 'America/New_York', 'MMMM d, yyyy');
-    // }
   }
+  return '';
 });
 
 </script>
@@ -206,7 +211,10 @@ const electionDate = computed(() => {
 <template>
   <section>
     <div class="columns is-multiline column is-10 is-offset-1 has-text-centered badge">
-      <div v-if="electionSplit" class="column is-12 badge-title">
+      <div
+        v-if="electionSplit"
+        class="column is-12 badge-title"
+      >
         <b>{{ $t(electionTypes[electionSplit[fieldNames.election_type]]) }}</b>
       </div>
       <div
@@ -215,7 +223,10 @@ const electionDate = computed(() => {
       >
         {{ electionDate }}
       </div>
-      <div v-else class="column election">
+      <div
+        v-else
+        class="column election"
+      >
         <p>
           <font-awesome-icon
             icon="fa-solid fa-spinner"
@@ -236,8 +247,7 @@ const electionDate = computed(() => {
     id="Voting-description"
     class="topic-info"
     v-html="$t('voting.topic.callout1.text')"
-  >
-  </div>
+  />
 
   <h2 class="subtitle is-5 vert-table-title">
     {{ $t('voting.topic.pollingPlace') }}
