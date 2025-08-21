@@ -29,8 +29,7 @@ export const useParcelsStore = defineStore('ParcelsStore', {
         return;
       }
       try {
-        //const response = await fetch(`https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/PWD_PARCELS/FeatureServer/0/query?where=parcelid=%27${pwdParcelNumber}%27&outSR=4326&f=geojson&outFields=*&returnGeometry=true`);
-        const response = await fetch(`https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/PWD_PARCELS_TEST/FeatureServer/0/query?where=parcelid=%27${pwdParcelNumber}%27&outSR=4326&f=geojson&outFields=*&returnGeometry=true`);
+        const response = await fetch(`https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/PWD_PARCELS/FeatureServer/0/query?where=parcelid=%27${pwdParcelNumber}%27&outSR=4326&f=geojson&outFields=*&returnGeometry=true`);
         if (response.ok) {
           this.pwd = await response.json()
         } else {
@@ -102,7 +101,7 @@ export const useParcelsStore = defineStore('ParcelsStore', {
 
     async checkParcelDataByLngLat(lng, lat, parcelLayer) {
       if (import.meta.env.VITE_DEBUG == 'true') console.log('checkParcelDataByLngLat, lng:', lng, 'lat:', lat, 'parcelLayer:', parcelLayer);
-      let ESRILayer = parcelLayer === 'pwd' ? 'PWD_PARCELS_TEST' : 'DOR_Parcel';
+      let ESRILayer = parcelLayer === 'pwd' ? 'PWD_PARCELS' : 'DOR_Parcel';
       let params = {
         'where': '1=1',
         'outSR': 4326,
