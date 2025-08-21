@@ -1,16 +1,12 @@
 <script setup>
 
 import { ref, computed, watch, onMounted } from 'vue';
-
 import { point } from '@turf/helpers';
 
 import { useMainStore } from '@/stores/MainStore';
 const MainStore = useMainStore();
-import { useMapStore } from '@/stores/MapStore';
-const MapStore = useMapStore();
 import { useCityServicesStore } from '@/stores/CityServicesStore';
 const CityServicesStore = useCityServicesStore();
-
 import useScrolling from '@/composables/useScrolling';
 const { isElementInViewport } = useScrolling();
 
@@ -89,18 +85,24 @@ onMounted(() => {
     <div
       class="topic-callout"
     >
-      This section of Atlas is in beta.  We are continuing to build out information about city services here.  Please submit your ideas and questions via our <a target="_blank" href="https://phila.formstack.com/forms/atlas_feedback_form">Feedback form</a>.
+      This section of Atlas is in beta.  We are continuing to build out information about city services here.  Please submit your ideas and questions via our <a
+        target="_blank"
+        href="https://phila.formstack.com/forms/atlas_feedback_form"
+      >Feedback form</a>.
     </div>
 
     <div
       id="Nearby Facilities-description"
       class="topic-info"
     >
-      Find city services and facilities for your search address including schools, rec centers, police stations, and fire stations. Hover over a facility below to highlight it on the map.  See the full directory of city services at <a target="_blank" href="phila.gov/services">phila.gov/services</a>.
+      Find city services and facilities for your search address including schools, rec centers, police stations, and fire stations. Hover over a facility below to highlight it on the map.  See the full directory of city services at <a
+        target="_blank"
+        href="phila.gov/services"
+      >phila.gov/services</a>.
     </div>
 
     <div class="filter-div columns is-multiline">
-      <div class="dropdown nearby-dropdown column is-4 is-12-mobile pt-0 pb-0"> 
+      <div class="dropdown nearby-dropdown column is-4 is-12-mobile pt-0 pb-0">
         <dropdown
           id="data-dropdown"
           v-model="selectedDataType"
@@ -112,7 +114,6 @@ onMounted(() => {
 
     <NearbySchools v-if="currentCityServicesDataType == 'public-schools'" />
     <NearbyPublicSafety v-if="currentCityServicesDataType == 'public-safety'" />
-    <NearbyRec v-if="currentCityServicesDataType == 'recreation-facilities'"></NearbyRec>
-
+    <NearbyRec v-if="currentCityServicesDataType == 'recreation-facilities'" />
   </section>
 </template>
