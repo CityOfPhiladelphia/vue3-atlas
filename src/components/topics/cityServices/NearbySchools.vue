@@ -49,13 +49,13 @@ const esCatchment = computed(() => {
   let catchment = {};
   if (CityServicesStore.esCatchments && CityServicesStore.esCatchments.features) {
     catchment = CityServicesStore.esCatchments.features.find(catchment => {
-      if (catchment.properties.ES_NAME && geocodeElementarySchool.value) {
-        return catchment.properties.ES_NAME == geocodeElementarySchool.value;
+      if (catchment.properties.es_name && geocodeElementarySchool.value) {
+        return catchment.properties.es_name == geocodeElementarySchool.value;
       } else {
         return false;
       }
     });
-  };
+  }
   return catchment;
 });
 
@@ -63,13 +63,13 @@ const msCatchment = computed(() => {
   let catchment = {};
   if (CityServicesStore.msCatchments && CityServicesStore.msCatchments.features) {
     catchment = CityServicesStore.msCatchments.features.find(catchment => {
-      if (catchment.properties.ES_NAME && geocodeElementarySchool.value) {
-        return catchment.properties.ES_NAME == geocodeElementarySchool.value;
+      if (catchment.properties.ms_name && geocodeMiddleSchool.value) {
+        return catchment.properties.ms_name == geocodeMiddleSchool.value;
       } else {
         return false;
       }
     });
-  };
+  }
   return catchment;
 });
 
@@ -77,13 +77,13 @@ const hsCatchment = computed(() => {
   let catchment = {};
   if (CityServicesStore.hsCatchments && CityServicesStore.hsCatchments.features) {
     catchment = CityServicesStore.hsCatchments.features.find(catchment => {
-      if (catchment.properties.ES_NAME && geocodeElementarySchool.value) {
-        return catchment.properties.ES_NAME == geocodeElementarySchool.value;
+      if (catchment.properties.hs_name && geocodeHighSchool.value) {
+        return catchment.properties.hs_name == geocodeHighSchool.value;
       } else {
         return false;
       }
     });
-  };
+  }
   return catchment;
 });
 
@@ -92,13 +92,13 @@ const elementarySchool = computed(() => {
   if (CityServicesStore.allSchools && CityServicesStore.allSchools.features && esCatchment.value && esCatchment.value.properties) {
     // if (import.meta.env.VITE_DEBUG) console.log('inside if');
     school = CityServicesStore.allSchools.features.find(school => {
-      if (school.properties.LOCATION_ID) {
-        return school.properties.LOCATION_ID == esCatchment.value.properties.ES_ID.toString();
+      if (school.properties.location_id) {
+        return school.properties.location_id == esCatchment.value.properties.es_id.toString();
       } else {
         return false;
       }
     });
-  };
+  }
   return school;
 });
 
@@ -115,13 +115,13 @@ const middleSchool = computed(() => {
   let school = null;
   if (CityServicesStore.allSchools && CityServicesStore.allSchools.features && msCatchment.value && msCatchment.value.properties) {
     school = CityServicesStore.allSchools.features.find(school => {
-      if (school.properties.LOCATION_ID) {
-        return school.properties.LOCATION_ID == msCatchment.value.properties.MS_ID.toString();
+      if (school.properties.location_id) {
+        return school.properties.location_id == msCatchment.value.properties.ms_id.toString();
       } else {
         return false;
       }
     });
-  };
+  }
   return school;
 });
 
@@ -138,13 +138,13 @@ const highSchool = computed(() => {
   let school = null;
   if (CityServicesStore.allSchools && CityServicesStore.allSchools.features && hsCatchment.value && hsCatchment.value.properties) {
     school = CityServicesStore.allSchools.features.find(school => {
-      if (school.properties.LOCATION_ID && hsCatchment.value && hsCatchment.value.properties) {
-        return school.properties.LOCATION_ID == hsCatchment.value.properties.HS_ID.toString();
+      if (school.properties.location_id && hsCatchment.value && hsCatchment.value.properties) {
+        return school.properties.location_id == hsCatchment.value.properties.hs_id.toString();
       } else {
         return false;
       }
     });
-  };
+  }
   return school;
 });
 
@@ -159,20 +159,23 @@ watch(
 
 const elementarySchoolData = computed(() => {
   if (elementarySchool.value && elementarySchool.value.properties) {
-    return '<b>' + elementarySchool.value.properties.SCHOOL_NAME_LABEL + '</b><br>' + elementarySchool.value.properties.STREET_ADDRESS + '<br>Philadelphia, PA ' + elementarySchool.value.properties.ZIP_CODE + '<br>' + elementarySchool.value.properties.PHONE_NUMBER + '<br>Grades: ' + elementarySchool.value.properties.GRADE_ORG;
+    return '<b>' + elementarySchool.value.properties.school_name_label + '</b><br>' + elementarySchool.value.properties.street_address + '<br>Philadelphia, PA ' + elementarySchool.value.properties.zip_code + '<br>' + elementarySchool.value.properties.phone_number + '<br>Grades: ' + elementarySchool.value.properties.grade_org;
   }
+  return '';
 });
 
 const middleSchoolData = computed(() => {
   if (middleSchool.value && middleSchool.value.properties) {
-    return '<b>' + middleSchool.value.properties.SCHOOL_NAME_LABEL + '</b><br>' + middleSchool.value.properties.STREET_ADDRESS + '<br>Philadelphia, PA ' + middleSchool.value.properties.ZIP_CODE + '<br>' + middleSchool.value.properties.PHONE_NUMBER + '<br>Grades: ' + middleSchool.value.properties.GRADE_ORG;
+    return '<b>' + middleSchool.value.properties.school_name_label + '</b><br>' + middleSchool.value.properties.street_address + '<br>Philadelphia, PA ' + middleSchool.value.properties.zip_code + '<br>' + middleSchool.value.properties.phone_number + '<br>Grades: ' + middleSchool.value.properties.grade_org;
   }
+  return '';
 });
 
 const highSchoolData = computed(() => {
   if (highSchool.value && highSchool.value.properties) {
-    return '<b>' + highSchool.value.properties.SCHOOL_NAME_LABEL + '</b><br>' + highSchool.value.properties.STREET_ADDRESS + '<br>Philadelphia, PA ' + highSchool.value.properties.ZIP_CODE + '<br>' + highSchool.value.properties.PHONE_NUMBER + '<br>Grades: ' + highSchool.value.properties.GRADE_ORG;
+    return '<b>' + highSchool.value.properties.school_name_label + '</b><br>' + highSchool.value.properties.street_address + '<br>Philadelphia, PA ' + highSchool.value.properties.zip_code + '<br>' + highSchool.value.properties.phone_number + '<br>Grades: ' + highSchool.value.properties.grade_org;
   }
+  return '';
 });
 
 const schoolsVertTableData = computed(() => {
@@ -182,12 +185,12 @@ const schoolsVertTableData = computed(() => {
         {
           label: 'Elementary & Middle School',
           value: elementarySchoolData.value,
-          class: elementarySchool.value.properties.SCHOOL_NUM,
+          class: elementarySchool.value.properties.school_num,
         },
         {
           label: 'High School',
           value: highSchoolData.value,
-          class: highSchool.value.properties.SCHOOL_NUM,
+          class: highSchool.value.properties.school_num,
         },
       ];
     } else if (geocodeMiddleSchool.value == geocodeHighSchool.value) {
@@ -195,12 +198,12 @@ const schoolsVertTableData = computed(() => {
         {
           label: 'Elementary & Middle School',
           value: elementarySchoolData.value,
-          class: elementarySchool.value.properties.SCHOOL_NUM,
+          class: elementarySchool.value.properties.school_num,
         },
         {
           label: 'High School',
           value: highSchoolData.value,
-          class: highSchool.value.properties.SCHOOL_NUM,
+          class: highSchool.value.properties.school_num,
         },
       ];
     } else if (geocodeElementarySchool.value == geocodeMiddleSchool.value == geocodeHighSchool.value) {
@@ -208,7 +211,7 @@ const schoolsVertTableData = computed(() => {
         {
           label: 'Elementary, Middle, and High School',
           value: elementarySchoolData.value,
-          class: elementarySchool.value.properties.SCHOOL_NUM,
+          class: elementarySchool.value.properties.school_num,
         },
       ];
     } else {
@@ -216,21 +219,22 @@ const schoolsVertTableData = computed(() => {
         {
           label: 'Elementary School',
           value: elementarySchoolData.value,
-          class: elementarySchool.value.properties.SCHOOL_NUM,
+          class: elementarySchool.value.properties.school_num,
         },
         {
           label: 'Middle School',
           value: middleSchoolData.value,
-          class: middleSchool.value.properties.SCHOOL_NUM,
+          class: middleSchool.value.properties.school_num,
         },
         {
           label: 'High School',
           value: highSchoolData.value,
-          class: highSchool.value.properties.SCHOOL_NUM,
+          class: highSchool.value.properties.school_num,
         },
       ];
     }
   }
+  return '';
 });
 
 const nearbySchools = computed(() => {
@@ -264,7 +268,7 @@ const nearbySchoolsTableData = computed(() => {
       },
       {
         label: 'Grades',
-        field: 'properties.GRADE_ORG',
+        field: 'properties.grade_org',
       },
       {
         label: 'Distance',
@@ -281,13 +285,13 @@ const handleCellClick = (e) => {
   let lngLat, schoolName;
   if (e.includes('Elementary')) {
     lngLat = elementarySchool.value.geometry.coordinates;
-    schoolName = elementarySchool.value.properties.SCHOOL_NAME_LABEL;
+    schoolName = elementarySchool.value.properties.school_name_label;
   } else if (e.includes('Middle')) {
     lngLat = middleSchool.value.geometry.coordinates;
-    schoolName = middleSchool.value.properties.SCHOOL_NAME_LABEL;
+    schoolName = middleSchool.value.properties.school_name_label;
   } else if (e.includes('High')) {
     lngLat = highSchool.value.geometry.coordinates;
-    schoolName = highSchool.value.properties.SCHOOL_NAME_LABEL;
+    schoolName = highSchool.value.properties.school_name_label;
   }
   map.flyTo({ center: lngLat });
   const popup = document.getElementsByClassName('maplibregl-popup');
@@ -306,7 +310,7 @@ const handleCellMouseover = (e) => {
   MainStore.hoveredSchoolId = e.toString();
 };
 
-const handleCellMouseleave = (e) => {
+const handleCellMouseleave = () => {
   // if (import.meta.env.VITE_DEBUG) console.log('handleCellMouseleave is running, e:', e);
   MainStore.hoveredSchoolId = null;
   const popup = document.getElementsByClassName('maplibregl-popup');
@@ -328,7 +332,6 @@ onMounted(() => {
 </script>
 
 <template>
-
   <div class="mt-5">
     <h2 class="subtitle mb-3 is-5">
       Designated Neighborhood Schools
@@ -382,12 +385,11 @@ onMounted(() => {
       </div>
     </template>
   </vue-good-table>
-
 </template>
 
 <style>
 
-/* @media 
+/* @media
 only screen and (max-width: 768px) {
 
   #nearbyVacantIndicators {

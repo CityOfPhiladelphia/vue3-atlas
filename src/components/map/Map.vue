@@ -287,7 +287,7 @@ onMounted(async () => {
     }
     new maplibregl.Popup({ className: 'my-class' })
       .setLngLat(e.lngLat)
-      .setHTML(properties.SCHOOL_NAME_LABEL)
+      .setHTML(properties.school_name_label)
       .setMaxWidth("300px")
       .addTo(map);
   });
