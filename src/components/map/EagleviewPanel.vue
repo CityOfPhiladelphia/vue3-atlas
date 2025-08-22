@@ -3,29 +3,13 @@
 import $config from '@/config';
 import { onMounted, computed, watch } from 'vue';
 import { point } from '@turf/helpers';
-import axios from 'axios';
 
 import { useMapStore } from '@/stores/MapStore';
-// import { config } from 'maplibre-gl';
 const MapStore = useMapStore();
 
 import { useRouter, useRoute } from 'vue-router';
 const route = useRoute();
 const router = useRouter();
-
-/*
-const clientId = import.meta.env.VITE_EAGLEVIEW_CLIENT_ID;
-const clientSecret = import.meta.env.VITE_EAGLEVIEW_CLIENT_SECRET;
-const options = {
-  method: 'POST',
-  headers: {
-    'Authorization': 'Basic ' + btoa(clientId + ':' + clientSecret),
-    'content-type': 'application/x-www-form-urlencoded'
-  },
-  data: 'grant_type=client_credentials',
-  url: 'https://apicenter.eagleview.com/oauth2/v1/token',
-};
-*/
 
 const currentAddressCoords = computed(() => {
   if (MapStore.currentAddressCoords.length) {
@@ -68,13 +52,10 @@ watch(
 );
 
 onMounted(async () => {
-  console.log("BEFORE: ", MapStore.eagleviewToken)
   if (!MapStore.eagleviewToken) {
     router.push('/eagleviewToken')
   }
 
-  //console.log("TOKEN: ", MapStore.eagleviewToken);
-  //const response = await axios(options);
   const config = {
     authToken: MapStore.eagleviewToken,
     measurementPanelEnabled: false,
@@ -98,13 +79,6 @@ onMounted(async () => {
       ]
     });
   }
-
-  // map.on('onViewUpdate', (value) => {
-  // if (import.meta.env.VITE_DEBUG == 'true') console.log('eagleview view has been updated, value:', value);
-  // if (value.zoom < 18) {
-  // map.setView({ zoom: 18, lonLat: value.lonLat, pitch: value.pitch, rotation: value.rotation });
-  // }
-  // });
 });
 
 const popoutClicked = () => {

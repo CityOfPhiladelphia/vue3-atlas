@@ -22,3 +22,33 @@ export async function getEagleviewToken() {
   }
   return '';
 }
+
+export async function getAgoToken() {
+  let data = qs.stringify({
+    'f': 'json',
+    'username': import.meta.env.VITE_AGO_USERNAME,
+    'password': import.meta.env.VITE_AGO_PASSWORD,
+    'referer': 'https://www.mydomain.com'
+  });
+
+  let config = {
+    method: 'post',
+    maxBodyLength: Infinity,
+    url: 'https://www.arcgis.com/sharing/rest/generateToken',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    data: data
+  };
+
+  try {
+    const response = await axios(config);
+    if (response.status === 200) {
+      return response.data.token;
+    }
+
+  } catch (err) {
+    console.log(err);
+  }
+  return '';
+}
