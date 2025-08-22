@@ -27,6 +27,7 @@ export const useMapStore = defineStore("MapStore", {
       cyclomediaYear: null,
       clickedCyclomediaRecordingCoords: null,
       eagleviewOn: false,
+      eagleviewToken: '',
       selectedRegmap: null,
       regmapOpacity: 0.5,
       zoningOpacity: 1,

@@ -18,6 +18,10 @@ import { useMainStore } from '@/stores/MainStore.js'
 import useRouting from '@/composables/useRouting';
 const { routeApp } = useRouting();
 
+import { getEagleviewToken } from '@/util/call-api';
+import { mapStores } from 'pinia';
+import { useMapStore } from '@/stores/MapStore';
+
 // this runs on address search and as part of datafetch()
 const clearStoreData = async () => {
   if (import.meta.env.VITE_DEBUG == 'true') console.log('clearStoreData is running');
@@ -290,7 +294,6 @@ const topicDataFetch = async (topic, data) => {
 }
 
 const router = createRouter({
-  // history: createWebHashHistory(import.meta.env.BASE_URL),
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
@@ -394,6 +397,15 @@ const router = createRouter({
           return false;
         }
       },
+    },
+    {
+      path: '/eagleviewToken',
+      name: 'eagleviewToken',
+      beforeEnter: async () => {
+        const MapStore = useMapStore();
+        MapStore.eagleviewToken = await getEagleviewToken();
+        return false;
+      }
     }
   ]
 })
@@ -418,6 +430,9 @@ router.afterEach(async (to, from) => {
       return;
     }
     case ('search'): {
+      return;
+    }
+    case ('eagleviewToken'): {
       return;
     }
     default: {
