@@ -8,7 +8,6 @@ import { point, polygon, lineString } from '@turf/helpers';
 import explode from '@turf/explode';
 import nearest from '@turf/nearest-point';
 import distance from '@turf/distance';
-import qs from 'qs';
 
 import { format } from 'date-fns';
 
@@ -30,34 +29,6 @@ export const useCity311Store = defineStore('City311Store', {
     };
   },
   actions: {
-    async getAgoToken() {
-      let data = qs.stringify({
-        'f': 'json',
-        'username': import.meta.env.VITE_AGO_USERNAME,
-        'password': import.meta.env.VITE_AGO_PASSWORD,
-        'referer': 'https://www.mydomain.com' 
-      });
-  
-      let config = {
-        method: 'post',
-        maxBodyLength: Infinity,
-        url: 'https://www.arcgis.com/sharing/rest/generateToken',
-        headers: { 
-          'Content-Type': 'application/x-www-form-urlencoded', 
-          // 'Authorization': 'Basic Og=='
-        },
-        data : data
-      };
-  
-      await axios.request(config)
-      .then((response) => {
-        // if (import.meta.env.VITE_DEBUG) console.log(JSON.stringify(response.data));
-        this.agoToken= response.data.token;
-      })
-      .catch((error) => {
-        if (import.meta.env.VITE_DEBUG == 'true') console.log(error);
-      });
-    },
     async fillCity311() {
       try {
         if (import.meta.env.VITE_DEBUG == 'true') console.log('fillCity311 is running');
@@ -68,7 +39,7 @@ export const useCity311Store = defineStore('City311Store', {
         await MapStore.fillBufferForAddress(coordinates[0], coordinates[1]);
         const buffer = MapStore.bufferForAddress;
         // if (import.meta.env.VITE_DEBUG == 'true') console.log('nearby311 still going 1');
-        
+
         const url = 'https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/SALESFORCE_CASES_1YEAR/FeatureServer/0/query?';
         const xyCoords = buffer[0];
         let xyCoordsReduced = [[ parseFloat(xyCoords[0][0].toFixed(6)), parseFloat(xyCoords[0][1].toFixed(6)) ]];
@@ -82,7 +53,7 @@ export const useCity311Store = defineStore('City311Store', {
           }
         }
         xyCoordsReduced.push([ parseFloat(xyCoords[0][0].toFixed(6)), parseFloat(xyCoords[0][1].toFixed(6)) ]);
-        
+
         const today = new Date();
         const dd = String(today.getDate()).padStart(2, '0');
         const mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
@@ -156,4 +127,3 @@ export const useCity311Store = defineStore('City311Store', {
     },
   },
 });
-  
