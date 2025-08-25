@@ -140,11 +140,7 @@ watch(
   }
 )
 const appTitle = computed(() => {
-  let version = 'Atlas';
-  if (import.meta.env.VITE_VERSION == 'cityatlas'){
-    version = 'CityAtlas';
-  }
-  return version;
+  return import.meta.env.VITE_VERSION == 'cityatlas' ? 'CityAtlas' : 'Atlas';
 })
 
 </script>

@@ -112,7 +112,7 @@ export const useZoningStore = defineStore('ZoningStore', {
       }
     },
     async fillProposedZoning() {
-      
+
       const ParcelsStore = useParcelsStore();
       const features = ParcelsStore.dor.features;
       if (!features) return;
@@ -270,7 +270,7 @@ export const useZoningStore = defineStore('ZoningStore', {
         const eclipseQuery = feature.properties.eclipse_location_id ? `addressobjectid IN ('${eclipseLocationId}')` : ``;
         const zoningQuery = `applicationtype in ('Zoning Board of Adjustment', 'RB_ZBA') AND applicationtype is not null`
         const opaQuery = feature.properties.opa_account_num ? ` AND opa_account_num IN ('${ feature.properties.opa_account_num}')` : ``;
-        
+
         const query = `SELECT * FROM APPEALS WHERE (address = '${ streetaddress }' AND ${zoningQuery} \
           OR addressobjectid IN ('${ addressId }') AND ${zoningQuery} \
           OR parcel_id_num IN ('${ pwd_parcel_id }') AND ${zoningQuery}) \
@@ -281,7 +281,7 @@ export const useZoningStore = defineStore('ZoningStore', {
           ${ opaQuery } AND ${zoningQuery} \
           AND systemofrecord IN ('ECLIPSE') \
           ORDER BY scheduleddate DESC`;
-        
+
         const url = baseUrl += query;
         const response = await fetch(url);
         if (response.ok) {
@@ -333,18 +333,18 @@ export const useZoningStore = defineStore('ZoningStore', {
           let data = await response.data;
 
           data.features.sort((a, b) => {
-            if (a.properties.ORGANIZATION_NAME < b.properties.ORGANIZATION_NAME) {
+            if (a.properties.organization_name < b.properties.organization_name) {
               return -1;
             }
-            if (a.properties.ORGANIZATION_NAME > b.properties.ORGANIZATION_NAME) {
+            if (a.properties.organization_name > b.properties.organization_name) {
               return 1;
             }
             return 0;
           });
 
           data.features.forEach(item => {
-            item.properties.rco = `<b>${item.properties.ORGANIZATION_NAME}</b><br>${item.properties.ORGANIZATION_ADDRESS}`;
-            item.properties.contact = `${rcoPrimaryContact(item.properties.PRIMARY_NAME)}<br>${phoneNumber(item.properties.PRIMARY_PHONE)}<br><a target='_blank' href='mailto:${item.properties.PRIMARY_EMAIL}'>${item.properties.PRIMARY_EMAIL}</a>`;
+            item.properties.rco = `<b>${item.properties.organization_name}</b><br>${item.properties.organization_address }`;
+            item.properties.contact = `${rcoPrimaryContact(item.properties.primary_name)}<br>${phoneNumber(item.properties.primary_phone)}<br><a target='_blank' href='mailto:${item.properties.primary_email}'>${item.properties.primary_email}</a>`;
           })
           this.rcos = data;
           this.loadingRcos = false;
