@@ -191,7 +191,7 @@ const rcosTableData = computed(() => {
       },
       {
         label: 'Meeting Address',
-        field: 'properties.MEETING_LOCATION_ADDRESS',
+        field: 'properties.meeting_location_address',
       },
       {
         label: 'Primary Contact',
@@ -200,7 +200,7 @@ const rcosTableData = computed(() => {
       },
       {
         label: 'Preferred Method',
-        field: 'properties.PREFFERED_CONTACT_METHOD',
+        field: 'properties.preffered_contact_method',
       },
     ],
     rows: ZoningStore.rcos.features || [],
