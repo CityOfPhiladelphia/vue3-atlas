@@ -2,7 +2,6 @@ import axios from 'axios';
 
 export async function getEagleviewToken() {
   let attempts = 5;
-  console.log("GETTING EAGLEVIEW TOKEN...")
   while (attempts) {
     const clientId = import.meta.env.VITE_EAGLEVIEW_CLIENT_ID;
     const clientSecret = import.meta.env.VITE_EAGLEVIEW_CLIENT_SECRET;
