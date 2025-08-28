@@ -53,8 +53,10 @@ watch(
 
 onMounted(async () => {
   if (!MapStore.eagleviewToken) {
-    router.push('/eagleviewToken')
+    console.log("NEED EAGLEVIEW TOKEN...")
+    await router.push('/eagleviewToken')
   }
+  console.log("TOKEN: ", MapStore.eagleviewToken)
 
   const config = {
     authToken: MapStore.eagleviewToken,
@@ -93,10 +95,16 @@ const popoutClicked = () => {
 <template>
   <div class="eagleview-panel">
     <div class="eagleview-pop-out">
-      <font-awesome-icon icon="fa-external-link" @click="popoutClicked" />
+      <font-awesome-icon
+        icon="fa-external-link"
+        @click="popoutClicked"
+      />
     </div>
 
-    <div id="eagleview" class="eagleview-div" />
+    <div
+      id="eagleview"
+      class="eagleview-div"
+    />
   </div>
 </template>
 
