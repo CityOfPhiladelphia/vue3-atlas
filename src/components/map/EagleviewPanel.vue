@@ -53,10 +53,8 @@ watch(
 
 onMounted(async () => {
   if (!MapStore.eagleviewToken) {
-    console.log("NEED EAGLEVIEW TOKEN...")
     await router.push('/eagleviewToken')
   }
-  console.log("TOKEN: ", MapStore.eagleviewToken)
 
   const config = {
     authToken: MapStore.eagleviewToken,
