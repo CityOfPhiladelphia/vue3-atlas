@@ -33,6 +33,8 @@ export const useMapStore = defineStore("MapStore", {
       zoningOpacity: 1,
       stormwaterOpacity: 1,
       labelLayers: [],
+      eagleviewParcelsOn: false,
+      eagleviewLabelsOn: false,
     };
   },
   actions: {
