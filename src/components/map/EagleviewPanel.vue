@@ -157,7 +157,6 @@ const popoutClicked = () => {
       id="eagleview"
       class="eagleview-div"
     />
-
   </div>
 </template>
 
