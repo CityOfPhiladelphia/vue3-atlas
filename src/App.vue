@@ -38,7 +38,7 @@ const locale = computed(() => instance.appContext.config.globalProperties.$i18n.
 
 onMounted(async () => {
   MainStore.appVersion = import.meta.env.VITE_VERSION;
-  MainStore.pageTitle = MainStore.appVersion.charAt(0).toUpperCase() + MainStore.appVersion.slice(1);
+  MainStore.pageTitle = MainStore.appVersion.charAt(0).toUpperCase() + MainStore.appVersion.slice(1) + " | phila.gov";
   MainStore.isMobileDevice = isMobileDevice();
   MainStore.isMac = isMac();
   await router.isReady()
