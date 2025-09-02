@@ -16,9 +16,9 @@ const toggleLabels = () => {
 
 <template>
   <button
-    class="eagleview-parcels-toggle"
+    class="eagleview-labels-toggle"
     :class="eagleviewLabelsOn ? 'active' : 'inactive'"
-    :title="eagleviewLabelsOn ? 'Turn parcels off' : 'Turn parcels on'"
+    :title="eagleviewLabelsOn ? 'Turn labels off' : 'Turn labels on'"
     type="button"
     @click="toggleLabels"
   >
@@ -38,7 +38,7 @@ button {
   cursor: pointer;
 }
 
-.eagleview-parcels-toggle {
+.eagleview-labels-toggle {
   height: 60px;
   width: 60px;
   position: absolute;
