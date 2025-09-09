@@ -48,10 +48,8 @@ export async function getAgoToken() {
   try {
     const response = await axios(config);
     if (response.status === 200) {
-      console.log("API TOKEN: ", response.data.token)
       return response.data.token;
     }
-
   } catch (err) {
     console.log(err);
   }

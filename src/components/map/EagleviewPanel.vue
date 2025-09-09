@@ -3,6 +3,7 @@
 import $config from '@/config';
 import { onMounted, computed, watch } from 'vue';
 import { point } from '@turf/helpers';
+import axios from 'axios';
 
 import { useMapStore } from '@/stores/MapStore';
 const MapStore = useMapStore();
@@ -90,7 +91,13 @@ watch(
 
 onMounted(async () => {
   if (!MapStore.eagleviewToken) {
-    await router.push('/eagleviewToken')
+    try {
+      const response = await axios.get('/GetEagleviewToken');
+      MapStore.eagleviewToken = response.data;
+    } catch (err) {
+      console.log("Failed to get token from Eagleview: ", err);
+      return {};
+    }
   }
 
   const config = {
@@ -144,19 +151,13 @@ const popoutClicked = () => {
 <template>
   <div class="eagleview-panel">
     <div class="eagleview-pop-out">
-      <font-awesome-icon
-        icon="fa-external-link"
-        @click="popoutClicked"
-      />
+      <font-awesome-icon icon="fa-external-link" @click="popoutClicked" />
     </div>
 
     <ParcelsControl />
     <LabelsControl />
 
-    <div
-      id="eagleview"
-      class="eagleview-div"
-    />
+    <div id="eagleview" class="eagleview-div" />
   </div>
 </template>
 

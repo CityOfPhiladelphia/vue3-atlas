@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import App from '@/App.vue';
 import $config from '@/config';
+import axios from 'axios';
 
 import { useGeocodeStore } from '@/stores/GeocodeStore.js'
 import { useCondosStore } from '@/stores/CondosStore.js'
@@ -17,10 +18,6 @@ import { useCityServicesStore } from '@/stores/CityServicesStore.js'
 import { useMainStore } from '@/stores/MainStore.js'
 import useRouting from '@/composables/useRouting';
 const { routeApp } = useRouting();
-
-import { getEagleviewToken, getAgoToken } from '@/util/call-api';
-import { mapStores } from 'pinia';
-import { useMapStore } from '@/stores/MapStore';
 
 // this runs on address search and as part of datafetch()
 const clearStoreData = async () => {
@@ -266,7 +263,13 @@ const topicDataFetch = async (topic, data) => {
     case 'city311': {
       const City311Store = useCity311Store();
       if (!City311Store.agoToken) {
-        router.push('agoToken');
+        try {
+          const response = await axios.get('/GetAgoToken');
+          City311Store.agoToken = response.data;
+        } catch (err) {
+          console.log("Failed to get token from ARCgis: ", err);
+          return {};
+        }
       }
       await City311Store.fillCity311(data);
       return;
@@ -398,24 +401,6 @@ const router = createRouter({
         }
       },
     },
-    {
-      path: '/eagleviewToken',
-      name: 'eagleviewToken',
-      beforeEnter: async () => {
-        const MapStore = useMapStore();
-        MapStore.eagleviewToken = await getEagleviewToken();
-        return false;
-      }
-    },
-    {
-      path: '/agoToken',
-      name: 'agoToken',
-      beforeEnter: async () => {
-        const City311Store = useCity311Store();
-        City311Store.agoToken = await getAgoToken();
-        return false;
-      }
-    }
   ]
 })
 
@@ -439,12 +424,6 @@ router.afterEach(async (to, from) => {
       return;
     }
     case ('search'): {
-      return;
-    }
-    case ('eagleviewToken'): {
-      return;
-    }
-    case ('agoToken'): {
       return;
     }
     default: {
