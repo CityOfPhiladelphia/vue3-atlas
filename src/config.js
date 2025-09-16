@@ -430,7 +430,7 @@ const dorDrawnMapStyle = mergeDeep(imageryInfo,{
   sources: {
     dor: {
       tiles: [
-        'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/DORBasemap/MapServer/tile/{z}/{y}/{x}',
+        'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/DOR_Basemap/MapServer/tile/{z}/{y}/{x}',
       ],
       type: 'raster',
       tileSize: 256,
@@ -540,7 +540,7 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
   sources: {
     dor: {
       tiles: [
-        'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/DORBasemap/MapServer/tile/{z}/{y}/{x}',
+        'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/DOR_Basemap/MapServer/tile/{z}/{y}/{x}',
       ],
       type: 'raster',
       tileSize: 256,
@@ -1315,9 +1315,9 @@ const $config = {
       source: 'pwdLabels',
       type: 'raster',
     },
-    dorBasemap: {
-      id: 'dorBasemap',
-      source: 'dorBasemap',
+    DOR_Basemap: {
+      id: 'DOR_Basemap',
+      source: 'DOR_Basemap',
       type: 'raster',
     },
     dorLabels: {
