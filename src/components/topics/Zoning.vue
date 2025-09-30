@@ -199,8 +199,9 @@ const rcosTableData = computed(() => {
         html: true,
       },
       {
-        label: 'Preferred Method',
-        field: 'properties.preffered_contact_method',
+        label: 'Organization Website',
+        field: 'properties.website_link',
+        html: true,
       },
     ],
     rows: ZoningStore.rcos.features || [],
