@@ -345,6 +345,7 @@ export const useZoningStore = defineStore('ZoningStore', {
           data.features.forEach(item => {
             item.properties.rco = `<b>${item.properties.organization_name}</b><br>${item.properties.organization_address }`;
             item.properties.contact = `${rcoPrimaryContact(item.properties.primary_name)}<br>${phoneNumber(item.properties.primary_phone)}<br><a target='_blank' href='mailto:${item.properties.primary_email}'>${item.properties.primary_email}</a>`;
+            item.properties.website_link = item.properties.websites ? `<a target='_blank' href='${item.properties.websites}'>${item.properties.websites}</a>` : 'No website provided';
           })
           this.rcos = data;
           this.loadingRcos = false;
