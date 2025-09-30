@@ -199,7 +199,7 @@ const rcosTableData = computed(() => {
         html: true,
       },
       {
-        label: 'Organization Website',
+        label: 'RCO Website',
         field: 'properties.website_link',
         html: true,
       },
