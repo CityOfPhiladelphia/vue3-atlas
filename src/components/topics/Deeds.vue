@@ -276,7 +276,18 @@ const dorDocsTableData = computed(() => {
         </vue-good-table>
       </div>
 
-      <div class="topic-info mt-6">
+      <div class="mt-6">
+        <callout
+          :type="'danger'"
+        >
+          Documents can currently be found at <a target='_blank' href='https://epayss.phila-records.com/web/'>https://epayss.phila-records.com/web/</a> by searching by the document IDs found in the table below.
+          The links in the table are currently not working, and will be working again shortly.
+        </callout>
+
+      </div>
+
+
+      <div class="topic-info mt-4">
         You can access a view-only, watermarked unofficial copy of the deeds below at
         no cost by clicking on the deeds below. In order to view and print non-watermarked 
         copies of the deeds below, you must purchase a subscription to 
