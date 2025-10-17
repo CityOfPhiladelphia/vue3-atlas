@@ -430,18 +430,18 @@ const dorDrawnMapStyle = mergeDeep(imageryInfo,{
   sources: {
     dor: {
       tiles: [
-        'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/DORBasemap/MapServer/tile/{z}/{y}/{x}',
+        'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/dor_basemap/MapServer/tile/{z}/{y}/{x}',
       ],
       type: 'raster',
       tileSize: 256,
     },
-    dorLabels: {
-      tiles: [
-        'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/DORBasemap_Labels/MapServer/tile/{z}/{y}/{x}',
-      ],
-      type: 'raster',
-      tileSize: 256,
-    },
+    // dorLabels: {
+    //   tiles: [
+    //     'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/DORBasemap_Labels/MapServer/tile/{z}/{y}/{x}',
+    //   ],
+    //   type: 'raster',
+    //   tileSize: 256,
+    // },
     addressMarker: {
       type: 'geojson',
       data: {
@@ -469,11 +469,11 @@ const dorDrawnMapStyle = mergeDeep(imageryInfo,{
       source: 'dor',
       type: 'raster',
     },
-    {
-      id: 'dorLabels',
-      source: 'dorLabels',
-      type: 'raster',
-    },
+    // {
+    //   id: 'dorLabels',
+    //   source: 'dorLabels',
+    //   type: 'raster',
+    // },
     {
       id: 'cyclomediaRecordings',
       source: 'cyclomediaRecordings',
@@ -540,18 +540,18 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
   sources: {
     dor: {
       tiles: [
-        'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/DORBasemap/MapServer/tile/{z}/{y}/{x}',
+        'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/dor_basemap/MapServer/tile/{z}/{y}/{x}',
       ],
       type: 'raster',
       tileSize: 256,
     },
-    dorLabels: {
-      tiles: [
-        'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/DORBasemap_Labels/MapServer/tile/{z}/{y}/{x}',
-      ],
-      type: 'raster',
-      tileSize: 256,
-    },
+    // dorLabels: {
+    //   tiles: [
+    //     'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/DORBasemap_Labels/MapServer/tile/{z}/{y}/{x}',
+    //   ],
+    //   type: 'raster',
+    //   tileSize: 256,
+    // },
     zoning: {
       tiles: [
         'https://citygeo-geoserver.databridge.phila.gov/geoserver/wms?service=WMS&version=1.1.0&request=GetMap&layers=atlas_zoning_grouped&bbox={bbox-epsg-3857}&width=1024&height=1024&srs=EPSG%3A3857&styles=&format=image/png&transparent=true'
@@ -595,11 +595,11 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
       source: 'dor',
       type: 'raster',
     },
-    {
-      id: 'dorLabels',
-      source: 'dorLabels',
-      type: 'raster',
-    },
+    // {
+    //   id: 'dorLabels',
+    //   source: 'dorLabels',
+    //   type: 'raster',
+    // },
     {
       id: 'cyclomediaRecordings',
       source: 'cyclomediaRecordings',
@@ -1315,16 +1315,16 @@ const $config = {
       source: 'pwdLabels',
       type: 'raster',
     },
-    dorBasemap: {
-      id: 'dorBasemap',
-      source: 'dorBasemap',
+    DOR_Basemap: {
+      id: 'DOR_Basemap',
+      source: 'DOR_Basemap',
       type: 'raster',
     },
-    dorLabels: {
-      id: 'dorLabels',
-      source: 'dorLabels',
-      type: 'raster',
-    },
+    // dorLabels: {
+    //   id: 'dorLabels',
+    //   source: 'dorLabels',
+    //   type: 'raster',
+    // },
     zoning: {
       id: 'zoning',
       source: 'zoning',
