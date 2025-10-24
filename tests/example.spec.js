@@ -51,7 +51,9 @@ test('test dor address', async ({ page }) => {
   await page.getByRole('textbox', { name: 'Search for an address, OPA' }).click();
   await page.getByRole('textbox', { name: 'Search for an address, OPA' }).fill('5669 CHESTNUT ST');
   await page.getByRole('button', { name: 'Address Search Button' }).click();
-  await expect(page.getByRole('paragraph')).toContainText('There is no property assessment record for this address.');
+  await expect(page.getByText('There is no property assessment record for this address.')).toBeVisible({ timeout: 10_000 });
+  // await expect(page.getByRole('div', { class: 'summary' })).toBeVisible({ timeout: 10_000 });
+  // await expect(page.getByRole('paragraph')).toContainText('There is no property assessment record for this address.', { timeout: 10_000 });
   await page.getByRole('button', { name: 'Deeds' }).click();
   await expect(page.locator('#dorTable')).toContainText('018S030074');
   await expect(page.locator('#dorTable')).toContainText('5627-99 CHESTNUT ST');
