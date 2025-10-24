@@ -118,7 +118,8 @@ export const useZoningStore = defineStore('ZoningStore', {
       if (!features) return;
       for (let feature of features) {
         // try {
-          console.log('feature:', feature);
+          const featurePendingBills = this.pendingBills[feature.properties.objectid] || [];
+          const pendingBillIds = featurePendingBills.map(bill => bill.pendingbill);
           let url = '//services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/Proposed_Zoning_Implementation_Public/FeatureServer/0/query';
 
           let xyCoordsReduced = [];
@@ -139,7 +140,7 @@ export const useZoningStore = defineStore('ZoningStore', {
 
           let params = {
             'returnGeometry': false,
-            'where': "1=1",
+            'where': "bill_number_txt NOT IN ('" + pendingBillIds.join("', '") + "')",
             'outSR': 4326,
             'outFields': '*',
             'inSr': 4326,
