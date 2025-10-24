@@ -2,7 +2,7 @@
 import { test, expect } from '@playwright/test';
 
 test('test basic address', async ({ page }) => {
-  await page.goto('https://atlas-dev.phila.gov/');
+  await page.goto('http://localhost:5173/');
   await expect(page.getByRole('link', { name: 'Atlas' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Atlas is your front door to' })).toBeVisible();
   await page.getByRole('textbox', { name: 'Search for an address, OPA' }).click();
@@ -52,8 +52,6 @@ test('test dor address', async ({ page }) => {
   await page.getByRole('textbox', { name: 'Search for an address, OPA' }).fill('5669 CHESTNUT ST');
   await page.getByRole('button', { name: 'Address Search Button' }).click();
   await expect(page.getByText('There is no property assessment record for this address.')).toBeVisible({ timeout: 10_000 });
-  // await expect(page.getByRole('div', { class: 'summary' })).toBeVisible({ timeout: 10_000 });
-  // await expect(page.getByRole('paragraph')).toContainText('There is no property assessment record for this address.', { timeout: 10_000 });
   await page.getByRole('button', { name: 'Deeds' }).click();
   await expect(page.locator('#dorTable')).toContainText('018S030074');
   await expect(page.locator('#dorTable')).toContainText('5627-99 CHESTNUT ST');
