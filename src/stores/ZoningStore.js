@@ -29,12 +29,12 @@ export const useZoningStore = defineStore('ZoningStore', {
   },
   actions: {
     async fillAllZoningData() {
-      this.fillZoningBase();
-      this.fillZoningOverlays();
-      this.fillPendingBills();
-      this.fillZoningAppeals();
-      this.fillProposedZoning();
-      this.fillRcos();
+      await this.fillZoningBase();
+      await this.fillZoningOverlays();
+      await this.fillPendingBills();
+      await this.fillZoningAppeals();
+      await this.fillProposedZoning();
+      await this.fillRcos();
     },
     async clearAllZoningData() {
       this.zoningBase = {};
@@ -118,7 +118,8 @@ export const useZoningStore = defineStore('ZoningStore', {
       if (!features) return;
       for (let feature of features) {
         // try {
-          console.log('feature:', feature);
+          const featurePendingBills = this.pendingBills[feature.properties.objectid] || [];
+          const pendingBillIds = featurePendingBills.map(bill => bill.pendingbill);
           let url = '//services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/Proposed_Zoning_Implementation_Public/FeatureServer/0/query';
 
           let xyCoordsReduced = [];
@@ -139,7 +140,7 @@ export const useZoningStore = defineStore('ZoningStore', {
 
           let params = {
             'returnGeometry': false,
-            'where': "1=1",
+            'where': "bill_number_txt NOT IN ('" + pendingBillIds.join("', '") + "')",
             'outSR': 4326,
             'outFields': '*',
             'inSr': 4326,
@@ -222,12 +223,14 @@ export const useZoningStore = defineStore('ZoningStore', {
         return;
       }
       for (let feature of features) {
-        let featureId = feature.properties.objectid,
-          target = this.zoningBase[featureId] || {},
-          data = target.data || {};
+        let featureId = feature.properties.objectid;
+        let target = this.zoningBase[featureId] || {};
+        let data = target.rows || {};
+          // data = target.data || target.rows || {};
 
         // include only rows where pending is true
-        const { rows=[]} = data;
+        const rows = data;
+        console.log('featureId:', featureId, 'data:', data, 'rows:', rows);
         const rowsFiltered = rows.filter(row => row.pending === 'Yes');
 
         // give each pending zoning bill a type of "zoning"
@@ -254,7 +257,13 @@ export const useZoningStore = defineStore('ZoningStore', {
 
         // combine pending zoning and overlays
         const zoningAndOverlays = rowsFilteredWithType.concat(overlayRowsFilteredWithType);
-        this.pendingBills[featureId] = zoningAndOverlays;
+
+        const finalZoningAndOverlays = zoningAndOverlays.map(row => {
+          row.pendingBillLink = '<a target="_blank" href="' + row.pendingbillurl + '">' + row.pendingbill + ' <i class="fas fa-external-link"></i></a>';
+          return row;
+        });
+
+        this.pendingBills[featureId] = finalZoningAndOverlays;
       }
       this.loadingPendingBills = false;
     },
