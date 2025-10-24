@@ -2,7 +2,7 @@
 import { test, expect } from '@playwright/test';
 
 test('test basic address', async ({ page }) => {
-  await page.goto('http://localhost:5173/');
+  await page.goto('/');
   await expect(page.getByRole('link', { name: 'Atlas' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Atlas is your front door to' })).toBeVisible();
   await page.getByRole('textbox', { name: 'Search for an address, OPA' }).click();
@@ -18,7 +18,7 @@ test('test basic address', async ({ page }) => {
 });
 
 test('test condominium', async ({ page }) => {
-  await page.goto('https://atlas-dev.phila.gov/');
+  await page.goto('/');
   await page.getByRole('textbox', { name: 'Search for an address, OPA' }).click();
   await page.getByRole('textbox', { name: 'Search for an address, OPA' }).fill('220 W WASHINGTON SQ');
   await page.getByRole('button', { name: 'Address Search Button' }).click();
@@ -34,7 +34,7 @@ test('test condominium', async ({ page }) => {
 });
 
 test('test pwd address', async ({ page }) => {
-  await page.goto('https://atlas-dev.phila.gov/');
+  await page.goto('/');
   await page.getByRole('textbox', { name: 'Search for an address, OPA' }).click();
   await page.getByRole('textbox', { name: 'Search for an address, OPA' }).fill('5036 HAWTHORNE ST');
   await page.getByRole('button', { name: 'Address Search Button' }).click();
@@ -47,7 +47,7 @@ test('test pwd address', async ({ page }) => {
 });
 
 test('test dor address', async ({ page }) => {
-  await page.goto('https://atlas-dev.phila.gov/');
+  await page.goto('/');
   await page.getByRole('textbox', { name: 'Search for an address, OPA' }).click();
   await page.getByRole('textbox', { name: 'Search for an address, OPA' }).fill('5669 CHESTNUT ST');
   await page.getByRole('button', { name: 'Address Search Button' }).click();
