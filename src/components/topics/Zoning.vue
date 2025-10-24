@@ -97,7 +97,7 @@ const pendingBillsTableData = computed(() => {
       },
       {
         label: 'Pending Bill',
-        field: 'pendingbillurl',
+        field: 'pendingBillLink',
         html: true,
       },
     ],
