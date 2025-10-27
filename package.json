@@ -8,7 +8,7 @@
     "build-dev": "vite build --mode=development",
     "build-prod": "vite build --mode=production",
     "build": "vite build",
-    "preview": "vite preview",
+    "preview": "vite preview --port 5173",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --ignore-path .eslintignore",
     "lint:fix": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .eslintignore"
   },
@@ -60,7 +60,8 @@
     "eslint-plugin-vue": "^9.17.0",
     "sass": "^1.74.1",
     "vite": "^5.1.6",
-    "vite-plugin-vue-devtools": "^7.7.0"
+    "vite-plugin-vue-devtools": "^7.7.0",
+    "wait-on": "^7.0.1"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "4.6.1"
