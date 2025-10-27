@@ -469,11 +469,11 @@ const dorDrawnMapStyle = mergeDeep(imageryInfo,{
       source: 'dor',
       type: 'raster',
     },
-    // {
-    //   id: 'dorLabels',
-    //   source: 'dorLabels',
-    //   type: 'raster',
-    // },
+    {
+      id: 'dorLabels',
+      source: 'dorLabels',
+      type: 'raster',
+    },
     {
       id: 'cyclomediaRecordings',
       source: 'cyclomediaRecordings',
@@ -595,11 +595,11 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
       source: 'dor',
       type: 'raster',
     },
-    // {
-    //   id: 'dorLabels',
-    //   source: 'dorLabels',
-    //   type: 'raster',
-    // },
+    {
+      id: 'dorLabels',
+      source: 'dorLabels',
+      type: 'raster',
+    },
     {
       id: 'cyclomediaRecordings',
       source: 'cyclomediaRecordings',
