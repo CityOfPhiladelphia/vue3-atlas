@@ -31,6 +31,7 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
+    video: 'retain-on-failure',
   },
 
   /* Configure projects for major browsers */
@@ -72,12 +73,12 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-webServer: {
-  command: process.env.CI
-    ? 'npm run build && npm run preview -- --port 5173'
-    : 'npm run dev',
-  url: 'http://localhost:5173',
-  reuseExistingServer: !process.env.CI,
-  timeout: 120000 // wait up to 2 minutes for server
-},
+//webServer: {
+//  command: process.env.CI
+  //  ? 'npm run build && npm run preview -- --port 5173'
+    //: 'npm run dev',
+  //url: 'http://localhost:5173',
+  //reuseExistingServer: !process.env.CI,
+  //timeout: 120000 // wait up to 2 minutes for server
+//},
 });
