@@ -28,8 +28,19 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
+      - name: Install wait-on
+        run: npm install -g wait-on
+
+      - name: Build and start preview server
+        run: |
+          npm run build
+          nohup npm run preview -- --port 5173 > preview.log 2>&1 &
+          echo "Waiting for Vite preview server to start..."
+          npx wait-on http-get://localhost:5173 --timeout 180000
+          echo "--> Server is up and running!"
+
       - name: Run Playwright tests
-        run: npx playwright test
+        run: npx playwright test --reporter=html
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
