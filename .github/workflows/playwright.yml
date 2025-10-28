@@ -28,15 +28,6 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
-      - name: Install wait-on
-        run: npm install -g wait-on
-
-      - name: Build and start preview server
-        run: |
-          npm run build
-          nohup npm run preview -- --port 5173 > preview.log 2>&1 &
-          npx wait-on http://localhost:5173
-
       - name: Run Playwright tests
         run: npx playwright test
 
