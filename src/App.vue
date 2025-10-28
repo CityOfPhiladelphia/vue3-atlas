@@ -176,7 +176,6 @@ const appTitle = computed(() => {
   >
     <!-- TOPIC PANEL ON LEFT -->
     <div
-      v-if="MainStore.windowDimensions.width > 768 && !fullScreenMapEnabled"
       class="topics-holder"
       :class="fullScreenTopicsEnabled ? 'topics-holder-full' : ''"
     >
@@ -192,12 +191,12 @@ const appTitle = computed(() => {
       <map-panel />
     </div>
 
-    <div
+    <!-- <div
       v-if="isMobileDevice() || MainStore.windowDimensions.width <= 768"
       class="topics-holder"
     >
       <topic-panel />
-    </div>
+    </div> -->
   </main>
 
   <!-- FOOTER -->
