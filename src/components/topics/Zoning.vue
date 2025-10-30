@@ -140,11 +140,11 @@ const proposedZoningTableData = computed(() => {
       },
       {
         label: 'Original zoning',
-        field: 'properties.existcode',
+        field: 'properties.formatted_existcode',
       },
       {
         label: 'Proposed zoning',
-        field: 'properties.propzone',
+        field: 'properties.formatted_propzone',
       },
     ],
     rows: proposedZoning.value || [],

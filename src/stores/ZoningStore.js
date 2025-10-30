@@ -165,6 +165,16 @@ export const useZoningStore = defineStore('ZoningStore', {
               } else {
                 item.properties.formatted_enacted_date = 'N/A';
               }
+              if (item.properties.existcode == 'Pre2012' || item.properties.existcode == null) {
+                item.properties.formatted_existcode = 'N/A';
+              } else {
+                item.properties.formatted_existcode = item.properties.existcode;
+              }
+              if (item.properties.propzone == 'Pre2012' || item.properties.propzone == null) {
+                item.properties.formatted_propzone = 'N/A';
+              } else {
+                item.properties.formatted_propzone = item.properties.propzone;
+              }
             })
 
             this.proposedZoning[feature.properties.objectid] = data;
@@ -201,7 +211,7 @@ export const useZoningStore = defineStore('ZoningStore', {
             const data = await response.json();
             if (import.meta.env.VITE_DEBUG == 'true') console.log('data:', data);
             data.rows.forEach(row => {
-              row.link = `<a target='_blank' href='${row.code_section_link}'>${row.code_section}<i class='fas fa-external-link'></i></a>`
+              row.link = `<a target='_blank' href='${row.code_section_link}'>${row.code_section} <i class='fas fa-external-link'></i></a>`
             });
             this.zoningOverlays[feature.properties.objectid] = data;
             this.loadingZoningOverlays = false;
