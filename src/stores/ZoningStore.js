@@ -165,13 +165,13 @@ export const useZoningStore = defineStore('ZoningStore', {
               } else {
                 item.properties.formatted_enacted_date = 'N/A';
               }
-              if (item.properties.existcode == 'Pre2012' || item.properties.existcode == null) {
-                item.properties.formatted_existcode = 'N/A';
+              if (item.properties.existcode == 'Pre2012' || item.properties.existcode == 'Multi' || item.properties.existcode == null) {
+                item.properties.formatted_existcode = 'Refer to bill';
               } else {
                 item.properties.formatted_existcode = item.properties.existcode;
               }
-              if (item.properties.propzone == 'Pre2012' || item.properties.propzone == null) {
-                item.properties.formatted_propzone = 'N/A';
+              if (item.properties.propzone == 'Pre2012' || item.properties.propzone == 'Multi' || item.properties.propzone == null) {
+                item.properties.formatted_propzone = 'Refer to bill';
               } else {
                 item.properties.formatted_propzone = item.properties.propzone;
               }
