@@ -137,7 +137,15 @@ const proposedZoningTableData = computed(() => {
       {
         label: 'Enacted date',
         field: 'properties.formatted_enacted_date',
-      }
+      },
+      {
+        label: 'Original zoning',
+        field: 'properties.formatted_existcode',
+      },
+      {
+        label: 'Proposed zoning',
+        field: 'properties.formatted_propzone',
+      },
     ],
     rows: proposedZoning.value || [],
   }
@@ -385,35 +393,37 @@ const rcosTableData = computed(() => {
           />
           <span v-else>({{ proposedZoningTableData.rows.length }})</span>
         </h2>
-        <vue-good-table
-          id="proposed-zoning"
-          :columns="proposedZoningTableData.columns"
-          :rows="proposedZoningTableData.rows"
-          :pagination-options="paginationOptions(proposedZoningTableData.rows.length)"
-          style-class="table"
-        >
-          <template #emptystate>
-            <div v-if="ZoningStore.loadingZoningOverlays">
-              Loading proposed zoning... <font-awesome-icon
-                icon="fa-solid fa-spinner"
-                spin
-              />
-            </div>
-            <div v-else>
-              No previous zoning legislation published
-            </div>
-          </template>
-          <template #pagination-top="props">
-            <custom-pagination-labels
-              :mode="'pages'"
-              :total="props.total"
-              :perPage="5"
-              @page-changed="props.pageChanged"
-              @per-page-changed="props.perPageChanged"
-            >
-            </custom-pagination-labels>
-          </template>
-        </vue-good-table>
+        <div class="horizontal-table">
+          <vue-good-table
+            id="proposed-zoning"
+            :columns="proposedZoningTableData.columns"
+            :rows="proposedZoningTableData.rows"
+            :pagination-options="paginationOptions(proposedZoningTableData.rows.length)"
+            style-class="table"
+          >
+            <template #emptystate>
+              <div v-if="ZoningStore.loadingZoningOverlays">
+                Loading proposed zoning... <font-awesome-icon
+                  icon="fa-solid fa-spinner"
+                  spin
+                />
+              </div>
+              <div v-else>
+                No previous zoning legislation published
+              </div>
+            </template>
+            <template #pagination-top="props">
+              <custom-pagination-labels
+                :mode="'pages'"
+                :total="props.total"
+                :perPage="5"
+                @page-changed="props.pageChanged"
+                @per-page-changed="props.perPageChanged"
+              >
+              </custom-pagination-labels>
+            </template>
+          </vue-good-table>
+        </div>
       </div>
 
       <!-- <div class="topic-info"> -->
@@ -582,6 +592,18 @@ only screen and (max-width: 768px),
     td:nth-of-type(1):before { content: "Bill Type"; }
     td:nth-of-type(2):before { content: "Current Zoning"; }
     td:nth-of-type(3):before { content: "Pending Bill"; }
+  }
+
+  #proposed-zoning {
+    td {
+      min-height: 60px;
+    }
+
+    td:nth-of-type(1):before { content: "Bill"; }
+    td:nth-of-type(2):before { content: "Status"; }
+    td:nth-of-type(3):before { content: "Enacted date"; }
+    td:nth-of-type(4):before { content: "Original zoning"; }
+    td:nth-of-type(5):before { content: "Proposed zoning"; }
   }
 
   #overlays {
