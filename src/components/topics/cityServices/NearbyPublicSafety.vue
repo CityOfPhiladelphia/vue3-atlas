@@ -85,7 +85,7 @@ const policeStation = computed(() => {
   };
   if (GeocodeStore.aisData.features && GeocodeStore.aisData.features.length && CityServicesStore.allPoliceStations.features && CityServicesStore.allPoliceStations.features.length) {
     district = GeocodeStore.aisData.features[0].properties.police_district;
-    station = CityServicesStore.allPoliceStations.features.find(station => station.properties.DISTRICT_NUMBER === parseInt(district));
+    station = CityServicesStore.allPoliceStations.features.find(station => station.properties.dist_num === parseInt(district));
   }
   return station;
 });
@@ -108,7 +108,7 @@ const policeVertTableData = computed(() => {
     },
     {
       label: 'Police Station',
-      value: policeStation.value.properties.LOCATION,
+      value: policeStation.value.properties.location,
       class: policeStation.value.id,
     },
   ];
@@ -118,7 +118,7 @@ const handleCellClick = () => {
   // if (import.meta.env.VITE_DEBUG) console.log('handleCellClick is running');
   const map = MapStore.map;
   let lngLat = policeStation.value.geometry.coordinates;
-  let location = policeStation.value.properties.LOCATION;
+  let location = policeStation.value.properties.location;
   map.flyTo({ center: lngLat });
   const popup = document.getElementsByClassName('maplibregl-popup');
   if (popup.length) {

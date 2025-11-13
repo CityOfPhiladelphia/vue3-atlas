@@ -30,3 +30,9 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+# Playwright
+/test-results/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

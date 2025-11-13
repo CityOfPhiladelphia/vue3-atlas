@@ -20,6 +20,7 @@
     "@fortawesome/vue-fontawesome": "^3.0.8",
     "@phila/phila-ui-app-footer": "^0.0.7",
     "@phila/phila-ui-app-header": "^0.0.21",
+    "@phila/phila-ui-callout": "^0.0.17",
     "@phila/phila-ui-core": "^1.0.15",
     "@phila/phila-ui-dropdown": "^0.0.1",
     "@phila/phila-ui-lang-selector": "^0.0.7",
@@ -52,6 +53,8 @@
     "vue-router": "^4.3.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "@types/node": "^24.9.1",
     "@vitejs/plugin-vue": "^5.0.4",
     "eslint": "^8.49.0",
     "eslint-plugin-vue": "^9.17.0",

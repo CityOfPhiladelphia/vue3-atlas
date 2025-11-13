@@ -123,15 +123,15 @@ const buildingData = computed(() => {
     },
     {
       label: 'Building Name',
-      value: selectedLiBuilding.attributes.BUILDING_NAME || 'N/A',
+      value: selectedLiBuilding.attributes.building_name || 'N/A',
     },
     {
       label: 'Parcel Address',
-      value: selectedLiBuilding.attributes.ADDRESS || 'N/A',
+      value: selectedLiBuilding.attributes.address || 'N/A',
     },
     {
       label: 'Building Height (approx)',
-      value: selectedLiBuilding.attributes.APPROX_HGT + ' ft' || 'N/A',
+      value: selectedLiBuilding.attributes.approx_hgt + ' ft' || 'N/A',
     },
     {
       label: 'Building Footprint (approx)',
