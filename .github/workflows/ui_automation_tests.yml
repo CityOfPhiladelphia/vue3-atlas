@@ -11,13 +11,13 @@ jobs:
     environment: development
 
     steps:
-      - name: Use Node.js 20.x
+      - name: Use Node.js 24.x
         uses: actions/checkout@v3
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20.x'
+          node-version: '24.x'
 
       - name: Install dependencies and run automation tests
         run: |
