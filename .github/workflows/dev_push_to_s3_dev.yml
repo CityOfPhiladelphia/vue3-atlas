@@ -14,11 +14,11 @@ jobs:
     environment: development
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Use Node.js 22.x
-      uses: actions/setup-node@v4
+    - uses: actions/checkout@v3
+    - name: Use Node.js 24.x
+      uses: actions/setup-node@v3
       with:
-        node-version: '22.x'
+        node-version: '24.x'
         cache: 'npm'
 
     - name: npm install, and build
