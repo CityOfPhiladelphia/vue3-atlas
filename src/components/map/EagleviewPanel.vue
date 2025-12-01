@@ -103,6 +103,11 @@ onMounted(async () => {
       zoom: 17,
       pitch: 0,
       rotation: 0
+    },
+    preferences: {
+      imageDisplay: {
+        'mainPane': 'oblique'
+      }
     }
   }
   map = new window.ev.EmbeddedExplorer().mount('eagleview', config);
@@ -122,9 +127,7 @@ onMounted(async () => {
     map.updateLayers(
       {
         filter: (layer) => {
-          console.log('layer:', layer);
           layer.visible = false;
-          console.log('layer', layer);
         }
       }
     );
@@ -144,19 +147,13 @@ const popoutClicked = () => {
 <template>
   <div class="eagleview-panel">
     <div class="eagleview-pop-out">
-      <font-awesome-icon
-        icon="fa-external-link"
-        @click="popoutClicked"
-      />
+      <font-awesome-icon icon="fa-external-link" @click="popoutClicked" />
     </div>
 
     <ParcelsControl />
     <LabelsControl />
 
-    <div
-      id="eagleview"
-      class="eagleview-div"
-    />
+    <div id="eagleview" class="eagleview-div" />
   </div>
 </template>
 
