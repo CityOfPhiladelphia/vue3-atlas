@@ -13,6 +13,8 @@ import $config from '@/config';
 
 import { format, subYears } from 'date-fns';
 
+import { StreetSmartApi } from "@cyclomedia/streetsmart-api";
+
 import proj4 from 'proj4';
 const projection4326 = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs";
 const projection2272 = "+proj=lcc +lat_1=40.96666666666667 +lat_2=39.93333333333333 +lat_0=39.33333333333334 +lon_0=-77.75 +x_0=600000 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs";
@@ -43,12 +45,8 @@ watch(
   }
 )
 
-const navBarExpanded = ref(false);
-
 const setNewLocation = async (coords) => {
   if (MapStore.cyclomediaOn) {
-
-    const today = new Date();
     const year = MapStore.cyclomediaYear;
     let thisYear, lastYear;
     let params = {};
@@ -61,8 +59,6 @@ const setNewLocation = async (coords) => {
         dateRange: { from: lastYear, to: thisYear },
       };
     } else {
-      // lastYear = format(subYears(today, 2), 'yyyy-MM-dd');
-      // thisYear = format(today, 'yyyy-MM-dd');
       params = {
         coordinate: coords,
       };
@@ -76,14 +72,18 @@ const setNewLocation = async (coords) => {
         panoramaViewer: {
           closable: false,
           maximizable: false,
+          navbarVisible: false
         },
       }
     )
     let viewer = response[0];
     if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue setNewLocation, viewer:', viewer, 'response:', response);
-    // viewer.toggleNavbarExpanded(navBarExpanded.value);
-    viewer.toggleButtonEnabled('panorama.elevation', false);
-    viewer.toggleButtonEnabled('panorama.reportBlurring', false);
+    console.log("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+    viewer.toggleButtonEnabled('buttons.ELEVATION', false);
+    viewer.toggleButtonEnabled('buttons.REPORT_BLURRING', false);
+    viewer.toggleReportBlurring()
+    viewer.toggleCenterMapVisibility()
+    console.log("YYYYYYYYYYYYYYYYYYYYYYYYYYYYYY")
 
     for (let overlay of viewer.props.overlays) {
       if (overlay.id === 'surfaceCursorLayer') {

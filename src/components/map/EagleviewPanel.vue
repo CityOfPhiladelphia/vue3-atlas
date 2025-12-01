@@ -123,7 +123,7 @@ onMounted(async () => {
   }
 
   map.getLayers();
-  map.on('onLayersDataLoad', (layerData) => {
+  map.on('onLayersDataLoad', () => {
     map.updateLayers(
       {
         filter: (layer) => {
@@ -132,7 +132,6 @@ onMounted(async () => {
       }
     );
   });
-
 });
 
 const popoutClicked = () => {
@@ -189,7 +188,6 @@ const popoutClicked = () => {
     height: 250px;
   }
 }
-
 
 .ev-embedded-explorer_container {
   height: 100%;
