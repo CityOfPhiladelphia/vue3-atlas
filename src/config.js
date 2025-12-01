@@ -430,14 +430,7 @@ const dorDrawnMapStyle = mergeDeep(imageryInfo,{
   sources: {
     dor: {
       tiles: [
-        'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/DORBasemap/MapServer/tile/{z}/{y}/{x}',
-      ],
-      type: 'raster',
-      tileSize: 256,
-    },
-    dorLabels: {
-      tiles: [
-        'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/DORBasemap_Labels/MapServer/tile/{z}/{y}/{x}',
+        'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/dor_basemap/MapServer/tile/{z}/{y}/{x}',
       ],
       type: 'raster',
       tileSize: 256,
@@ -467,11 +460,6 @@ const dorDrawnMapStyle = mergeDeep(imageryInfo,{
     {
       id: 'dor',
       source: 'dor',
-      type: 'raster',
-    },
-    {
-      id: 'dorLabels',
-      source: 'dorLabels',
       type: 'raster',
     },
     {
@@ -540,14 +528,7 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
   sources: {
     dor: {
       tiles: [
-        'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/DORBasemap/MapServer/tile/{z}/{y}/{x}',
-      ],
-      type: 'raster',
-      tileSize: 256,
-    },
-    dorLabels: {
-      tiles: [
-        'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/DORBasemap_Labels/MapServer/tile/{z}/{y}/{x}',
+        'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/dor_basemap/MapServer/tile/{z}/{y}/{x}',
       ],
       type: 'raster',
       tileSize: 256,
@@ -593,11 +574,6 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
     {
       id: 'dor',
       source: 'dor',
-      type: 'raster',
-    },
-    {
-      id: 'dorLabels',
-      source: 'dorLabels',
       type: 'raster',
     },
     {
@@ -1315,14 +1291,9 @@ const $config = {
       source: 'pwdLabels',
       type: 'raster',
     },
-    dorBasemap: {
-      id: 'dorBasemap',
-      source: 'dorBasemap',
-      type: 'raster',
-    },
-    dorLabels: {
-      id: 'dorLabels',
-      source: 'dorLabels',
+    DOR_Basemap: {
+      id: 'DOR_Basemap',
+      source: 'DOR_Basemap',
       type: 'raster',
     },
     zoning: {

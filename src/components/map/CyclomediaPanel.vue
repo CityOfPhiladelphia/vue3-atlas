@@ -81,7 +81,7 @@ const setNewLocation = async (coords) => {
     )
     let viewer = response[0];
     if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue setNewLocation, viewer:', viewer, 'response:', response);
-    viewer.toggleNavbarExpanded(navBarExpanded.value);
+    // viewer.toggleNavbarExpanded(navBarExpanded.value);
     viewer.toggleButtonEnabled('panorama.elevation', false);
     viewer.toggleButtonEnabled('panorama.reportBlurring', false);
 
@@ -195,20 +195,17 @@ const popoutClicked = () => {
 
 <template>
   <div class="cyclomedia-panel">
-
     <div class="cyclomedia-pop-out">
       <font-awesome-icon
         icon="fa-external-link"
         @click="popoutClicked"
-      ></font-awesome-icon>
+      />
     </div>
     <div
       id="cycloviewer"
       ref="cycloviewer"
       class="panoramaViewerWindow"
-    >
-    </div>
-
+    />
   </div>
 </template>
 

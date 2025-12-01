@@ -828,7 +828,7 @@ watch(
         'schoolMarkers',
         'icon-size',
         ['match',
-          ['get', 'SCHOOL_NUM'],
+          ['get', 'school_num'],
           parseInt(newHoveredSchoolId),
           0.09,
           0.05,

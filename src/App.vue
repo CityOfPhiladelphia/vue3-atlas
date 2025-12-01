@@ -38,6 +38,7 @@ const locale = computed(() => instance.appContext.config.globalProperties.$i18n.
 
 onMounted(async () => {
   MainStore.appVersion = import.meta.env.VITE_VERSION;
+  MainStore.pageTitle = MainStore.appVersion.charAt(0).toUpperCase() + MainStore.appVersion.slice(1) + " | phila.gov";
   MainStore.isMobileDevice = isMobileDevice();
   MainStore.isMac = isMac();
   await router.isReady()
@@ -140,11 +141,7 @@ watch(
   }
 )
 const appTitle = computed(() => {
-  let version = 'Atlas';
-  if (import.meta.env.VITE_VERSION == 'cityatlas'){
-    version = 'CityAtlas';
-  }
-  return version;
+  return import.meta.env.VITE_VERSION == 'cityatlas' ? 'CityAtlas' : 'Atlas';
 })
 
 </script>

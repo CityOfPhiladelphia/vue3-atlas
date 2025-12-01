@@ -11,6 +11,9 @@ import { useRouter, useRoute } from 'vue-router';
 const route = useRoute();
 const router = useRouter();
 
+import ParcelsControl from '@/components/map/ParcelsControl.vue';
+import LabelsControl from '@/components/map/LabelsControl.vue';
+
 const currentAddressCoords = computed(() => {
   if (MapStore.currentAddressCoords.length) {
     return { lat: MapStore.currentAddressCoords[1], lon: MapStore.currentAddressCoords[0] }
@@ -51,9 +54,43 @@ watch(
   }
 );
 
+watch(
+  () => MapStore.eagleviewParcelsOn,
+  newEagleviewParcelsOn => {
+    if (map) {
+      map.updateLayers(
+        {
+          filter: (layer) => {
+            if (layer.name == 'US Parcels') {
+              layer.visible = newEagleviewParcelsOn;
+            }
+          }
+        }
+      );
+    }
+  }
+)
+
+watch(
+  () => MapStore.eagleviewLabelsOn,
+  newEagleviewLabelsOn => {
+    if (map) {
+      map.updateLayers(
+        {
+          filter: (layer) => {
+            if (layer.name == 'Streets') {
+              layer.visible = newEagleviewLabelsOn;
+            }
+          }
+        }
+      );
+    }
+  }
+)
+
 onMounted(async () => {
   if (!MapStore.eagleviewToken) {
-    router.push('/eagleviewToken')
+    await router.push('/eagleviewToken')
   }
 
   const config = {
@@ -79,6 +116,20 @@ onMounted(async () => {
       ]
     });
   }
+
+  map.getLayers();
+  map.on('onLayersDataLoad', (layerData) => {
+    map.updateLayers(
+      {
+        filter: (layer) => {
+          console.log('layer:', layer);
+          layer.visible = false;
+          console.log('layer', layer);
+        }
+      }
+    );
+  });
+
 });
 
 const popoutClicked = () => {
@@ -93,10 +144,19 @@ const popoutClicked = () => {
 <template>
   <div class="eagleview-panel">
     <div class="eagleview-pop-out">
-      <font-awesome-icon icon="fa-external-link" @click="popoutClicked" />
+      <font-awesome-icon
+        icon="fa-external-link"
+        @click="popoutClicked"
+      />
     </div>
 
-    <div id="eagleview" class="eagleview-div" />
+    <ParcelsControl />
+    <LabelsControl />
+
+    <div
+      id="eagleview"
+      class="eagleview-div"
+    />
   </div>
 </template>
 

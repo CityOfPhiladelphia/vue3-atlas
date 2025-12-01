@@ -27,6 +27,7 @@ import MobileNav from "@phila/phila-ui-mobile-nav";
 import NavLink from "@phila/phila-ui-nav-link";
 import Textbox from "@phila/phila-ui-textbox";
 import LangSelector from "@phila/phila-ui-lang-selector";
+import Callout from "@phila/phila-ui-callout";
 
 // if (import.meta.env.VITE_DEBUG == 'true') console.log('MobileNav', MobileNav, 'Dropdown:', Dropdown);
 
@@ -39,6 +40,7 @@ app.component("MobileNav", MobileNav);
 app.component("NavLink", NavLink);
 app.component("Textbox", Textbox);
 app.component("LangSelector", LangSelector);
+app.component("Callout", Callout);
 app.use(PhilaUICore);
 
 // import $config from './config'

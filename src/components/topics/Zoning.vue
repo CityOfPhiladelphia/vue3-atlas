@@ -97,7 +97,7 @@ const pendingBillsTableData = computed(() => {
       },
       {
         label: 'Pending Bill',
-        field: 'pendingbillurl',
+        field: 'pendingBillLink',
         html: true,
       },
     ],
@@ -137,7 +137,15 @@ const proposedZoningTableData = computed(() => {
       {
         label: 'Enacted date',
         field: 'properties.formatted_enacted_date',
-      }
+      },
+      {
+        label: 'Original zoning',
+        field: 'properties.formatted_existcode',
+      },
+      {
+        label: 'Proposed zoning',
+        field: 'properties.formatted_propzone',
+      },
     ],
     rows: proposedZoning.value || [],
   }
@@ -191,7 +199,7 @@ const rcosTableData = computed(() => {
       },
       {
         label: 'Meeting Address',
-        field: 'properties.MEETING_LOCATION_ADDRESS',
+        field: 'properties.meeting_location_address',
       },
       {
         label: 'Primary Contact',
@@ -199,8 +207,9 @@ const rcosTableData = computed(() => {
         html: true,
       },
       {
-        label: 'Preferred Method',
-        field: 'properties.PREFFERED_CONTACT_METHOD',
+        label: 'RCO Website',
+        field: 'properties.website_link',
+        html: true,
       },
     ],
     rows: ZoningStore.rcos.features || [],
@@ -384,35 +393,37 @@ const rcosTableData = computed(() => {
           />
           <span v-else>({{ proposedZoningTableData.rows.length }})</span>
         </h2>
-        <vue-good-table
-          id="proposed-zoning"
-          :columns="proposedZoningTableData.columns"
-          :rows="proposedZoningTableData.rows"
-          :pagination-options="paginationOptions(proposedZoningTableData.rows.length)"
-          style-class="table"
-        >
-          <template #emptystate>
-            <div v-if="ZoningStore.loadingZoningOverlays">
-              Loading proposed zoning... <font-awesome-icon
-                icon="fa-solid fa-spinner"
-                spin
-              />
-            </div>
-            <div v-else>
-              No previous zoning legislation published
-            </div>
-          </template>
-          <template #pagination-top="props">
-            <custom-pagination-labels
-              :mode="'pages'"
-              :total="props.total"
-              :perPage="5"
-              @page-changed="props.pageChanged"
-              @per-page-changed="props.perPageChanged"
-            >
-            </custom-pagination-labels>
-          </template>
-        </vue-good-table>
+        <div class="horizontal-table">
+          <vue-good-table
+            id="proposed-zoning"
+            :columns="proposedZoningTableData.columns"
+            :rows="proposedZoningTableData.rows"
+            :pagination-options="paginationOptions(proposedZoningTableData.rows.length)"
+            style-class="table"
+          >
+            <template #emptystate>
+              <div v-if="ZoningStore.loadingZoningOverlays">
+                Loading proposed zoning... <font-awesome-icon
+                  icon="fa-solid fa-spinner"
+                  spin
+                />
+              </div>
+              <div v-else>
+                No previous zoning legislation published
+              </div>
+            </template>
+            <template #pagination-top="props">
+              <custom-pagination-labels
+                :mode="'pages'"
+                :total="props.total"
+                :perPage="5"
+                @page-changed="props.pageChanged"
+                @per-page-changed="props.perPageChanged"
+              >
+              </custom-pagination-labels>
+            </template>
+          </vue-good-table>
+        </div>
       </div>
 
       <!-- <div class="topic-info"> -->
@@ -583,6 +594,18 @@ only screen and (max-width: 768px),
     td:nth-of-type(3):before { content: "Pending Bill"; }
   }
 
+  #proposed-zoning {
+    td {
+      min-height: 60px;
+    }
+
+    td:nth-of-type(1):before { content: "Bill"; }
+    td:nth-of-type(2):before { content: "Status"; }
+    td:nth-of-type(3):before { content: "Enacted date"; }
+    td:nth-of-type(4):before { content: "Original zoning"; }
+    td:nth-of-type(5):before { content: "Proposed zoning"; }
+  }
+
   #overlays {
     td {
       min-height: 60px;
@@ -612,7 +635,7 @@ only screen and (max-width: 768px),
     td:nth-of-type(1):before { content: "RCO"; }
     td:nth-of-type(2):before { content: "Meeting Address"; }
     td:nth-of-type(3):before { content: "Primary Contact"; }
-    td:nth-of-type(4):before { content: "Preferred Method"; }
+    td:nth-of-type(4):before { content: "RCO Website"; }
   }
 }
 

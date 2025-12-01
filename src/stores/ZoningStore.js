@@ -29,12 +29,12 @@ export const useZoningStore = defineStore('ZoningStore', {
   },
   actions: {
     async fillAllZoningData() {
-      this.fillZoningBase();
-      this.fillZoningOverlays();
-      this.fillPendingBills();
-      this.fillZoningAppeals();
-      this.fillProposedZoning();
-      this.fillRcos();
+      await this.fillZoningBase();
+      await this.fillZoningOverlays();
+      await this.fillPendingBills();
+      await this.fillZoningAppeals();
+      await this.fillProposedZoning();
+      await this.fillRcos();
     },
     async clearAllZoningData() {
       this.zoningBase = {};
@@ -112,13 +112,14 @@ export const useZoningStore = defineStore('ZoningStore', {
       }
     },
     async fillProposedZoning() {
-      
+
       const ParcelsStore = useParcelsStore();
       const features = ParcelsStore.dor.features;
       if (!features) return;
       for (let feature of features) {
         // try {
-          console.log('feature:', feature);
+          const featurePendingBills = this.pendingBills[feature.properties.objectid] || [];
+          const pendingBillIds = featurePendingBills.map(bill => bill.pendingbill);
           let url = '//services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/Proposed_Zoning_Implementation_Public/FeatureServer/0/query';
 
           let xyCoordsReduced = [];
@@ -139,7 +140,7 @@ export const useZoningStore = defineStore('ZoningStore', {
 
           let params = {
             'returnGeometry': false,
-            'where': "1=1",
+            'where': "bill_number_txt NOT IN ('" + pendingBillIds.join("', '") + "')",
             'outSR': 4326,
             'outFields': '*',
             'inSr': 4326,
@@ -163,6 +164,16 @@ export const useZoningStore = defineStore('ZoningStore', {
                 item.properties.formatted_enacted_date = date(item.properties.enacted_date, 'MM/dd/yyyy');
               } else {
                 item.properties.formatted_enacted_date = 'N/A';
+              }
+              if (item.properties.existcode == 'Pre2012' || item.properties.existcode == 'Multi' || item.properties.existcode == null) {
+                item.properties.formatted_existcode = 'Refer to bill';
+              } else {
+                item.properties.formatted_existcode = item.properties.existcode;
+              }
+              if (item.properties.propzone == 'Pre2012' || item.properties.propzone == 'Multi' || item.properties.propzone == null) {
+                item.properties.formatted_propzone = 'Refer to bill';
+              } else {
+                item.properties.formatted_propzone = item.properties.propzone;
               }
             })
 
@@ -200,7 +211,7 @@ export const useZoningStore = defineStore('ZoningStore', {
             const data = await response.json();
             if (import.meta.env.VITE_DEBUG == 'true') console.log('data:', data);
             data.rows.forEach(row => {
-              row.link = `<a target='_blank' href='${row.code_section_link}'>${row.code_section}<i class='fas fa-external-link'></i></a>`
+              row.link = `<a target='_blank' href='${row.code_section_link}'>${row.code_section} <i class='fas fa-external-link'></i></a>`
             });
             this.zoningOverlays[feature.properties.objectid] = data;
             this.loadingZoningOverlays = false;
@@ -222,12 +233,14 @@ export const useZoningStore = defineStore('ZoningStore', {
         return;
       }
       for (let feature of features) {
-        let featureId = feature.properties.objectid,
-          target = this.zoningBase[featureId] || {},
-          data = target.data || {};
+        let featureId = feature.properties.objectid;
+        let target = this.zoningBase[featureId] || {};
+        let data = target.rows || {};
+          // data = target.data || target.rows || {};
 
         // include only rows where pending is true
-        const { rows=[]} = data;
+        const rows = data;
+        console.log('featureId:', featureId, 'data:', data, 'rows:', rows);
         const rowsFiltered = rows.filter(row => row.pending === 'Yes');
 
         // give each pending zoning bill a type of "zoning"
@@ -254,7 +267,13 @@ export const useZoningStore = defineStore('ZoningStore', {
 
         // combine pending zoning and overlays
         const zoningAndOverlays = rowsFilteredWithType.concat(overlayRowsFilteredWithType);
-        this.pendingBills[featureId] = zoningAndOverlays;
+
+        const finalZoningAndOverlays = zoningAndOverlays.map(row => {
+          row.pendingBillLink = '<a target="_blank" href="' + row.pendingbillurl + '">' + row.pendingbill + ' <i class="fas fa-external-link"></i></a>';
+          return row;
+        });
+
+        this.pendingBills[featureId] = finalZoningAndOverlays;
       }
       this.loadingPendingBills = false;
     },
@@ -270,7 +289,7 @@ export const useZoningStore = defineStore('ZoningStore', {
         const eclipseQuery = feature.properties.eclipse_location_id ? `addressobjectid IN ('${eclipseLocationId}')` : ``;
         const zoningQuery = `applicationtype in ('Zoning Board of Adjustment', 'RB_ZBA') AND applicationtype is not null`
         const opaQuery = feature.properties.opa_account_num ? ` AND opa_account_num IN ('${ feature.properties.opa_account_num}')` : ``;
-        
+
         const query = `SELECT * FROM APPEALS WHERE (address = '${ streetaddress }' AND ${zoningQuery} \
           OR addressobjectid IN ('${ addressId }') AND ${zoningQuery} \
           OR parcel_id_num IN ('${ pwd_parcel_id }') AND ${zoningQuery}) \
@@ -281,7 +300,7 @@ export const useZoningStore = defineStore('ZoningStore', {
           ${ opaQuery } AND ${zoningQuery} \
           AND systemofrecord IN ('ECLIPSE') \
           ORDER BY scheduleddate DESC`;
-        
+
         const url = baseUrl += query;
         const response = await fetch(url);
         if (response.ok) {
@@ -333,18 +352,19 @@ export const useZoningStore = defineStore('ZoningStore', {
           let data = await response.data;
 
           data.features.sort((a, b) => {
-            if (a.properties.ORGANIZATION_NAME < b.properties.ORGANIZATION_NAME) {
+            if (a.properties.organization_name < b.properties.organization_name) {
               return -1;
             }
-            if (a.properties.ORGANIZATION_NAME > b.properties.ORGANIZATION_NAME) {
+            if (a.properties.organization_name > b.properties.organization_name) {
               return 1;
             }
             return 0;
           });
 
           data.features.forEach(item => {
-            item.properties.rco = `<b>${item.properties.ORGANIZATION_NAME}</b><br>${item.properties.ORGANIZATION_ADDRESS}`;
-            item.properties.contact = `${rcoPrimaryContact(item.properties.PRIMARY_NAME)}<br>${phoneNumber(item.properties.PRIMARY_PHONE)}<br><a target='_blank' href='mailto:${item.properties.PRIMARY_EMAIL}'>${item.properties.PRIMARY_EMAIL}</a>`;
+            item.properties.rco = `<b>${item.properties.organization_name}</b><br>${item.properties.organization_address }`;
+            item.properties.contact = `${rcoPrimaryContact(item.properties.primary_name)}<br>${phoneNumber(item.properties.primary_phone)}<br><a target='_blank' href='mailto:${item.properties.primary_email}'>${item.properties.primary_email}</a>`;
+            item.properties.website_link = item.properties.websites ? `<a target='_blank' href='${item.properties.websites}'>${item.properties.websites}</a>` : 'No website provided';
           })
           this.rcos = data;
           this.loadingRcos = false;

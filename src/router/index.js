@@ -413,8 +413,6 @@ const router = createRouter({
       beforeEnter: async () => {
         const City311Store = useCity311Store();
         City311Store.agoToken = await getAgoToken();
-        //const MapStore = useMapStore();
-        //MapStore.eagleviewToken = await getEagleviewToken();
         return false;
       }
     }

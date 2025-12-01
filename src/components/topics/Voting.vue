@@ -215,7 +215,7 @@ const electionDate = computed(() => {
         v-if="electionSplit"
         class="column is-12 badge-title"
       >
-        <b>{{ $t(electionTypes[electionSplit[fieldNames.election_type]]) }}</b>
+        <b v-if="electionTypes[electionSplit[fieldNames.election_type]]">{{ $t(electionTypes[electionSplit[fieldNames.election_type]]) }}</b>
       </div>
       <div
         v-if="VotingStore.loadingVotingData === false"
