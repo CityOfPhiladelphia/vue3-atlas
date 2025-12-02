@@ -19,7 +19,6 @@ import useRouting from '@/composables/useRouting';
 const { routeApp } = useRouting();
 
 import { getEagleviewToken, getAgoToken, cyclomediaInit } from '@/util/call-api';
-import { mapStores } from 'pinia';
 import { useMapStore } from '@/stores/MapStore';
 
 // this runs on address search and as part of datafetch()
