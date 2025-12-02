@@ -87,7 +87,7 @@ const setNewLocation = async (coords) => {
       }
     }
 
-    viewer.on('VIEW_CHANGE', function(e) {
+    viewer.on('VIEW_CHANGE', function (e) {
       if (import.meta.env.VITE_DEBUG == 'true') console.log('on VIEW_CHANGE fired, type:', e.type, 'detail:', e.detail, 'viewer.props:', viewer.props, 'viewer.props.orientation.xyz:', viewer.props.orientation.xyz, 'MapStore.cyclomediaCameraXyz:', MapStore.cyclomediaCameraXyz);
       if (MapStore.cyclomediaOn) {
         MapStore.cyclomediaCameraYaw = e.detail.yaw;
@@ -96,14 +96,14 @@ const setNewLocation = async (coords) => {
         $emit('updateCameraHFov', e.detail.hFov, e.detail.yaw);
         if (viewer.props.orientation.xyz !== MapStore.cyclomediaCameraXyz) {
           // const lngLat = proj4(projection2272, projection4326, [ viewer.props.orientation.xyz[0], viewer.props.orientation.xyz[1] ]);
-          const lngLat = [ viewer.props.orientation.xyz[0], viewer.props.orientation.xyz[1] ];
+          const lngLat = [viewer.props.orientation.xyz[0], viewer.props.orientation.xyz[1]];
           MapStore.setCyclomediaCameraLngLat(lngLat, viewer.props.orientation.xyz);
           $emit('updateCameraLngLat', lngLat);
         }
       }
     });
 
-    viewer.on('VIEW_LOAD_END', function(e) {
+    viewer.on('VIEW_LOAD_END', function (e) {
       if (import.meta.env.VITE_DEBUG == 'true') console.log('on VIEW_LOAD_END fired, type:', e.type, 'e:', e, 'viewer.props.orientation:', viewer.props.orientation, 'viewer.props:', viewer.props);
       if (import.meta.env.VITE_DEBUG == 'true') console.log('update cyclomedia date, viewer.props.recording.year:', viewer.props.recording.year);
       MapStore.cyclomediaYear = viewer.props.recording.year;
@@ -113,7 +113,7 @@ const setNewLocation = async (coords) => {
       if (import.meta.env.VITE_DEBUG == 'true') console.log('orientation:', orientation);
       if (viewer.props.orientation.xyz !== MapStore.cyclomediaCameraXyz) {
         // const lngLat = proj4(projection2272, projection4326, [ viewer.props.orientation.xyz[0], viewer.props.orientation.xyz[1] ]);
-        const lngLat = [ viewer.props.orientation.xyz[0], viewer.props.orientation.xyz[1] ];
+        const lngLat = [viewer.props.orientation.xyz[0], viewer.props.orientation.xyz[1]];
         MapStore.setCyclomediaCameraLngLat(lngLat, viewer.props.orientation.xyz);
         $emit('updateCameraLngLat', lngLat);
         const orientation = viewer.getOrientation();
@@ -142,39 +142,17 @@ watch(
   }
 )
 
-onMounted( async() => {
-  let CYCLOMEDIA_USERNAME, CYCLOMEDIA_PASSWORD;
-  if (import.meta.env.VITE_VERSION == 'atlas') {
-    CYCLOMEDIA_USERNAME = import.meta.env.VITE_CYCLOMEDIA_USERNAME;
-    CYCLOMEDIA_PASSWORD = import.meta.env.VITE_CYCLOMEDIA_PASSWORD;
-  } else if (import.meta.env.VITE_VERSION == 'cityatlas') {
-    CYCLOMEDIA_USERNAME = import.meta.env.VITE_CITYATLAS_CYCLOMEDIA_USERNAME;
-    CYCLOMEDIA_PASSWORD = import.meta.env.VITE_CITYATLAS_CYCLOMEDIA_PASSWORD;
-  }
-  if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue onMounted, StreetSmartApi:', StreetSmartApi, 'CYCLOMEDIA_USERNAME:', CYCLOMEDIA_USERNAME, 'CYCLOMEDIA_PASSWORD:', CYCLOMEDIA_PASSWORD);
-
+onMounted(async () => {
   if (!cyclomediaInitialized.value) {
     if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue onMounted, initializing cyclomedia');
-    await StreetSmartApi.init({
-      targetElement: cycloviewer,
-      username: CYCLOMEDIA_USERNAME,
-      password: CYCLOMEDIA_PASSWORD,
-      apiKey: import.meta.env.VITE_CYCLOMEDIA_API_KEY,
-      srs: 'EPSG:4326',
-      locale: 'en-us',
-      addressSettings: {
-        locale: 'en-us',
-        database: 'CMDatabase',
-      },
-    })
-
+    await router.push('/cycloInit')
     if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue onMounted, cyclomedia initialized');
     cyclomediaInitialized.value = true;
   }
   if (GeocodeStore.aisData.features) {
     setNewLocation(GeocodeStore.aisData.features[0].geometry.coordinates);
   } else {
-    setNewLocation([ -75.163471, 39.953338 ]);
+    setNewLocation([-75.163471, 39.953338]);
   }
 })
 
@@ -182,7 +160,7 @@ const popoutClicked = () => {
   window.open('//cyclomedia.phila.gov/?lat=' + MapStore.cyclomediaCameraLngLat[1] + '&lng=' + MapStore.cyclomediaCameraLngLat[0], '_blank');
   let startQuery = { ...route.query };
   delete startQuery['streetview'];
-  router.push({ query: { ...startQuery }});
+  router.push({ query: { ...startQuery } });
 }
 
 </script>
@@ -190,21 +168,13 @@ const popoutClicked = () => {
 <template>
   <div class="cyclomedia-panel">
     <div class="cyclomedia-pop-out">
-      <font-awesome-icon
-        icon="fa-external-link"
-        @click="popoutClicked"
-      />
+      <font-awesome-icon icon="fa-external-link" @click="popoutClicked" />
     </div>
-    <div
-      id="cycloviewer"
-      ref="cycloviewer"
-      class="panoramaViewerWindow"
-    />
+    <div id="cycloviewer" ref="cycloviewer" class="panoramaViewerWindow" />
   </div>
 </template>
 
 <style scoped>
-
 .cyclomedia-panel {
   position: relative;
   height: 100%;
@@ -224,9 +194,8 @@ const popoutClicked = () => {
   border-radius: 2px;
 }
 
-@media
-only screen and (max-width: 768px),
-(min-device-width: 768px) and (max-device-width: 1024px)  {
+@media only screen and (max-width: 768px),
+(min-device-width: 768px) and (max-device-width: 1024px) {
   .cyclomedia-panel {
     height: 250px;
   }
@@ -235,7 +204,7 @@ only screen and (max-width: 768px),
 .panoramaViewerWindow {
   display: block;
   width: 100%;
-  height:100%;
+  height: 100%;
 }
 
 </style>

@@ -1,3 +1,5 @@
+import { StreetSmartApi } from "@cyclomedia/streetsmart-api";
+
 export async function getEagleviewToken() {
   const clientId = import.meta.env.VITE_EAGLEVIEW_CLIENT_ID;
   const clientSecret = import.meta.env.VITE_EAGLEVIEW_CLIENT_SECRET;
@@ -41,4 +43,21 @@ export async function getAgoToken() {
     console.log(err);
   }
   return '';
+}
+
+export async function cyclomediaInit() {
+  const CYCLOMEDIA_USERNAME = import.meta.env.VITE_VERSION == 'cityatlas' ? import.meta.env.VITE_CITYATLAS_CYCLOMEDIA_USERNAME : import.meta.env.VITE_CYCLOMEDIA_USERNAME;
+  const CYCLOMEDIA_PASSWORD = import.meta.env.VITE_VERSION == 'cityatlas' ? import.meta.env.VITE_CITYATLAS_CYCLOMEDIA_PASSWORD : import.meta.env.VITE_CYCLOMEDIA_PASSWORD;
+  await StreetSmartApi.init({
+    targetElement: document.getElementById('cycloviewer'),
+    username: CYCLOMEDIA_USERNAME,
+    password: CYCLOMEDIA_PASSWORD,
+    apiKey: import.meta.env.VITE_CYCLOMEDIA_API_KEY,
+    srs: 'EPSG:4326',
+    locale: 'en-us',
+    addressSettings: {
+      locale: 'en-us',
+      database: 'CMDatabase',
+    },
+  })
 }

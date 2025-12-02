@@ -18,7 +18,7 @@ import { useMainStore } from '@/stores/MainStore.js'
 import useRouting from '@/composables/useRouting';
 const { routeApp } = useRouting();
 
-import { getEagleviewToken, getAgoToken } from '@/util/call-api';
+import { getEagleviewToken, getAgoToken, cyclomediaInit } from '@/util/call-api';
 import { mapStores } from 'pinia';
 import { useMapStore } from '@/stores/MapStore';
 
@@ -413,6 +413,14 @@ const router = createRouter({
       beforeEnter: async () => {
         const City311Store = useCity311Store();
         City311Store.agoToken = await getAgoToken();
+        return false;
+      }
+    },
+    {
+      path: '/cycloInit',
+      name: 'cycloInit',
+      beforeEnter: async () => {
+        await cyclomediaInit();
         return false;
       }
     }
