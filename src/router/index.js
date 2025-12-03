@@ -454,6 +454,9 @@ router.afterEach(async (to, from) => {
     case ('agoToken'): {
       return;
     }
+    case ('cycloInit'): {
+      return;
+    }
     default: {
       MainStore.addressSearchRunning = false;
       // if data portion of URI is not the same, get new data
