@@ -137,9 +137,9 @@ export const useZoningStore = defineStore('ZoningStore', {
       }
       return xyCoordsReduced;
     },
+    // this function requires that all proposed zoning overlaps found must cover at least 5% of the query polygon
     filterProposedZoningFeatures(features, queryPolygon) {
       const filteredFeatures = features.filter(feature => {
-        // if (import.meta.env.VITE_DEBUG == 'true') console.log('feature:', feature);
         try {
           const featureGeom = polygon(feature.geometry.coordinates);
           const intersection = intersect(
@@ -168,25 +168,6 @@ export const useZoningStore = defineStore('ZoningStore', {
         let url = '//services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/Proposed_Zoning_Implementation_Public/FeatureServer/0/query';
 
         let xyCoordsReduced = this.reduceCoordinates(feature.geometry.coordinates[0]);
-        // let xyCoordsReduced = [];
-        // let xyCoords = feature.geometry.coordinates[0];
-
-        // for (let i = 0; i < xyCoords.length; i++) {
-        //   let newXyCoordReduced;
-        //   if (xyCoords.length > 20 && i%3 == 0) {
-        //     // if (import.meta.env.VITE_DEBUG) console.log('i:', i, 'xyCoords.length:', xyCoords.length, 'i%3:', i%3);
-        //     newXyCoordReduced = [ parseFloat(xyCoords[i][0].toFixed(6)), parseFloat(xyCoords[i][1].toFixed(6)) ];
-        //     xyCoordsReduced.push(newXyCoordReduced);
-        //   } else if (xyCoords.length <= 20) {
-        //     // if (import.meta.env.VITE_DEBUG) console.log('i:', i, 'xyCoords[i]:', xyCoords[i]);
-        //     newXyCoordReduced = [ parseFloat(xyCoords[i][0].toFixed(6)), parseFloat(xyCoords[i][1].toFixed(6)) ];
-        //     xyCoordsReduced.push(newXyCoordReduced);
-        //   }
-        // }
-        // console.log('xyCoordsReduced[xyCoordsReduced.length - 1]:', xyCoordsReduced[xyCoordsReduced.length - 1]);
-        // if (xyCoordsReduced[xyCoordsReduced.length - 1] !== xyCoordsReduced[0]) {
-        //   xyCoordsReduced.push(xyCoordsReduced[0]);
-        // }
 
         let params = {
           'returnGeometry': true,
@@ -198,7 +179,6 @@ export const useZoningStore = defineStore('ZoningStore', {
           'spatialRel': 'esriSpatialRelIntersects',
           'f': 'geojson',
           'geometry': JSON.stringify({ "rings": [xyCoordsReduced], "spatialReference": { "wkid": 4326 }}),
-          // 'geometry': JSON.stringify({ "x": feature.geometry.coordinates[0], "y": feature.geometry.coordinates[1], "spatialReference": { "wkid": 4326 }}),
         };
 
         const response = await axios.get(url, { params });
