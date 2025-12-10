@@ -30,7 +30,7 @@ const zoningOverlays = computed(() => {
 // PROPOSED ZONING
 const proposedZoning = computed(() => {
   if (!ZoningStore.proposedZoning[selectedParcelId.value]) return [];
-  return ZoningStore.proposedZoning[selectedParcelId.value].features || [];
+  return ZoningStore.proposedZoning[selectedParcelId.value].rows || [];
 });
 
 // ZONING APPEALS
@@ -127,24 +127,24 @@ const proposedZoningTableData = computed(() => {
     columns: [
       {
         label: 'Bill',
-        field: 'properties.bill_number_link',
+        field: 'bill_number_link',
         html: true,
       },
       {
         label: 'Status',
-        field: 'properties.remap_status',
+        field: 'remap_status',
       },
       {
         label: 'Enacted date',
-        field: 'properties.formatted_enacted_date',
+        field: 'formatted_enacted_date',
       },
       {
         label: 'Original zoning',
-        field: 'properties.formatted_existcode',
+        field: 'formatted_existcode',
       },
       {
         label: 'Proposed zoning',
-        field: 'properties.formatted_propzone',
+        field: 'formatted_propzone',
       },
     ],
     rows: proposedZoning.value || [],

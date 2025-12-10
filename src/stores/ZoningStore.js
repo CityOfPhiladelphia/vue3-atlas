@@ -115,6 +115,62 @@ export const useZoningStore = defineStore('ZoningStore', {
         if (import.meta.env.VITE_DEBUG == 'true') console.error('fillZoningBase - await never resolved, failed to fetch data');
       }
     },
+    async fillProposedZoning() {
+      const ParcelsStore = useParcelsStore();
+      const features = ParcelsStore.dor.features;
+      if (!features) return;
+      for (let feature of features) {
+        try {
+          let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
+          const mapreg = feature.properties.mapreg;
+          const query = "WITH all_proposed_zoning AS \
+              ( SELECT * FROM phl.proposedzoning_imp_public ), \
+            parcel AS \
+              ( SELECT * FROM phl.dor_parcel WHERE dor_parcel.mapreg = '" + mapreg + "' ), \
+            zp AS \
+              ( SELECT all_proposed_zoning.* FROM all_proposed_zoning, parcel WHERE st_overlaps(parcel.the_geom, all_proposed_zoning.the_geom)) \
+            SELECT * \
+            FROM zp";
+          const url = baseUrl += query;
+          const response = await fetch(url);
+          if (response.ok) {
+            const data = await response.json();
+            if (import.meta.env.VITE_DEBUG == 'true') console.log('data:', data);
+            data.rows.forEach(item => {
+              if (import.meta.env.VITE_DEBUG == 'true') console.log('item:', item);
+              item.bill_number_link = `<a target='_blank' href='${item.bill_url_updated}'>${item.bill_number_txt} <i class='fas fa-external-link'></i></a>`;
+              if (!!item.enacted_date && format(item.enacted_date, 'yyyy') === '1899') {
+                console.log('format(item.enacted_date, "yyyy"):', format(item.enacted_date, 'yyyy'));
+                item.formatted_enacted_date = 'N/A';
+              } else if (!!item.enacted_date && item.remap_status == 'Enacted') {
+                item.formatted_enacted_date = date(item.enacted_date, 'MM/dd/yyyy');
+              } else {
+                item.formatted_enacted_date = 'N/A';
+              }
+              if (item.existcode == 'Pre2012' || item.existcode == 'Multi' || item.existcode == null) {
+                item.formatted_existcode = 'Refer to bill';
+              } else {
+                item.formatted_existcode = item.existcode;
+              }
+              if (item.propzone == 'Pre2012' || item.propzone == 'Multi' || item.propzone == null) {
+                item.formatted_propzone = 'Refer to bill';
+              } else {
+                item.formatted_propzone = item.propzone;
+              }
+            })
+            this.proposedZoning[feature.properties.objectid] = data;
+            this.loadingProposedZoning = false;
+          } else {
+            this.loadingProposedZoning = false;
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillProposedZoning - await resolved but HTTP status was not successful');
+          }
+        } catch {
+          this.loadingProposedZoning = false;
+          if (import.meta.env.VITE_DEBUG == 'true') console.error('fillZoningOverlays - await never resolved, failed to fetch data');
+        }
+      }
+    },
+    // this is used by fillProposedZoningAGO which is no longer used now that proposedzoning_imp_public is in Carto
     reduceCoordinates(coordinates) {
       let xyCoordsReduced = [];
       let xyCoords = coordinates;
@@ -157,8 +213,9 @@ export const useZoningStore = defineStore('ZoningStore', {
       });
       return filteredFeatures;
     },
-    async fillProposedZoning() {
-
+    // this is the old way of filling proposed zoning, it is no longer used now that proposedzoning_imp_public is in Carto
+    // it is preserved here, in case we need to revert to it in the future
+    async fillProposedZoningAGO() {
       const ParcelsStore = useParcelsStore();
       const features = ParcelsStore.dor.features;
       if (!features) return;
