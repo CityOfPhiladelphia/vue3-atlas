@@ -33,11 +33,11 @@ defineProps({
       >
         <th>{{ field.label }}</th>
         <td
-          v-html="field.value"
           :class="hoveredId == field.class && hoveredId != null ? 'active-hover ' + field.class : 'inactive ' + field.class"
           @mouseenter="$emit('hoveredCell', field.class)"
           @mouseleave="$emit('unhoveredCell', field.class)"
           @click="$emit('clickedCell', field.label)"
+          v-html="field.value"
         />
       </tr>
     </tbody>

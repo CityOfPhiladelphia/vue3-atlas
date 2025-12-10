@@ -63,7 +63,7 @@ class RecordingsClient {
       const recordings = recordingEls.map(recordingEl => {
         const imageId = recordingEl.getElementsByTagNameNS('*', 'imageId')[0].firstChild.data;
         const coords = recordingEl.getElementsByTagNameNS('*', 'pos')[0].firstChild.data;
-        const [ lng, lat ] = coords.split(' ').map(parseFloat);
+        const [lng, lat] = coords.split(' ').map(parseFloat);
 
         return {
           imageId,

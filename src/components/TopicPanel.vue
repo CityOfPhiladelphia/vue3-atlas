@@ -49,10 +49,10 @@ const zipCode = computed(() => {
   <full-screen-topics-toggle-tab
     v-show="!MainStore.fullScreenMapEnabled"
   />
-      
+
   <!-- FRONT PAGE CONTENT -->
   <CityAtlasIntro v-if="route.name == 'home' && version == 'cityatlas'" />
-  <VotingIntro v-else-if="route.name == 'topic' && route.params.topic.toLowerCase() == 'voting'"/>
+  <VotingIntro v-else-if="route.name == 'topic' && route.params.topic.toLowerCase() == 'voting'" />
   <AtlasIntro v-else-if="route.name == 'home'" />
 
   <!-- ADDRESS NOT FOUND CONTENT -->
@@ -65,8 +65,12 @@ const zipCode = computed(() => {
       <address-search-control :input-id="'address-bar-search-input'" />
     </div>
     <div :class="MainStore.fullScreenTopicsEnabled ? 'topic-panel-half': ''">
-      <h1 class="subtitle is-3">We couldn't find that address.</h1>
-      <p class="subtitle is-4">Are you sure everything was spelled correctly?</p>
+      <h1 class="subtitle is-3">
+        We couldn't find that address.
+      </h1>
+      <p class="subtitle is-4">
+        Are you sure everything was spelled correctly?
+      </p>
       <p>Here are some examples of things you can search for:</p>
       <ul class="bullet-list">
         <li>1234 Market St</li>
@@ -113,7 +117,7 @@ const zipCode = computed(() => {
     >
       <Voting />
     </topic> -->
-    
+
     <topic
       :topic-name="'Property Assessments'"
       :topic-slug="'property'"
