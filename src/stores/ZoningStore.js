@@ -9,6 +9,10 @@ const { rcoPrimaryContact, phoneNumber, date } = useTransforms();
 
 import { format } from 'date-fns';
 
+import { polygon, featureCollection } from '@turf/helpers';
+import area from '@turf/area';
+import intersect from '@turf/intersect';
+
 export const useZoningStore = defineStore('ZoningStore', {
   state: () => {
     return {
@@ -112,81 +116,164 @@ export const useZoningStore = defineStore('ZoningStore', {
       }
     },
     async fillProposedZoning() {
-
       const ParcelsStore = useParcelsStore();
       const features = ParcelsStore.dor.features;
       if (!features) return;
       for (let feature of features) {
-        // try {
-          const featurePendingBills = this.pendingBills[feature.properties.objectid] || [];
-          const pendingBillIds = featurePendingBills.map(bill => bill.pendingbill);
-          let url = '//services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/Proposed_Zoning_Implementation_Public/FeatureServer/0/query';
-
-          let xyCoordsReduced = [];
-          let xyCoords = feature.geometry.coordinates[0];
-
-          for (let i = 0; i < xyCoords.length; i++) {
-            let newXyCoordReduced;
-            if (xyCoords.length > 20 && i%3 == 0) {
-              if (import.meta.env.VITE_DEBUG) console.log('i:', i, 'xyCoords.length:', xyCoords.length, 'i%3:', i%3);
-              newXyCoordReduced = [ parseFloat(xyCoords[i][0].toFixed(6)), parseFloat(xyCoords[i][1].toFixed(6)) ];
-              xyCoordsReduced.push(newXyCoordReduced);
-            } else if (xyCoords.length <= 20) {
-              if (import.meta.env.VITE_DEBUG) console.log('i:', i, 'xyCoords[i]:', xyCoords[i]);
-              newXyCoordReduced = [ parseFloat(xyCoords[i][0].toFixed(6)), parseFloat(xyCoords[i][1].toFixed(6)) ];
-              xyCoordsReduced.push(newXyCoordReduced);
-            }
-          }
-
-          let params = {
-            'returnGeometry': false,
-            'where': "bill_number_txt NOT IN ('" + pendingBillIds.join("', '") + "')",
-            'outSR': 4326,
-            'outFields': '*',
-            'inSr': 4326,
-            'geometryType': 'esriGeometryPolygon',
-            'spatialRel': 'esriSpatialRelIntersects',
-            'f': 'geojson',
-            'geometry': JSON.stringify({ "rings": [xyCoordsReduced], "spatialReference": { "wkid": 4326 }}),
-            // 'geometry': JSON.stringify({ "x": feature.geometry.coordinates[0], "y": feature.geometry.coordinates[1], "spatialReference": { "wkid": 4326 }}),
-          };
-
-          const response = await axios.get(url, { params });
-          if (response.status === 200) {
-            let data = await response.data;
-
-            data.features.forEach(item => {
-              item.properties.bill_number_link = `<a target='_blank' href='${item.properties.bill_url_updated}'>${item.properties.bill_number_txt} <i class='fas fa-external-link'></i></a>`;
-              if (!!item.properties.enacted_date && format(item.properties.enacted_date, 'yyyy') === '1899') {
-                console.log('format(item.properties.enacted_date, "yyyy"):', format(item.properties.enacted_date, 'yyyy'));
-                item.properties.formatted_enacted_date = 'N/A';
-              } else if (!!item.properties.enacted_date && item.properties.remap_status == 'Enacted') {
-                item.properties.formatted_enacted_date = date(item.properties.enacted_date, 'MM/dd/yyyy');
+        try {
+          let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
+          const mapreg = feature.properties.mapreg;
+          const query = "WITH all_proposed_zoning AS \
+              ( SELECT * FROM phl.proposedzoning_imp_public ), \
+            parcel AS \
+              ( SELECT * FROM phl.dor_parcel WHERE dor_parcel.mapreg = '" + mapreg + "' ), \
+            zp AS \
+              ( SELECT all_proposed_zoning.* FROM all_proposed_zoning, parcel WHERE st_overlaps(parcel.the_geom, all_proposed_zoning.the_geom)) \
+            SELECT * \
+            FROM zp";
+          const url = baseUrl += query;
+          const response = await fetch(url);
+          if (response.ok) {
+            const data = await response.json();
+            if (import.meta.env.VITE_DEBUG == 'true') console.log('data:', data);
+            data.rows.forEach(item => {
+              if (import.meta.env.VITE_DEBUG == 'true') console.log('item:', item);
+              item.bill_number_link = `<a target='_blank' href='${item.bill_url_updated}'>${item.bill_number_txt} <i class='fas fa-external-link'></i></a>`;
+              if (!!item.enacted_date && format(item.enacted_date, 'yyyy') === '1899') {
+                console.log('format(item.enacted_date, "yyyy"):', format(item.enacted_date, 'yyyy'));
+                item.formatted_enacted_date = 'N/A';
+              } else if (!!item.enacted_date && item.remap_status == 'Enacted') {
+                item.formatted_enacted_date = date(item.enacted_date, 'MM/dd/yyyy');
               } else {
-                item.properties.formatted_enacted_date = 'N/A';
+                item.formatted_enacted_date = 'N/A';
               }
-              if (item.properties.existcode == 'Pre2012' || item.properties.existcode == 'Multi' || item.properties.existcode == null) {
-                item.properties.formatted_existcode = 'Refer to bill';
+              if (item.existcode == 'Pre2012' || item.existcode == 'Multi' || item.existcode == null) {
+                item.formatted_existcode = 'Refer to bill';
               } else {
-                item.properties.formatted_existcode = item.properties.existcode;
+                item.formatted_existcode = item.existcode;
               }
-              if (item.properties.propzone == 'Pre2012' || item.properties.propzone == 'Multi' || item.properties.propzone == null) {
-                item.properties.formatted_propzone = 'Refer to bill';
+              if (item.propzone == 'Pre2012' || item.propzone == 'Multi' || item.propzone == null) {
+                item.formatted_propzone = 'Refer to bill';
               } else {
-                item.properties.formatted_propzone = item.properties.propzone;
+                item.formatted_propzone = item.propzone;
               }
             })
-
             this.proposedZoning[feature.properties.objectid] = data;
             this.loadingProposedZoning = false;
           } else {
             this.loadingProposedZoning = false;
             if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillProposedZoning - await resolved but HTTP status was not successful');
           }
-        // } catch {
-        //   this.loadingProposedZoning = false;
-        //   if (import.meta.env.VITE_DEBUG == 'true') console.error('fillProposedZoning - await never resolved, failed to fetch data');
-        // }
+        } catch {
+          this.loadingProposedZoning = false;
+          if (import.meta.env.VITE_DEBUG == 'true') console.error('fillZoningOverlays - await never resolved, failed to fetch data');
+        }
+      }
+    },
+    // this is used by fillProposedZoningAGO which is no longer used now that proposedzoning_imp_public is in Carto
+    reduceCoordinates(coordinates) {
+      let xyCoordsReduced = [];
+      let xyCoords = coordinates;
+
+      for (let i = 0; i < xyCoords.length; i++) {
+        let newXyCoordReduced;
+        if (xyCoords.length > 20 && i%3 == 0) {
+          // if (import.meta.env.VITE_DEBUG) console.log('i:', i, 'xyCoords.length:', xyCoords.length, 'i%3:', i%3);
+          newXyCoordReduced = [ parseFloat(xyCoords[i][0].toFixed(6)), parseFloat(xyCoords[i][1].toFixed(6)) ];
+          xyCoordsReduced.push(newXyCoordReduced);
+        } else if (xyCoords.length <= 20) {
+          // if (import.meta.env.VITE_DEBUG) console.log('i:', i, 'xyCoords[i]:', xyCoords[i]);
+          newXyCoordReduced = [ parseFloat(xyCoords[i][0].toFixed(6)), parseFloat(xyCoords[i][1].toFixed(6)) ];
+          xyCoordsReduced.push(newXyCoordReduced);
+        }
+      }
+      console.log('xyCoordsReduced[xyCoordsReduced.length - 1]:', xyCoordsReduced[xyCoordsReduced.length - 1]);
+      if (xyCoordsReduced[xyCoordsReduced.length - 1] !== xyCoordsReduced[0]) {
+        xyCoordsReduced.push(xyCoordsReduced[0]);
+      }
+      return xyCoordsReduced;
+    },
+    // this function requires that all proposed zoning overlaps found must cover at least 5% of the query polygon
+    filterProposedZoningFeatures(features, queryPolygon) {
+      const filteredFeatures = features.filter(feature => {
+        try {
+          const featureGeom = polygon(feature.geometry.coordinates);
+          const intersection = intersect(
+            featureCollection([queryPolygon, featureGeom]),
+          );
+          if (!intersection) return false;
+          const intersectionArea = area(intersection);
+          const queryPolygonArea = area(queryPolygon);
+          const percentIntersection = (intersectionArea / queryPolygonArea) * 100;                
+          return percentIntersection > 5;
+        } catch (error) {
+          console.error('Error processing feature:', error);
+          return false;
+        }
+      });
+      return filteredFeatures;
+    },
+    // this is the old way of filling proposed zoning, it is no longer used now that proposedzoning_imp_public is in Carto
+    // it is preserved here, in case we need to revert to it in the future
+    async fillProposedZoningAGO() {
+      const ParcelsStore = useParcelsStore();
+      const features = ParcelsStore.dor.features;
+      if (!features) return;
+      for (let feature of features) {
+        const featurePendingBills = this.pendingBills[feature.properties.objectid] || [];
+        const pendingBillIds = featurePendingBills.map(bill => bill.pendingbill);
+        let url = '//services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/Proposed_Zoning_Implementation_Public/FeatureServer/0/query';
+
+        let xyCoordsReduced = this.reduceCoordinates(feature.geometry.coordinates[0]);
+
+        let params = {
+          'returnGeometry': true,
+          'where': "bill_number_txt NOT IN ('" + pendingBillIds.join("', '") + "')",
+          'outSR': 4326,
+          'outFields': '*',
+          'inSr': 4326,
+          'geometryType': 'esriGeometryPolygon',
+          'spatialRel': 'esriSpatialRelIntersects',
+          'f': 'geojson',
+          'geometry': JSON.stringify({ "rings": [xyCoordsReduced], "spatialReference": { "wkid": 4326 }}),
+        };
+
+        const response = await axios.get(url, { params });
+        if (response.status === 200) {
+          let data = await response.data;
+
+          const queryPolygon = polygon([xyCoordsReduced]);
+          data.features = this.filterProposedZoningFeatures(data.features, queryPolygon);
+
+          data.features.forEach(item => {
+            if (import.meta.env.VITE_DEBUG == 'true') console.log('item:', item);
+            item.properties.bill_number_link = `<a target='_blank' href='${item.properties.bill_url_updated}'>${item.properties.bill_number_txt} <i class='fas fa-external-link'></i></a>`;
+            if (!!item.properties.enacted_date && format(item.properties.enacted_date, 'yyyy') === '1899') {
+              console.log('format(item.properties.enacted_date, "yyyy"):', format(item.properties.enacted_date, 'yyyy'));
+              item.properties.formatted_enacted_date = 'N/A';
+            } else if (!!item.properties.enacted_date && item.properties.remap_status == 'Enacted') {
+              item.properties.formatted_enacted_date = date(item.properties.enacted_date, 'MM/dd/yyyy');
+            } else {
+              item.properties.formatted_enacted_date = 'N/A';
+            }
+            if (item.properties.existcode == 'Pre2012' || item.properties.existcode == 'Multi' || item.properties.existcode == null) {
+              item.properties.formatted_existcode = 'Refer to bill';
+            } else {
+              item.properties.formatted_existcode = item.properties.existcode;
+            }
+            if (item.properties.propzone == 'Pre2012' || item.properties.propzone == 'Multi' || item.properties.propzone == null) {
+              item.properties.formatted_propzone = 'Refer to bill';
+            } else {
+              item.properties.formatted_propzone = item.properties.propzone;
+            }
+          })
+
+          this.proposedZoning[feature.properties.objectid] = data;
+          this.loadingProposedZoning = false;
+        } else {
+          this.loadingProposedZoning = false;
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillProposedZoning - await resolved but HTTP status was not successful');
+        }
       }
     },
     async fillZoningOverlays() {
