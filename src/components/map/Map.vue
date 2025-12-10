@@ -497,7 +497,9 @@ watch(
         setImagery(imagerySelected.value);
       }
       if ($config.parcelLayerForTopic[newTopic] == 'dor') {
-        map.getSource('dorParcel').setData(dorCoordinates.value);
+        if (map.getSource('dorParcel')) {
+          map.getSource('dorParcel').setData(dorCoordinates.value);
+        }
       }
       else if (newTopic === 'li' && selectedLiBuildingNumber.value) {
         map.setPaintProperty(

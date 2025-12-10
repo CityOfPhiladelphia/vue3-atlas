@@ -35,6 +35,7 @@
     "@turf/distance": "^7.0.0",
     "@turf/explode": "^7.0.0",
     "@turf/helpers": "^7.0.0",
+    "@turf/intersect": "^7.3.1",
     "@turf/length": "^7.2.0",
     "@turf/midpoint": "^7.0.0",
     "@turf/nearest-point": "^7.0.0",
