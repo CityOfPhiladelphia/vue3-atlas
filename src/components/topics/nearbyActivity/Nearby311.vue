@@ -132,10 +132,10 @@ const nearby311TableData = computed(() => {
         :rows="nearby311TableData.rows"
         :row-style-class="row => hoveredStateId === row.service_request_id ? 'active-hover ' + row.service_request_id : 'inactive ' + row.service_request_id"
         style-class="table nearby-table"
+        :sort-options="{ initialSortBy: {field: 'distance_ft', type: 'asc'}}"
         @row-mouseenter="handleRowMouseover($event, 'service_request_id')"
         @row-mouseleave="handleRowMouseleave"
         @row-click="handleRowClick($event, 'service_request_id', 'nearby311')"
-        :sort-options="{ initialSortBy: {field: 'distance_ft', type: 'asc'}}"
       >
         <template #emptystate>
           <div v-if="loadingData">

@@ -146,13 +146,19 @@ const popoutClicked = () => {
 <template>
   <div class="eagleview-panel">
     <div class="eagleview-pop-out">
-      <font-awesome-icon icon="fa-external-link" @click="popoutClicked" />
+      <font-awesome-icon
+        icon="fa-external-link"
+        @click="popoutClicked"
+      />
     </div>
 
     <ParcelsControl />
     <LabelsControl />
 
-    <div id="eagleview" class="eagleview-div" />
+    <div
+      id="eagleview"
+      class="eagleview-div"
+    />
   </div>
 </template>
 

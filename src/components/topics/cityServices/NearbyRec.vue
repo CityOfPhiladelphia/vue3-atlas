@@ -66,7 +66,6 @@ const nearbyRecreationFacilitiesTableData = computed(() => {
 </script>
 
 <template>
-  
   <div class="mt-5">
     <h2 class="subtitle mb-3 is-5">
       Nearby Parks and Recreation Facilities
@@ -111,9 +110,6 @@ const nearbyRecreationFacilitiesTableData = computed(() => {
     target="_blank"
     href="https://www.phila.gov/parks-rec-finder/#/"
   >See all parks & recreation facilities citywide <font-awesome-icon icon="fa-solid fa-external-link" /></a>
-
-  
-
 </template>
 
 <style>

@@ -225,7 +225,10 @@ const rcosTableData = computed(() => {
   >
     Base district zoning maps, associated zoning overlays, and Registered Community Organizations applicable to your search address. If you notice a discrepancy, please contact <a href="mailto:planning@phila.gov">planning@phila.gov</a>. Source: Department of Planning and Development
     <br><br>
-    A fuller summary of zoning for this address can be found on the <a target="_blank" :href="'https://www.phila.gov/zoning-summary-generator/?address='+MainStore.currentAddress">Zoning Summary Generator</a>.
+    A fuller summary of zoning for this address can be found on the <a
+      target="_blank"
+      :href="'https://www.phila.gov/zoning-summary-generator/?address='+MainStore.currentAddress"
+    >Zoning Summary Generator</a>.
   </div>
   <div :class="selectedParcel ? 'mb-5' : 'mb-6'">
     <collection-summary
@@ -264,8 +267,8 @@ const rcosTableData = computed(() => {
               </div>
             </div>
             <div
-              v-if="longCodes"
               v-for="longCode in longCodes"
+              v-if="longCodes"
               class="column is-12 columns is-mobile pt-0 pb-0"
             >
               <div class="column is-2 badge-cell">
@@ -332,11 +335,10 @@ const rcosTableData = computed(() => {
               <custom-pagination-labels
                 :mode="'pages'"
                 :total="props.total"
-                :perPage="5"
+                :per-page="5"
                 @page-changed="props.pageChanged"
                 @per-page-changed="props.perPageChanged"
-              >
-              </custom-pagination-labels>
+              />
             </template>
           </vue-good-table>
         </div>
@@ -374,11 +376,10 @@ const rcosTableData = computed(() => {
             <custom-pagination-labels
               :mode="'pages'"
               :total="props.total"
-              :perPage="5"
+              :per-page="5"
               @page-changed="props.pageChanged"
               @per-page-changed="props.perPageChanged"
-            >
-            </custom-pagination-labels>
+            />
           </template>
         </vue-good-table>
       </div>
@@ -416,11 +417,10 @@ const rcosTableData = computed(() => {
               <custom-pagination-labels
                 :mode="'pages'"
                 :total="props.total"
-                :perPage="5"
+                :per-page="5"
                 @page-changed="props.pageChanged"
                 @per-page-changed="props.perPageChanged"
-              >
-              </custom-pagination-labels>
+              />
             </template>
           </vue-good-table>
         </div>
@@ -433,7 +433,6 @@ const rcosTableData = computed(() => {
         general reference purposes only. Users should not assume that the information is complete or 
         free from error and should not rely on it exclusively when making decisions.
       </div>
-
     </div>
   </div>
 
@@ -470,13 +469,12 @@ const rcosTableData = computed(() => {
           <custom-pagination-labels
             :mode="'pages'"
             :total="props.total"
-            :perPage="5"
+            :per-page="5"
             @page-changed="props.pageChanged"
             @per-page-changed="props.perPageChanged"
-          >
-          </custom-pagination-labels>
+          />
         </template>
-        <template #table-row='props'>
+        <template #table-row="props">
           <span v-if="props.column.field === 'appealgrounds'">
             {{ props.row.appealgrounds }}<br>
             <span v-if="props.row.coordinatingrco">
@@ -484,7 +482,6 @@ const rcosTableData = computed(() => {
             </span>
           </span>
         </template>
-
       </vue-good-table>
     </div>
   </div>
@@ -529,11 +526,10 @@ const rcosTableData = computed(() => {
           <custom-pagination-labels
             :mode="'pages'"
             :total="props.total"
-            :perPage="5"
+            :per-page="5"
             @page-changed="props.pageChanged"
             @per-page-changed="props.perPageChanged"
-          >
-          </custom-pagination-labels>
+          />
         </template>
       </vue-good-table>
     </div>

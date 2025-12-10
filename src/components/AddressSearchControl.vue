@@ -56,8 +56,14 @@ const replaceRoute = (address) => {
     :class="fullScreenTopicsEnabled ? 'holder holder-topics' : 'holder holder-map'"
     :style="{ top: yPosition, width: holderWidth }"
   >
-    <div class="field has-addons" :style="{ width: '100%' }">
-      <div class="control has-icons-right" :style="{ width: '100%' }">
+    <div
+      class="field has-addons"
+      :style="{ width: '100%' }"
+    >
+      <div
+        class="control has-icons-right"
+        :style="{ width: '100%' }"
+      >
         <label
           :for="inputId"
           class="search-label"

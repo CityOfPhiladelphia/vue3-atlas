@@ -168,9 +168,16 @@ const popoutClicked = () => {
 <template>
   <div class="cyclomedia-panel">
     <div class="cyclomedia-pop-out">
-      <font-awesome-icon icon="fa-external-link" @click="popoutClicked" />
+      <font-awesome-icon
+        icon="fa-external-link"
+        @click="popoutClicked"
+      />
     </div>
-    <div id="cycloviewer" ref="cycloviewer" class="panoramaViewerWindow" />
+    <div
+      id="cycloviewer"
+      ref="cycloviewer"
+      class="panoramaViewerWindow"
+    />
   </div>
 </template>
 

@@ -166,7 +166,7 @@ const buildingCertsTableData = ref({
       dateOutputFormat: 'MM/dd/yyyy',
     }
   ],
-  rows: selectedBuildingCerts || [],
+  rows: selectedBuildingCerts.value || [],
 })
 
 const permitsTableData = computed(() => {
@@ -434,11 +434,10 @@ const liAppealsTableData = computed(() => {
                 <custom-pagination-labels
                   :mode="'pages'"
                   :total="props.total"
-                  :perPage="5"
+                  :per-page="5"
                   @page-changed="props.pageChanged"
                   @per-page-changed="props.perPageChanged"
-                >
-                </custom-pagination-labels>
+                />
               </template>
             </vue-good-table>
           </div>
@@ -492,11 +491,10 @@ const liAppealsTableData = computed(() => {
             <custom-pagination-labels
               :mode="'pages'"
               :total="props.total"
-              :perPage="5"
+              :per-page="5"
               @page-changed="props.pageChanged"
               @per-page-changed="props.perPageChanged"
-            >
-            </custom-pagination-labels>
+            />
           </template>
         </vue-good-table>
       </div>
@@ -547,11 +545,10 @@ const liAppealsTableData = computed(() => {
             <custom-pagination-labels
               :mode="'pages'"
               :total="props.total"
-              :perPage="5"
+              :per-page="5"
               @page-changed="props.pageChanged"
               @per-page-changed="props.perPageChanged"
-            >
-            </custom-pagination-labels>
+            />
           </template>
         </vue-good-table>
       </div>
@@ -594,11 +591,10 @@ const liAppealsTableData = computed(() => {
             <custom-pagination-labels
               :mode="'pages'"
               :total="props.total"
-              :perPage="5"
+              :per-page="5"
               @page-changed="props.pageChanged"
               @per-page-changed="props.perPageChanged"
-            >
-            </custom-pagination-labels>
+            />
           </template>
         </vue-good-table>
       </div>
@@ -646,11 +642,10 @@ const liAppealsTableData = computed(() => {
             <custom-pagination-labels
               :mode="'pages'"
               :total="props.total"
-              :perPage="5"
+              :per-page="5"
               @page-changed="props.pageChanged"
               @per-page-changed="props.perPageChanged"
-            >
-            </custom-pagination-labels>
+            />
           </template>
         </vue-good-table>
       </div>
@@ -698,11 +693,10 @@ const liAppealsTableData = computed(() => {
             <custom-pagination-labels
               :mode="'pages'"
               :total="props.total"
-              :perPage="5"
+              :per-page="5"
               @page-changed="props.pageChanged"
               @per-page-changed="props.perPageChanged"
-            >
-            </custom-pagination-labels>
+            />
           </template>
         </vue-good-table>
       </div>
@@ -750,11 +744,10 @@ const liAppealsTableData = computed(() => {
             <custom-pagination-labels
               :mode="'pages'"
               :total="props.total"
-              :perPage="5"
+              :per-page="5"
               @page-changed="props.pageChanged"
               @per-page-changed="props.perPageChanged"
-            >
-            </custom-pagination-labels>
+            />
           </template>
         </vue-good-table>
       </div>
@@ -764,7 +757,6 @@ const liAppealsTableData = computed(() => {
         :href="`https://li.phila.gov/Property-History/search?address=${encodeURIComponent(MainStore.currentAddress)}`"
       >See all business licenses at L&I Property History <font-awesome-icon icon="fa-solid fa-external-link" /></a>
     </div>
-
   </section>
 </template>
 

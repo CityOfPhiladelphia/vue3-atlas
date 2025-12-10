@@ -314,23 +314,27 @@ const valuationHistoryTableData = computed(() => {
               <custom-pagination-labels
                 :mode="'pages'"
                 :total="props.total"
-                :perPage="5"
+                :per-page="5"
                 @page-changed="props.pageChanged"
                 @per-page-changed="props.perPageChanged"
-              >
-              </custom-pagination-labels>
+              />
             </template>
           </vue-good-table>
         </div>
       </div>
       <div class="topic-info">
         Corrections to or questions about this property?<br>
-        <a target="_blank" href="http://opa.phila.gov/opa.apps/Help/CitizenMain.aspx?sch=Ctrl2&s=1&url=search&id=3172000144">Submit an Official Inquiry</a> to the Office of Property Assessment
+        <a
+          target="_blank"
+          href="http://opa.phila.gov/opa.apps/Help/CitizenMain.aspx?sch=Ctrl2&s=1&url=search&id=3172000144"
+        >Submit an Official Inquiry</a> to the Office of Property Assessment
       </div>
       <div class="topic-info">
-        You can download the property assessment dataset in bulk, and get more information about this data at <a target="_blank" href="https://metadata.phila.gov/#home/datasetdetails/5543865f20583086178c4ee5/">metadata.phila.gov</a>
+        You can download the property assessment dataset in bulk, and get more information about this data at <a
+          target="_blank"
+          href="https://metadata.phila.gov/#home/datasetdetails/5543865f20583086178c4ee5/"
+        >metadata.phila.gov</a>
       </div>
-      
     </div>
 
     <div v-if="shouldShowCondosMessage">
@@ -353,7 +357,6 @@ const valuationHistoryTableData = computed(() => {
     >
       <p>There is no property assessment record for this address.</p>
     </div>
-    
   </section>
 </template>
 
