@@ -76,8 +76,8 @@ const setNewLocation = async (coords) => {
     )
     const viewer = response[0];
     if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue setNewLocation, viewer:', viewer, 'response:', response);
-    viewer.toggleReportBlurring()
-    viewer.toggleCenterMapVisibility()
+    if (viewer.getButtonEnabled('panorama.reportBlurring')) viewer.toggleReportBlurring()
+    if (viewer.getCenterMapVisible()) viewer.toggleCenterMapVisibility()
 
     for (let overlay of viewer.props.overlays) {
       if (overlay.id === 'surfaceCursorLayer') {
