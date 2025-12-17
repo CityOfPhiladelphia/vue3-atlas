@@ -62,16 +62,16 @@ onMounted(async () => {
   handleWindowResize();
 });
 
-const links = [
+const links = computed(() => { return [
   {
     type: 'native',
-    href: 'https://phila.formstack.com/forms/atlas_feedback_form',
+    href: 'https://phila.formstack.com/forms/atlas_feedback_form?address=' + (MainStore.currentAddress || ''),
     text: 'Feedback',
     attrs: {
       target: '_blank',
     },
   },
-];
+];});
 
 const handleWindowResize = () => {
   const rootElement = document.getElementById('app');
