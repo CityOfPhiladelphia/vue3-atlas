@@ -11,9 +11,9 @@ const router = useRouter();
 
 import { StreetSmartApi } from "@cyclomedia/streetsmart-api";
 
-import proj4 from 'proj4';
-const projection4326 = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs";
-const projection2272 = "+proj=lcc +lat_1=40.96666666666667 +lat_2=39.93333333333333 +lat_0=39.33333333333334 +lon_0=-77.75 +x_0=600000 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs";
+// import proj4 from 'proj4';
+// const projection4326 = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs";
+// const projection2272 = "+proj=lcc +lat_1=40.96666666666667 +lat_2=39.93333333333333 +lat_0=39.33333333333334 +lon_0=-77.75 +x_0=600000 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs";
 
 import $config from '@/config';
 
@@ -48,7 +48,7 @@ const setNewLocation = async (coords) => {
     const year = MapStore.cyclomediaYear;
     let thisYear, lastYear;
     let params = {};
-    const coords2272 = proj4(projection4326, projection2272, coords);
+    // const coords2272 = proj4(projection4326, projection2272, coords);
     if (year) {
       lastYear = `${year}-01-01`;
       thisYear = `${year + 1}-01-01`;
@@ -61,7 +61,7 @@ const setNewLocation = async (coords) => {
         coordinate: coords,
       };
     }
-    if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue setNewLocation, lastYear:', lastYear, 'thisYear:', thisYear, 'coords:', coords, 'coords2272:', coords2272);
+    if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue setNewLocation, lastYear:', lastYear, 'thisYear:', thisYear, 'coords:', coords);
     const response = await StreetSmartApi.open(
       params,
       {
@@ -76,8 +76,8 @@ const setNewLocation = async (coords) => {
     )
     const viewer = response[0];
     if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue setNewLocation, viewer:', viewer, 'response:', response);
-    if (viewer.getButtonEnabled('panorama.reportBlurring')) viewer.toggleReportBlurring()
-    if (viewer.getCenterMapVisible()) viewer.toggleCenterMapVisibility()
+    if (viewer.props.ui['panorama.reportBlurring'].visible) viewer.toggleReportBlurring();
+    if (viewer.getCenterMapVisible()) viewer.toggleCenterMapVisibility();
 
     for (let overlay of viewer.props.overlays) {
       if (overlay.id === 'surfaceCursorLayer') {
@@ -109,7 +109,7 @@ const setNewLocation = async (coords) => {
       MapStore.cyclomediaYear = viewer.props.recording.year;
       // $emit('updateCyclomediaDate', e.recording.year);
       const orientation = viewer.getOrientation();
-      // viewer.setOrientation({ pitch: 0 });
+      viewer.setOrientation({ pitch: 0 });
       if (import.meta.env.VITE_DEBUG == 'true') console.log('orientation:', orientation);
       if (viewer.props.orientation.xyz !== MapStore.cyclomediaCameraXyz) {
         // const lngLat = proj4(projection2272, projection4326, [ viewer.props.orientation.xyz[0], viewer.props.orientation.xyz[1] ]);
