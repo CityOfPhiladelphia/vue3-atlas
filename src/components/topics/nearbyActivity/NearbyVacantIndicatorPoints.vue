@@ -1,6 +1,6 @@
 <script setup>
 import { computed, watch, onMounted, onBeforeUnmount } from 'vue';
-import { point, featureCollection, feature } from '@turf/helpers';
+import { point, featureCollection } from '@turf/helpers';
 
 
 import { useNearbyActivityStore } from '@/stores/NearbyActivityStore';
@@ -142,7 +142,7 @@ const nearbyVacantIndicatorsTableData = computed(() => {
 
 <style>
 
-@media 
+@media
 only screen and (max-width: 768px) {
 
   #nearbyVacantIndicators {

@@ -9,8 +9,6 @@ const MainStore = useMainStore();
 import { useMapStore } from '@/stores/MapStore';
 const MapStore = useMapStore();
 
-import useTransforms from '@/composables/useTransforms';
-const { timeReverseFn } = useTransforms();
 import useScrolling from '@/composables/useScrolling';
 const { handleRowClick, handleRowMouseover, handleRowMouseleave } = useScrolling();
 
@@ -164,7 +162,7 @@ const nearbyUnsafeBuildingsTableData = computed(() => {
 
 <style>
 
-@media 
+@media
 only screen and (max-width: 768px),
 (min-device-width: 768px) and (max-device-width: 1024px)  {
 	/*Label the data*/

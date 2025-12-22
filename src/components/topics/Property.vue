@@ -144,30 +144,12 @@ const cityatlasVertTable3Data = computed(() => {
   }
 });
 
-const opaAccountNumber = computed(() => {
-  if (GeocodeStore.aisData.features) {
-    return GeocodeStore.aisData.features[0].properties.opa_account_num;
-  }
-});
+const opaAccountNumber = computed(() => GeocodeStore.aisData.features ? GeocodeStore.aisData.features[0].properties.opa_account_num : null );
 
 const shouldShowCondosMessage = computed(() => {
-  if (OpaStore.opaData.rows) {
-    if (import.meta.env.VITE_DEBUG == 'true') console.log('shouldShowCondosMessage 1');
-    if (!CondosStore.condosData.pages.page_1.features) {
-      if (import.meta.env.VITE_DEBUG == 'true') console.log('shouldShowCondosMessage 2');
-      return false;
-    } else if (CondosStore.condosData.pages.page_1.features.length == 1) {
-      if (import.meta.env.VITE_DEBUG == 'true') console.log('shouldShowCondosMessage 3');
-      if (CondosStore.condosData.pages.page_1.features[0].match_type == 'has_base_no_suffix_unit_child') {
-        return false;
-      } else {
-        return true;
-      }
-    } else {
-      if (import.meta.env.VITE_DEBUG == 'true') console.log('shouldShowCondosMessage 4');
-      return CondosStore.condosData.pages.page_1.features.length > 1;
-    }
-  }
+  if (!OpaStore.opaData.rows || !CondosStore.condosData.pages.page_1.features) return false;
+  if (CondosStore.condosData.pages.page_1.features.length == 1 && CondosStore.condosData.pages.page_1.features[0].match_type == 'has_base_no_suffix_unit_child') return false;
+  return CondosStore.condosData.pages.page_1.features.length >= 1;
 });
 
 const hasNoData = computed(() => {
@@ -366,7 +348,7 @@ const valuationHistoryTableData = computed(() => {
   font-weight: bold;
 }
 
-@media 
+@media
 only screen and (max-width: 768px),
 (min-device-width: 768px) and (max-device-width: 1024px)  {
 

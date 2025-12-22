@@ -1,5 +1,3 @@
-import { ref } from 'vue';
-
 export default function useTables() {
 
   const paginationOptions = (tableLength) => {

@@ -19,6 +19,7 @@ const selectedParcel = computed(() => {
   if (ParcelsStore.dor.features && ParcelsStore.dor.features.length > 0) {
     return ParcelsStore.dor.features.filter(feature => feature.id === selectedParcelId.value)[0];
   }
+  return null;
 });
 
 // ZONING OVERLAYS
@@ -55,34 +56,8 @@ const longCodes = computed(() => {
     }
     return codes;
   }
+  return null;
 });
-
-const hexesForLongCodes = computed(() => {
-  const hexes = [];
-  if (longCodes.value) {
-    for (let code of longCodes.value) {
-      hexes.push($config.ZONING_CODE_MAP[code].color);
-    }
-  }
-  return hexes;
-  // if (ZoningStore.zoningBase[selectedParcelId.value] && ZoningStore.zoningBase[selectedParcelId.value].rows) {
-  //   const longCode = ZoningStore.zoningBase[selectedParcelId.value].rows[0].long_code;
-  //   return $config.ZONING_CODE_MAP[longCode].color;
-  // }
-});
-
-const descriptions = computed(() => {
-  const descriptions = [];
-  if (longCodes.value) {
-    for (let code of longCodes.value) {
-      descriptions.push($config.ZONING_CODE_MAP[code].description);
-    }
-  }
-  return descriptions;
-  // if (ZoningStore.zoningBase[selectedParcelId.value] && ZoningStore.zoningBase[selectedParcelId.value].rows) {
-  //   return $config.ZONING_CODE_MAP[ZoningStore.zoningBase[selectedParcelId.value].rows[0].long_code].description;
-  // }
-})
 
 const pendingBillsTableData = computed(() => {
   return {
@@ -429,8 +404,8 @@ const rcosTableData = computed(() => {
       <!-- <div class="topic-info"> -->
       <div>
         Community based map changes are shown from 1969 onward. Individual property or small block map
-        changes are shown from 2000 onward. The maps and data provided on this page are intended for 
-        general reference purposes only. Users should not assume that the information is complete or 
+        changes are shown from 2000 onward. The maps and data provided on this page are intended for
+        general reference purposes only. Users should not assume that the information is complete or
         free from error and should not rely on it exclusively when making decisions.
       </div>
     </div>
@@ -575,7 +550,7 @@ const rcosTableData = computed(() => {
   /* padding: 0px; */
 }
 
-@media 
+@media
 only screen and (max-width: 768px),
 (min-device-width: 768px) and (max-device-width: 1024px)  {
 
@@ -636,7 +611,7 @@ only screen and (max-width: 768px),
 }
 
 #rcos {
-  td:nth-of-type(2) span { 
+  td:nth-of-type(2) span {
     word-wrap: break-word !important;
     display: inline-block !important;
     max-width: 180px !important;

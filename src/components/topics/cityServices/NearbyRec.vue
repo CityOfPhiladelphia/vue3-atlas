@@ -5,8 +5,6 @@ import { point, featureCollection } from '@turf/helpers';
 import bbox from '@turf/bbox';
 import buffer from '@turf/buffer';
 
-import { useGeocodeStore } from '@/stores/GeocodeStore';
-const GeocodeStore = useGeocodeStore();
 import { useCityServicesStore } from '@/stores/CityServicesStore';
 const CityServicesStore = useCityServicesStore();
 import { useMapStore } from '@/stores/MapStore';

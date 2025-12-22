@@ -24,6 +24,7 @@ export default {
       default: 'bottom-left',
     },
   },
+emits: {'drawDelete': null, 'drawCancel': null},
   data() {
     const data = {
       mode: 'simple_select',
@@ -318,7 +319,7 @@ export default {
       if (import.meta.env.VITE_DEBUG == 'true') console.log('handleDrawCancel is running, shapeId:', shapeId);
       if (shapeId) {
         let index = MapStore.labelLayers.indexOf(MapStore.labelLayers.filter(set => set.id === shapeId)[0]);
-        
+
         MapStore.labelLayers.splice(index, 1);
         MapStore.draw.delete(this.currentShape);
         this.$data.currentShape = null;

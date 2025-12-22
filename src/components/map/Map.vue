@@ -13,7 +13,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import '@/assets/mapbox-gl-draw.min.js'
 import '@/assets/maplibre-gl-draw.css';
 import destination from '@turf/destination';
-import { point, polygon, multiPolygon, feature, featureCollection } from '@turf/helpers';
+import { point, polygon, feature, featureCollection } from '@turf/helpers';
 import bbox from '@turf/bbox';
 import buffer from '@turf/buffer';
 
@@ -386,7 +386,7 @@ onMounted(async () => {
   });
 
   // mapbox-gl-draw is initialized
-  const draw = new MapboxDraw({
+  const draw = new window.MapboxDraw({
     displayControlsDefault: false,
     controls: {
       polygon: true,
@@ -823,7 +823,6 @@ watch(
 watch(
   () => hoveredSchoolId.value,
   newHoveredSchoolId => {
-    const style = map.getStyle().layers.filter(layer => layer.id === 'schoolMarkers')[0].layout['icon-size'];
     // if (import.meta.env.VITE_DEBUG) console.log('Map.vue hoveredSchoolId watch, newHoveredSchoolId:', newHoveredSchoolId, 'style:', style, 'map.getStyle().sources.schoolMarkers.data.features:', map.getStyle().sources.schoolMarkers.data.features);
     if (newHoveredSchoolId) {
       map.setLayoutProperty(

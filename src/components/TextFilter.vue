@@ -87,7 +87,7 @@ button.button.clear-button {
   }
 }
 
-@media 
+@media
 only screen and (max-width: 768px)
 {
 
