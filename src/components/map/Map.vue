@@ -541,7 +541,7 @@ const toggleImagery = () => {
   if (!MapStore.imageryOn) {
     MapStore.imageryOn = true;
     // if a year has already been selected, use that as the current year. If not, then get the more recent year with a satelite map from the mapLayers
-    const currentYear = imagerySelected.value ? imagerySelected.value : Object.keys($config.mapLayers).at(-11);
+    const currentYear = imagerySelected.value ? imagerySelected.value : Object.keys($config.mapLayers).filter(item => !isNaN(item) && item !== '').at(-1);
     setImagery(currentYear);
   }
   // if imagery is going from 'on' to 'off'
