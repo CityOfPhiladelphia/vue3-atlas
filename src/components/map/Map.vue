@@ -217,7 +217,7 @@ onMounted(async () => {
       idField = NearbyActivityStore.dataFields[properties.type].id_field;
       infoField = NearbyActivityStore.dataFields[properties.type].info_field;
       row = NearbyActivityStore[properties.type].rows.filter(row => row[idField] === properties.id)[0];
-    } else if (MainStore.currentTopic == '311') {
+    } else if (MainStore.currentTopic == 'city311') {
       idField = City311Store.dataFields[properties.type].id_field;
       infoField = City311Store.dataFields[properties.type].info_field;
       row = City311Store[properties.type].rows.filter(row => row[idField] === properties.id)[0];
