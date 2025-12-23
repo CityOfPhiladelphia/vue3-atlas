@@ -1,7 +1,7 @@
 <script setup>
 
 import $config from '@/config';
-import { onMounted, computed, watch } from 'vue';
+import { onMounted, computed, watch, onBeforeMount } from 'vue';
 import { point } from '@turf/helpers';
 
 import { useMapStore } from '@/stores/MapStore';
@@ -90,11 +90,13 @@ watch(
   }
 )
 
-onMounted(async () => {
+onBeforeMount(async () => {
   if (!MapStore.eagleviewToken) {
     MapStore.eagleviewToken = await getEagleviewToken();
   }
+})
 
+onMounted(async () => {
   const config = {
     authToken: MapStore.eagleviewToken,
     measurementPanelEnabled: false,

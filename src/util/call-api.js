@@ -1,26 +1,5 @@
 import { StreetSmartApi } from "@cyclomedia/streetsmart-api";
 
-export async function getEagleviewToken() {
-  try {
-    const response = await fetch('https://apicenter.eagleview.com/oauth2/v1/token', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Basic ' + btoa(`${import.meta.env.VITE_EAGLEVIEW_CLIENT_ID}:${import.meta.env.VITE_EAGLEVIEW_CLIENT_SECRET}`),
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Accept': 'application/json'
-      },
-      body: new URLSearchParams({
-        'grant_type': 'client_credentials'
-      })
-    });
-    const data = await response.json();
-    return data.access_token;
-  } catch (err) {
-    console.log(err)
-  }
-  return '';
-}
-
 export async function getAgoToken() {
   try {
     const response = await fetch('https://www.arcgis.com/sharing/rest/generateToken', {
@@ -43,26 +22,32 @@ export async function getAgoToken() {
   return '';
 }
 
-export async function cyclomediaInit_Atlas(element) {
-  await StreetSmartApi.init({
-    targetElement: element,
-    username: import.meta.env.VITE_CYCLOMEDIA_USERNAME,
-    password: import.meta.env.VITE_CYCLOMEDIA_PASSWORD,
-    apiKey: import.meta.env.VITE_CYCLOMEDIA_API_KEY,
-    srs: 'EPSG:4326',
-    locale: 'en-us',
-    addressSettings: {
-      locale: 'en-us',
-      database: 'CMDatabase'
-    }
-  })
+export async function getEagleviewToken() {
+  try {
+    const response = await fetch('https://apicenter.eagleview.com/oauth2/v1/token', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Basic ' + btoa(`${import.meta.env.VITE_EAGLEVIEW_CLIENT_ID}:${import.meta.env.VITE_EAGLEVIEW_CLIENT_SECRET}`),
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json'
+      },
+      body: new URLSearchParams({
+        'grant_type': 'client_credentials'
+      })
+    });
+    const data = await response.json();
+    return data.access_token;
+  } catch (err) {
+    console.log(err)
+  }
+  return '';
 }
 
-export async function cyclomediaInit_CityAtlas(element) {
+export async function cyclomediaInit(element) {
   await StreetSmartApi.init({
     targetElement: element,
-    username: import.meta.env.VITE_CITYATLAS_CYCLOMEDIA_USERNAME,
-    password: import.meta.env.VITE_CITYATLAS_CYCLOMEDIA_PASSWORD,
+    username: import.meta.env.VITE_VERSION == 'cityatlas' ? import.meta.env.VITE_CITYATLAS_CYCLOMEDIA_USERNAME : import.meta.env.VITE_CYCLOMEDIA_USERNAME,
+    password: import.meta.env.VITE_VERSION == 'cityatlas' ? import.meta.env.VITE_CITYATLAS_CYCLOMEDIA_PASSWORD : import.meta.env.VITE_CYCLOMEDIA_PASSWORD,
     apiKey: import.meta.env.VITE_CYCLOMEDIA_API_KEY,
     srs: 'EPSG:4326',
     locale: 'en-us',

@@ -386,7 +386,7 @@ onMounted(async () => {
   });
 
   // mapbox-gl-draw is initialized
-  const draw = new MapboxDraw({
+  const draw = new window.MapboxDraw({
     displayControlsDefault: false,
     controls: {
       polygon: true,
