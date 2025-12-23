@@ -160,7 +160,6 @@ onMounted(() => {
 </script>
 
 <template>
-
   <div class="mt-5">
     <h2 class="subtitle mb-3 is-5">
       Police District
@@ -219,5 +218,4 @@ onMounted(() => {
       </div>
     </template>
   </vue-good-table>
-
 </template>

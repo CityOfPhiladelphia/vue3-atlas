@@ -13,7 +13,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import '@/assets/mapbox-gl-draw.min.js'
 import '@/assets/maplibre-gl-draw.css';
 import destination from '@turf/destination';
-import { point, polygon, multiPolygon, feature, featureCollection } from '@turf/helpers';
+import { point, polygon, feature, featureCollection } from '@turf/helpers';
 import bbox from '@turf/bbox';
 import buffer from '@turf/buffer';
 
@@ -541,7 +541,7 @@ const toggleImagery = () => {
   if (!MapStore.imageryOn) {
     MapStore.imageryOn = true;
     // if a year has already been selected, use that as the current year. If not, then get the more recent year with a satelite map from the mapLayers
-    const currentYear = imagerySelected.value ? imagerySelected.value : Object.keys($config.mapLayers).at(-11);
+    const currentYear = imagerySelected.value ? imagerySelected.value : Object.keys($config.mapLayers).filter(item => !isNaN(item) && item !== '').at(-1);
     setImagery(currentYear);
   }
   // if imagery is going from 'on' to 'off'
@@ -823,7 +823,6 @@ watch(
 watch(
   () => hoveredSchoolId.value,
   newHoveredSchoolId => {
-    const style = map.getStyle().layers.filter(layer => layer.id === 'schoolMarkers')[0].layout['icon-size'];
     // if (import.meta.env.VITE_DEBUG) console.log('Map.vue hoveredSchoolId watch, newHoveredSchoolId:', newHoveredSchoolId, 'style:', style, 'map.getStyle().sources.schoolMarkers.data.features:', map.getStyle().sources.schoolMarkers.data.features);
     if (newHoveredSchoolId) {
       map.setLayoutProperty(
@@ -1150,7 +1149,7 @@ let cyclomediaRecordingsClient = new CyclomediaRecordingsClient(
   'https://atlasapi.cyclomedia.com/api/recording/wfs',
   import.meta.env.VITE_CYCLOMEDIA_USERNAME,
   import.meta.env.VITE_CYCLOMEDIA_PASSWORD,
-  4326,
+  4326
 );
 
 const updateCyclomediaRecordings = async () => {

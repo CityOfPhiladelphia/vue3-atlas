@@ -64,4 +64,4 @@ export const useMapStore = defineStore("MapStore", {
 // this is from https://pinia.vuejs.org/cookbook/hot-module-replacement.html
 if (import.meta.hot) {
   import.meta.hot.accept(acceptHMRUpdate(useMapStore, import.meta.hot))
-};
+}

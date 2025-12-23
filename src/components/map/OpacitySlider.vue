@@ -9,6 +9,7 @@ export default {
       default: 1,
     },
   },
+emits: {'opacityChange': null},
   data() {
     let data = {
       value: 100,

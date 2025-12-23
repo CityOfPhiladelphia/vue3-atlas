@@ -13,7 +13,6 @@ import AddressSearchControl from '@/components/AddressSearchControl.vue';
     id="topic-panel-no-topics"
     class="section"
   >
-
     <div v-if="MainStore.fullScreenTopicsEnabled">
       <address-search-control :input-id="'address-bar-search-input'" />
     </div>
@@ -46,14 +45,21 @@ import AddressSearchControl from '@/components/AddressSearchControl.vue';
       </div>
       <div class="custom-section">
         <ul class="bullet-list">
-          <li><a target="_blank" href="https://www.phila.gov/voting">{{ $t('voting.introPage.link2') }}</a></li>
-          <li><a target="_blank" href="https://www.pavoterservices.pa.gov/pages/ballottracking.aspx">{{ $t('voting.introPage.link3') }}</a></li>
+          <li>
+            <a
+              target="_blank"
+              href="https://www.phila.gov/voting"
+            >{{ $t('voting.introPage.link2') }}</a>
+          </li>
+          <li>
+            <a
+              target="_blank"
+              href="https://www.pavoterservices.pa.gov/pages/ballottracking.aspx"
+            >{{ $t('voting.introPage.link3') }}</a>
+          </li>
           <!-- <li><a target="_blank" href="https://www.pavoterservices.pa.gov/Pages/voterregistrationstatus.aspx">{{ $t('voting.introPage.link4') }}</a></li> -->
         </ul>
       </div>
-
     </div>
   </div>
-
-
 </template>

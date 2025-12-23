@@ -199,7 +199,7 @@ const accountsTableData = computed(() => {
         <custom-pagination-labels
           :mode="'pages'"
           :total="props.total"
-          :perPage="5"
+          :per-page="5"
           @page-changed="props.pageChanged"
           @per-page-changed="props.perPageChanged"
         />

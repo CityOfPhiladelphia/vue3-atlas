@@ -267,11 +267,10 @@ const dorDocsTableData = computed(() => {
             <custom-pagination-labels
               :mode="'pages'"
               :total="props.total"
-              :perPage="5"
+              :per-page="5"
               @page-changed="props.pageChanged"
               @per-page-changed="props.perPageChanged"
-            >
-            </custom-pagination-labels>
+            />
           </template>
         </vue-good-table>
       </div>
@@ -293,16 +292,16 @@ const dorDocsTableData = computed(() => {
       <div class="mt-4">
         <h2 class="subtitle mb-3 is-5">
           Documents <font-awesome-icon
-          v-if="DorStore.loadingDorData"
-          icon="fa-solid fa-spinner"
-          spin
-        /><span v-else>({{ selectedDocsLength }})</span>
+            v-if="DorStore.loadingDorData"
+            icon="fa-solid fa-spinner"
+            spin
+          /><span v-else>({{ selectedDocsLength }})</span>
         </h2>
         <TextFilter
+          v-model="textSearch"
           class="dor-docs-filter"
           :search-label="'Search Documents'"
           :placeholder="'Search Documents'"
-          v-model="textSearch"
         />
         <div class="horizontal-table">
           <vue-good-table
@@ -327,11 +326,10 @@ const dorDocsTableData = computed(() => {
               <custom-pagination-labels
                 :mode="'pages'"
                 :total="props.total"
-                :perPage="5"
+                :per-page="5"
                 @page-changed="props.pageChanged"
                 @per-page-changed="props.perPageChanged"
-              >
-              </custom-pagination-labels>
+              />
             </template>
           </vue-good-table>
         </div>

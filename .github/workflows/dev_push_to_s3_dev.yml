@@ -6,7 +6,7 @@ name: dev Push to S3 dev bucket
 on:
   push:
     branches:
-      - fix/proposed-zoning-query
+      - fix/api-refactors
 jobs:
   build:
 

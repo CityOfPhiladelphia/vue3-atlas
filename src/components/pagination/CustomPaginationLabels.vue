@@ -90,7 +90,6 @@ import {
 
 export default {
   name: 'VgtPagination',
-
   components: {
     'pagination-page-info': VgtPaginationPageInfo,
   },
@@ -113,6 +112,7 @@ export default {
     allText: { default: 'All' },
     infoFn: { default: null },
   },
+emits: {'page-changed': null, 'per-page-changed': null},
 
   data() {
     return {
@@ -127,10 +127,7 @@ export default {
   computed: {
     // Number of pages
     pagesCount() {
-      const quotient = Math.floor(this.total / this.currentPerPage);
-      const remainder = this.total % this.currentPerPage;
-
-      return remainder === 0 ? quotient : quotient + 1;
+      return Math.ceil(this.total / this.currentPerPage);
     },
 
     // Can go to next page

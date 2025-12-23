@@ -146,10 +146,10 @@ const nearbyZoningAppealsTableData = computed(() => {
         :rows="nearbyZoningAppealsTableData.rows"
         :row-style-class="row => hoveredStateId === row.objectid ? 'active-hover ' + row.objectid : 'inactive ' + row.objectid"
         style-class="table nearby-table"
+        :sort-options="{ initialSortBy: {field: 'distance_ft', type: 'asc'}}"
         @row-mouseenter="handleRowMouseover($event, 'objectid')"
         @row-mouseleave="handleRowMouseleave"
         @row-click="handleRowClick($event, 'objectid', 'nearbyZoningAppeals')"
-        :sort-options="{ initialSortBy: {field: 'distance_ft', type: 'asc'}}"
       >
         <template #emptystate>
           <div v-if="loadingData">

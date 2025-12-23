@@ -151,10 +151,10 @@ const city311TableData = computed(() => {
         :rows="city311TableData.rows"
         :row-style-class="row => hoveredStateId === row.id ? 'active-hover ' + row.id : 'inactive ' + row.id"
         style-class="table nearby-table"
+        :sort-options="{ initialSortBy: {field: 'properties.distance_ft', type: 'asc'}}"
         @row-mouseenter="handleRowMouseover($event, 'id')"
         @row-mouseleave="handleRowMouseleave"
         @row-click="handleRowClick($event, 'id', 'city311')"
-        :sort-options="{ initialSortBy: {field: 'properties.distance_ft', type: 'asc'}}"
       >
         <template #emptystate>
           <div v-if="loadingCity311">

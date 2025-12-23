@@ -80,7 +80,7 @@ const selectedBuildingCerts = computed(() => {
 
 // PERMITS
 const permitsCompareFn = (a, b) => new Date(b.permitissuedate) - new Date(a.permitissuedate);
-const permits = computed(() => { if (LiStore.liPermits.rows) return [ ...LiStore.liPermits.rows ].sort(permitsCompareFn) });
+const permits = computed(() => LiStore.liPermits.rows ? [ ...LiStore.liPermits.rows ].sort(permitsCompareFn) : null );
 const permitsLength = computed(() => permits.value && permits.value.length ? permits.value.length : 0);
 
 // ZONING DOCS
@@ -94,22 +94,22 @@ const liAllZoningDocs = computed(() => {
 
 // INSPECTIONS
 const inspectionsCompareFn = (a, b) => new Date(b.investigationcompleted) - new Date(a.investigationcompleted);
-const inspections = computed(() => { if (LiStore.liInspections.rows) return [ ...LiStore.liInspections.rows ].sort(inspectionsCompareFn) });
+const inspections = computed(() => LiStore.liInspections.rows ? [ ...LiStore.liInspections.rows ].sort(inspectionsCompareFn) : null );
 const inspectionsLength = computed(() => inspections.value && inspections.value.length ? inspections.value.length : 0);
 
 // VIOLATIONS
 const violationsCompareFn = (a, b) => new Date(b.casecreateddate) - new Date(a.casecreateddate);
-const violations = computed(() => { if (LiStore.liViolations.rows) return [ ...LiStore.liViolations.rows ].sort(violationsCompareFn) });
+const violations = computed(() => LiStore.liViolations.rows? [ ...LiStore.liViolations.rows ].sort(violationsCompareFn) : null );
 const violationsLength = computed(() => violations.value && violations.value.length ? violations.value.length : 0);
 
 // BUSINESS LICENSES
 const businessLicensesCompareFn = (a, b) => new Date(b.initialissuedate) - new Date(a.initialissuedate);
-const businessLicenses = computed(() => { if (LiStore.liBusinessLicenses.rows) return [ ...LiStore.liBusinessLicenses.rows ].sort(businessLicensesCompareFn) });
+const businessLicenses = computed(() => LiStore.liBusinessLicenses.rows ? [ ...LiStore.liBusinessLicenses.rows ].sort(businessLicensesCompareFn) : null );
 const businessLicensesLength = computed(() => businessLicenses.value && businessLicenses.value.length ? businessLicenses.value.length : 0);
 
 // L&I Appeals
 const liAppealsCompareFn = (a, b) => new Date(b.createddate) - new Date(a.createddate);
-const liAppeals = computed(() => { if (LiStore.liAppeals.rows) return [ ...LiStore.liAppeals.rows ].sort(liAppealsCompareFn) });
+const liAppeals = computed(() => LiStore.liAppeals.rows ? [ ...LiStore.liAppeals.rows ].sort(liAppealsCompareFn) : null );
 const liAppealsLength = computed(() => liAppeals.value && liAppeals.value.length ? liAppeals.value.length : 0);
 
 // TABLES
@@ -166,7 +166,7 @@ const buildingCertsTableData = ref({
       dateOutputFormat: 'MM/dd/yyyy',
     }
   ],
-  rows: selectedBuildingCerts || [],
+  rows: selectedBuildingCerts.value || [],
 })
 
 const permitsTableData = computed(() => {
@@ -434,11 +434,10 @@ const liAppealsTableData = computed(() => {
                 <custom-pagination-labels
                   :mode="'pages'"
                   :total="props.total"
-                  :perPage="5"
+                  :per-page="5"
                   @page-changed="props.pageChanged"
                   @per-page-changed="props.perPageChanged"
-                >
-                </custom-pagination-labels>
+                />
               </template>
             </vue-good-table>
           </div>
@@ -492,11 +491,10 @@ const liAppealsTableData = computed(() => {
             <custom-pagination-labels
               :mode="'pages'"
               :total="props.total"
-              :perPage="5"
+              :per-page="5"
               @page-changed="props.pageChanged"
               @per-page-changed="props.perPageChanged"
-            >
-            </custom-pagination-labels>
+            />
           </template>
         </vue-good-table>
       </div>
@@ -547,11 +545,10 @@ const liAppealsTableData = computed(() => {
             <custom-pagination-labels
               :mode="'pages'"
               :total="props.total"
-              :perPage="5"
+              :per-page="5"
               @page-changed="props.pageChanged"
               @per-page-changed="props.perPageChanged"
-            >
-            </custom-pagination-labels>
+            />
           </template>
         </vue-good-table>
       </div>
@@ -594,11 +591,10 @@ const liAppealsTableData = computed(() => {
             <custom-pagination-labels
               :mode="'pages'"
               :total="props.total"
-              :perPage="5"
+              :per-page="5"
               @page-changed="props.pageChanged"
               @per-page-changed="props.perPageChanged"
-            >
-            </custom-pagination-labels>
+            />
           </template>
         </vue-good-table>
       </div>
@@ -646,11 +642,10 @@ const liAppealsTableData = computed(() => {
             <custom-pagination-labels
               :mode="'pages'"
               :total="props.total"
-              :perPage="5"
+              :per-page="5"
               @page-changed="props.pageChanged"
               @per-page-changed="props.perPageChanged"
-            >
-            </custom-pagination-labels>
+            />
           </template>
         </vue-good-table>
       </div>
@@ -698,11 +693,10 @@ const liAppealsTableData = computed(() => {
             <custom-pagination-labels
               :mode="'pages'"
               :total="props.total"
-              :perPage="5"
+              :per-page="5"
               @page-changed="props.pageChanged"
               @per-page-changed="props.perPageChanged"
-            >
-            </custom-pagination-labels>
+            />
           </template>
         </vue-good-table>
       </div>
@@ -750,11 +744,10 @@ const liAppealsTableData = computed(() => {
             <custom-pagination-labels
               :mode="'pages'"
               :total="props.total"
-              :perPage="5"
+              :per-page="5"
               @page-changed="props.pageChanged"
               @per-page-changed="props.perPageChanged"
-            >
-            </custom-pagination-labels>
+            />
           </template>
         </vue-good-table>
       </div>
@@ -764,7 +757,6 @@ const liAppealsTableData = computed(() => {
         :href="`https://li.phila.gov/Property-History/search?address=${encodeURIComponent(MainStore.currentAddress)}`"
       >See all business licenses at L&I Property History <font-awesome-icon icon="fa-solid fa-external-link" /></a>
     </div>
-
   </section>
 </template>
 
