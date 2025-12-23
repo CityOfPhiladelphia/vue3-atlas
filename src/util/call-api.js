@@ -43,11 +43,26 @@ export async function getAgoToken() {
   return '';
 }
 
-export async function cyclomediaInit(element) {
+export async function cyclomediaInit_Atlas(element) {
   await StreetSmartApi.init({
     targetElement: element,
-    username: import.meta.env.VITE_VERSION == 'cityatlas' ? import.meta.env.VITE_CITYATLAS_CYCLOMEDIA_USERNAME : import.meta.env.VITE_CYCLOMEDIA_USERNAME,
-    password: import.meta.env.VITE_VERSION == 'cityatlas' ? import.meta.env.VITE_CITYATLAS_CYCLOMEDIA_PASSWORD : import.meta.env.VITE_CYCLOMEDIA_PASSWORD,
+    username: import.meta.env.VITE_CYCLOMEDIA_USERNAME,
+    password: import.meta.env.VITE_CYCLOMEDIA_PASSWORD,
+    apiKey: import.meta.env.VITE_CYCLOMEDIA_API_KEY,
+    srs: 'EPSG:4326',
+    locale: 'en-us',
+    addressSettings: {
+      locale: 'en-us',
+      database: 'CMDatabase'
+    }
+  })
+}
+
+export async function cyclomediaInit_CityAtlas(element) {
+  await StreetSmartApi.init({
+    targetElement: element,
+    username: import.meta.env.VITE_CITYATLAS_CYCLOMEDIA_USERNAME,
+    password: import.meta.env.VITE_CITYATLAS_CYCLOMEDIA_PASSWORD,
     apiKey: import.meta.env.VITE_CYCLOMEDIA_API_KEY,
     srs: 'EPSG:4326',
     locale: 'en-us',

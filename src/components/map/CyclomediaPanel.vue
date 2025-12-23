@@ -12,7 +12,7 @@ const router = useRouter();
 import { StreetSmartApi } from "@cyclomedia/streetsmart-api";
 import $config from '@/config';
 
-import { cyclomediaInit } from '@/util/call-api';
+import { cyclomediaInit_Atlas, cyclomediaInit_CityAtlas } from '@/util/call-api';
 
 const cyclomediaInitialized = ref(false);
 const streetView = useTemplateRef('cycloviewer')
@@ -140,7 +140,7 @@ watch(
 onMounted(async () => {
   if (!cyclomediaInitialized.value) {
     if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue onMounted, initializing cyclomedia');
-    await cyclomediaInit(streetView.value);
+    import.meta.env.VITE_VERSION == 'cityatlas' ? await cyclomediaInit_CityAtlas(streetView.value) : await cyclomediaInit_Atlas(streetView.value);
     if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue onMounted, cyclomedia initialized');
     cyclomediaInitialized.value = true;
   }
