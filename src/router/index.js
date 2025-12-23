@@ -18,7 +18,7 @@ import { useMainStore } from '@/stores/MainStore.js'
 import useRouting from '@/composables/useRouting';
 const { routeApp } = useRouting();
 
-import { getEagleviewToken, getAgoToken, cyclomediaInit } from '@/util/call-api';
+import { getAgoToken } from '@/util/call-api';
 import { useMapStore } from '@/stores/MapStore';
 
 // this runs on address search and as part of datafetch()
@@ -265,7 +265,7 @@ const topicDataFetch = async (topic, data) => {
     case 'city311': {
       const City311Store = useCity311Store();
       if (!City311Store.agoToken) {
-        router.push('agoToken');
+        City311Store.agoToken = await getAgoToken();
       }
       await City311Store.fillCity311(data);
       return;
@@ -396,32 +396,6 @@ const router = createRouter({
           return false;
         }
       },
-    },
-    {
-      path: '/eagleviewToken',
-      name: 'eagleviewToken',
-      beforeEnter: async () => {
-        const MapStore = useMapStore();
-        MapStore.eagleviewToken = await getEagleviewToken();
-        return false;
-      }
-    },
-    {
-      path: '/agoToken',
-      name: 'agoToken',
-      beforeEnter: async () => {
-        const City311Store = useCity311Store();
-        City311Store.agoToken = await getAgoToken();
-        return false;
-      }
-    },
-    {
-      path: '/cycloInit',
-      name: 'cycloInit',
-      beforeEnter: async () => {
-        await cyclomediaInit();
-        return false;
-      }
     }
   ]
 })
@@ -446,15 +420,6 @@ router.afterEach(async (to, from) => {
       return;
     }
     case ('search'): {
-      return;
-    }
-    case ('eagleviewToken'): {
-      return;
-    }
-    case ('agoToken'): {
-      return;
-    }
-    case ('cycloInit'): {
       return;
     }
     default: {

@@ -386,7 +386,7 @@ onMounted(async () => {
   });
 
   // mapbox-gl-draw is initialized
-  const draw = new window.MapboxDraw({
+  const draw = new MapboxDraw({
     displayControlsDefault: false,
     controls: {
       polygon: true,
@@ -1149,7 +1149,7 @@ let cyclomediaRecordingsClient = new CyclomediaRecordingsClient(
   'https://atlasapi.cyclomedia.com/api/recording/wfs',
   import.meta.env.VITE_CYCLOMEDIA_USERNAME,
   import.meta.env.VITE_CYCLOMEDIA_PASSWORD,
-  4326,
+  4326
 );
 
 const updateCyclomediaRecordings = async () => {
