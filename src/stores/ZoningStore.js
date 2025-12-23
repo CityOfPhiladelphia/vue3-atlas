@@ -204,7 +204,7 @@ export const useZoningStore = defineStore('ZoningStore', {
           if (!intersection) return false;
           const intersectionArea = area(intersection);
           const queryPolygonArea = area(queryPolygon);
-          const percentIntersection = (intersectionArea / queryPolygonArea) * 100;                
+          const percentIntersection = (intersectionArea / queryPolygonArea) * 100;
           return percentIntersection > 5;
         } catch (error) {
           console.error('Error processing feature:', error);
@@ -400,7 +400,7 @@ export const useZoningStore = defineStore('ZoningStore', {
               address += ' Unit ' + row.unit_num;
             }
             console.log('in loop, row:', row);
-            row.appeallink = `<a target='_blank' href='https://li.phila.gov/Property-History/search/Appeal-Detail?address=${row.address}&Id=${row.appealnumber}'>${row.appealnumber}<i class='fas fa-external-link'></i></a>`
+            row.appeallink = `<a target='_blank' href='https://li.phila.gov/Property-History/search/Appeal-Detail?address=${address}&Id=${row.appealnumber}'>${row.appealnumber}<i class='fas fa-external-link'></i></a>`
             row.calendarlink = "<a target='_blank' href='https://li.phila.gov/zba-appeals-calendar/appeal?from=2-7-2000&to=4-7-2050&region=all&Id="+row.appealnumber+"'>"+date(row.scheduleddate, 'MM/dd/yyyy')+" <i class='fa fa-external-link'></i></a>";
             console.log('in loop, row:', row);
           });

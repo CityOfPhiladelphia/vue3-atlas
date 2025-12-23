@@ -9,8 +9,6 @@ const MainStore = useMainStore();
 import { useMapStore } from '@/stores/MapStore';
 const MapStore = useMapStore();
 
-import useTransforms from '@/composables/useTransforms';
-const { timeReverseFn } = useTransforms();
 import useScrolling from '@/composables/useScrolling';
 const { handleRowClick, handleRowMouseover, handleRowMouseleave } = useScrolling();
 
@@ -136,10 +134,10 @@ const nearbyUnsafeBuildingsTableData = computed(() => {
         :rows="nearbyUnsafeBuildingsTableData.rows"
         :row-style-class="row => hoveredStateId === row.casenumber ? 'active-hover ' + row.casenumber : 'inactive ' + row.casenumber"
         style-class="table nearby-table"
+        :sort-options="{ initialSortBy: {field: 'distance_ft', type: 'asc'}}"
         @row-mouseenter="handleRowMouseover($event, 'casenumber')"
         @row-mouseleave="handleRowMouseleave"
         @row-click="handleRowClick($event, 'casenumber', 'nearbyUnsafeBuildings')"
-        :sort-options="{ initialSortBy: {field: 'distance_ft', type: 'asc'}}"
       >
         <template #emptystate>
           <div v-if="loadingData">
@@ -164,7 +162,7 @@ const nearbyUnsafeBuildingsTableData = computed(() => {
 
 <style>
 
-@media 
+@media
 only screen and (max-width: 768px),
 (min-device-width: 768px) and (max-device-width: 1024px)  {
 	/*Label the data*/

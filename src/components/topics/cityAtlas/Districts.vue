@@ -117,7 +117,6 @@ const streetsVertTableData = computed(() => {
 </script>
 
 <template>
-  
   <div
     id="Districts-description"
     class="topic-info"
@@ -128,7 +127,6 @@ const streetsVertTableData = computed(() => {
     There is no district data available for this address.
   </div>
   <div v-if="hasData">
-  
     <div class="data-section">
       <h2 class="subtitle mb-3 is-5 vert-table-title">
         Districts
@@ -159,5 +157,4 @@ const streetsVertTableData = computed(() => {
       />
     </div>
   </div>
-
 </template>

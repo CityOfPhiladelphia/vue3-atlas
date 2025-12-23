@@ -42,7 +42,7 @@ const toggleCyclomedia = () => {
       type="button"
       @click="toggleCyclomedia"
     >
-    <!-- @click="$emit('toggleCyclomedia')" -->
+      <!-- @click="$emit('toggleCyclomedia')" -->
       <img
         class="img-src"
         alt="street-view"

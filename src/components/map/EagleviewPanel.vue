@@ -14,6 +14,8 @@ const router = useRouter();
 import ParcelsControl from '@/components/map/ParcelsControl.vue';
 import LabelsControl from '@/components/map/LabelsControl.vue';
 
+import { getEagleviewToken } from '@/util/call-api';
+
 const currentAddressCoords = computed(() => {
   if (MapStore.currentAddressCoords.length) {
     return { lat: MapStore.currentAddressCoords[1], lon: MapStore.currentAddressCoords[0] }
@@ -90,7 +92,7 @@ watch(
 
 onMounted(async () => {
   if (!MapStore.eagleviewToken) {
-    await router.push('/eagleviewToken')
+    MapStore.eagleviewToken = await getEagleviewToken();
   }
 
   const config = {
@@ -123,7 +125,7 @@ onMounted(async () => {
   }
 
   map.getLayers();
-  map.on('onLayersDataLoad', (layerData) => {
+  map.on('onLayersDataLoad', () => {
     map.updateLayers(
       {
         filter: (layer) => {
@@ -132,7 +134,6 @@ onMounted(async () => {
       }
     );
   });
-
 });
 
 const popoutClicked = () => {
@@ -147,13 +148,19 @@ const popoutClicked = () => {
 <template>
   <div class="eagleview-panel">
     <div class="eagleview-pop-out">
-      <font-awesome-icon icon="fa-external-link" @click="popoutClicked" />
+      <font-awesome-icon
+        icon="fa-external-link"
+        @click="popoutClicked"
+      />
     </div>
 
     <ParcelsControl />
     <LabelsControl />
 
-    <div id="eagleview" class="eagleview-div" />
+    <div
+      id="eagleview"
+      class="eagleview-div"
+    />
   </div>
 </template>
 
@@ -189,7 +196,6 @@ const popoutClicked = () => {
     height: 250px;
   }
 }
-
 
 .ev-embedded-explorer_container {
   height: 100%;

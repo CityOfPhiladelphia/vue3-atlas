@@ -19,6 +19,7 @@ const selectedParcel = computed(() => {
   if (ParcelsStore.dor.features && ParcelsStore.dor.features.length > 0) {
     return ParcelsStore.dor.features.filter(feature => feature.id === selectedParcelId.value)[0];
   }
+  return null;
 });
 
 // ZONING OVERLAYS
@@ -55,34 +56,8 @@ const longCodes = computed(() => {
     }
     return codes;
   }
+  return null;
 });
-
-const hexesForLongCodes = computed(() => {
-  const hexes = [];
-  if (longCodes.value) {
-    for (let code of longCodes.value) {
-      hexes.push($config.ZONING_CODE_MAP[code].color);
-    }
-  }
-  return hexes;
-  // if (ZoningStore.zoningBase[selectedParcelId.value] && ZoningStore.zoningBase[selectedParcelId.value].rows) {
-  //   const longCode = ZoningStore.zoningBase[selectedParcelId.value].rows[0].long_code;
-  //   return $config.ZONING_CODE_MAP[longCode].color;
-  // }
-});
-
-const descriptions = computed(() => {
-  const descriptions = [];
-  if (longCodes.value) {
-    for (let code of longCodes.value) {
-      descriptions.push($config.ZONING_CODE_MAP[code].description);
-    }
-  }
-  return descriptions;
-  // if (ZoningStore.zoningBase[selectedParcelId.value] && ZoningStore.zoningBase[selectedParcelId.value].rows) {
-  //   return $config.ZONING_CODE_MAP[ZoningStore.zoningBase[selectedParcelId.value].rows[0].long_code].description;
-  // }
-})
 
 const pendingBillsTableData = computed(() => {
   return {
@@ -225,7 +200,10 @@ const rcosTableData = computed(() => {
   >
     Base district zoning maps, associated zoning overlays, and Registered Community Organizations applicable to your search address. If you notice a discrepancy, please contact <a href="mailto:planning@phila.gov">planning@phila.gov</a>. Source: Department of Planning and Development
     <br><br>
-    A fuller summary of zoning for this address can be found on the <a target="_blank" :href="'https://www.phila.gov/zoning-summary-generator/?address='+MainStore.currentAddress">Zoning Summary Generator</a>.
+    A fuller summary of zoning for this address can be found on the <a
+      target="_blank"
+      :href="'https://www.phila.gov/zoning-summary-generator/?address='+MainStore.currentAddress"
+    >Zoning Summary Generator</a>.
   </div>
   <div :class="selectedParcel ? 'mb-5' : 'mb-6'">
     <collection-summary
@@ -264,8 +242,8 @@ const rcosTableData = computed(() => {
               </div>
             </div>
             <div
-              v-if="longCodes"
               v-for="longCode in longCodes"
+              v-if="longCodes"
               class="column is-12 columns is-mobile pt-0 pb-0"
             >
               <div class="column is-2 badge-cell">
@@ -332,11 +310,10 @@ const rcosTableData = computed(() => {
               <custom-pagination-labels
                 :mode="'pages'"
                 :total="props.total"
-                :perPage="5"
+                :per-page="5"
                 @page-changed="props.pageChanged"
                 @per-page-changed="props.perPageChanged"
-              >
-              </custom-pagination-labels>
+              />
             </template>
           </vue-good-table>
         </div>
@@ -374,11 +351,10 @@ const rcosTableData = computed(() => {
             <custom-pagination-labels
               :mode="'pages'"
               :total="props.total"
-              :perPage="5"
+              :per-page="5"
               @page-changed="props.pageChanged"
               @per-page-changed="props.perPageChanged"
-            >
-            </custom-pagination-labels>
+            />
           </template>
         </vue-good-table>
       </div>
@@ -416,11 +392,10 @@ const rcosTableData = computed(() => {
               <custom-pagination-labels
                 :mode="'pages'"
                 :total="props.total"
-                :perPage="5"
+                :per-page="5"
                 @page-changed="props.pageChanged"
                 @per-page-changed="props.perPageChanged"
-              >
-              </custom-pagination-labels>
+              />
             </template>
           </vue-good-table>
         </div>
@@ -429,11 +404,10 @@ const rcosTableData = computed(() => {
       <!-- <div class="topic-info"> -->
       <div>
         Community based map changes are shown from 1969 onward. Individual property or small block map
-        changes are shown from 2000 onward. The maps and data provided on this page are intended for 
-        general reference purposes only. Users should not assume that the information is complete or 
+        changes are shown from 2000 onward. The maps and data provided on this page are intended for
+        general reference purposes only. Users should not assume that the information is complete or
         free from error and should not rely on it exclusively when making decisions.
       </div>
-
     </div>
   </div>
 
@@ -470,13 +444,12 @@ const rcosTableData = computed(() => {
           <custom-pagination-labels
             :mode="'pages'"
             :total="props.total"
-            :perPage="5"
+            :per-page="5"
             @page-changed="props.pageChanged"
             @per-page-changed="props.perPageChanged"
-          >
-          </custom-pagination-labels>
+          />
         </template>
-        <template #table-row='props'>
+        <template #table-row="props">
           <span v-if="props.column.field === 'appealgrounds'">
             {{ props.row.appealgrounds }}<br>
             <span v-if="props.row.coordinatingrco">
@@ -484,7 +457,6 @@ const rcosTableData = computed(() => {
             </span>
           </span>
         </template>
-
       </vue-good-table>
     </div>
   </div>
@@ -529,11 +501,10 @@ const rcosTableData = computed(() => {
           <custom-pagination-labels
             :mode="'pages'"
             :total="props.total"
-            :perPage="5"
+            :per-page="5"
             @page-changed="props.pageChanged"
             @per-page-changed="props.perPageChanged"
-          >
-          </custom-pagination-labels>
+          />
         </template>
       </vue-good-table>
     </div>
@@ -579,7 +550,7 @@ const rcosTableData = computed(() => {
   /* padding: 0px; */
 }
 
-@media 
+@media
 only screen and (max-width: 768px),
 (min-device-width: 768px) and (max-device-width: 1024px)  {
 
@@ -640,7 +611,7 @@ only screen and (max-width: 768px),
 }
 
 #rcos {
-  td:nth-of-type(2) span { 
+  td:nth-of-type(2) span {
     word-wrap: break-word !important;
     display: inline-block !important;
     max-width: 180px !important;

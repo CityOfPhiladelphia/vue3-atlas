@@ -1,6 +1,6 @@
 <script setup>
 
-import { ref, computed, watch, onMounted } from 'vue';
+import { computed, watch, onMounted } from 'vue';
 import { RouterLink, useRoute } from 'vue-router'
 const route = useRoute();
 
@@ -134,10 +134,10 @@ const condosTableData = computed(() => {
   font-weight: bold !important;
 }
 
-@media 
+@media
 only screen and (max-width: 768px),
 (min-device-width: 768px) and (max-device-width: 1024px)  {
-  
+
   .pagination-link {
     margin: 0px !important;
     /* padding: 0px; */
@@ -163,7 +163,7 @@ only screen and (max-width: 768px),
   }
 
   .horizontal-table {
-    
+
     td:nth-of-type(2) { min-height: 60px; }
     /* Label the data */
     td:nth-of-type(1):before { content: "Address"; }

@@ -1,6 +1,6 @@
 <script setup>
 import { computed, watch, onMounted, onBeforeUnmount } from 'vue';
-import { point, featureCollection, feature } from '@turf/helpers';
+import { point, featureCollection } from '@turf/helpers';
 
 
 import { useNearbyActivityStore } from '@/stores/NearbyActivityStore';
@@ -61,7 +61,7 @@ onMounted(() => {
     if (nearbyVacantIndicatorPointsGeojson.value.length > 0) {
       const bounds = bbox(buffer(featureCollection(nearbyVacantIndicatorPointsGeojson.value), 1000, {units: 'feet'}));
       if (map.fitBounds) map.fitBounds(bounds);
-    };
+    }
   }
 });
 onBeforeUnmount(() => {
@@ -114,10 +114,10 @@ const nearbyVacantIndicatorsTableData = computed(() => {
         :rows="nearbyVacantIndicatorsTableData.rows"
         :row-style-class="row => hoveredStateId === row.id ? 'active-hover ' + row.id : 'inactive ' + row.id"
         style-class="table nearby-table"
+        :sort-options="{ initialSortBy: {field: 'properties.distance_ft', type: 'asc'}}"
         @row-mouseenter="handleRowMouseover($event, 'id')"
         @row-mouseleave="handleRowMouseleave"
         @row-click="handleRowClick($event, 'id', 'nearbyVacantIndicatorPoints')"
-        :sort-options="{ initialSortBy: {field: 'properties.distance_ft', type: 'asc'}}"
       >
         <template #emptystate>
           <div v-if="loadingData">
@@ -142,7 +142,7 @@ const nearbyVacantIndicatorsTableData = computed(() => {
 
 <style>
 
-@media 
+@media
 only screen and (max-width: 768px) {
 
   #nearbyVacantIndicators {

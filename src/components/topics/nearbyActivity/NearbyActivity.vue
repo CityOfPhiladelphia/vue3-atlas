@@ -164,13 +164,41 @@ onMounted( () => {
       </div>
     </div>
 
-    <Nearby311 v-if="currentNearbyActivityDataType == '311'" :time-interval-selected="timeIntervalSelected" :text-search="textSearch" />
-    <NearbyCrimeIncidents v-if="currentNearbyActivityDataType == 'crimeIncidents'" :time-interval-selected="timeIntervalSelected" :text-search="textSearch" />
-    <NearbyZoningAppeals v-if="currentNearbyActivityDataType == 'zoningAppeals'" :time-interval-selected="timeIntervalSelected" :text-search="textSearch" />
-    <NearbyVacantIndicatorPoints v-if="currentNearbyActivityDataType == 'vacantIndicatorPoints'" :time-interval-selected="timeIntervalSelected" :text-search="textSearch" />
-    <NearbyConstructionPermits v-if="currentNearbyActivityDataType == 'constructionPermits'" :time-interval-selected="timeIntervalSelected" :text-search="textSearch" />
-    <NearbyDemolitionPermits v-if="currentNearbyActivityDataType == 'demolitionPermits'" :time-interval-selected="timeIntervalSelected" :text-search="textSearch" />
-    <NearbyUnsafeBuildings v-if="currentNearbyActivityDataType == 'unsafeBuildings'" :time-interval-selected="timeIntervalSelected" :text-search="textSearch" />
+    <Nearby311
+      v-if="currentNearbyActivityDataType == '311'"
+      :time-interval-selected="timeIntervalSelected"
+      :text-search="textSearch"
+    />
+    <NearbyCrimeIncidents
+      v-if="currentNearbyActivityDataType == 'crimeIncidents'"
+      :time-interval-selected="timeIntervalSelected"
+      :text-search="textSearch"
+    />
+    <NearbyZoningAppeals
+      v-if="currentNearbyActivityDataType == 'zoningAppeals'"
+      :time-interval-selected="timeIntervalSelected"
+      :text-search="textSearch"
+    />
+    <NearbyVacantIndicatorPoints
+      v-if="currentNearbyActivityDataType == 'vacantIndicatorPoints'"
+      :time-interval-selected="timeIntervalSelected"
+      :text-search="textSearch"
+    />
+    <NearbyConstructionPermits
+      v-if="currentNearbyActivityDataType == 'constructionPermits'"
+      :time-interval-selected="timeIntervalSelected"
+      :text-search="textSearch"
+    />
+    <NearbyDemolitionPermits
+      v-if="currentNearbyActivityDataType == 'demolitionPermits'"
+      :time-interval-selected="timeIntervalSelected"
+      :text-search="textSearch"
+    />
+    <NearbyUnsafeBuildings
+      v-if="currentNearbyActivityDataType == 'unsafeBuildings'"
+      :time-interval-selected="timeIntervalSelected"
+      :text-search="textSearch"
+    />
   </section>
 </template>
 
