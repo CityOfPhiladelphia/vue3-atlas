@@ -123,14 +123,22 @@ export const useZoningStore = defineStore('ZoningStore', {
         try {
           let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
           const mapreg = feature.properties.mapreg;
-          const query = "WITH all_proposed_zoning AS \
-              ( SELECT * FROM phl.proposedzoning_imp_public ), \
+          console.log('fillProposedZoning - mapreg:', mapreg);
+          const query = "WITH all_proposed_zoning AS ( SELECT * FROM phl.proposedzoning_imp_public ), \
             parcel AS \
               ( SELECT * FROM phl.dor_parcel WHERE dor_parcel.mapreg = '" + mapreg + "' ), \
-            zp AS \
-              ( SELECT all_proposed_zoning.* FROM all_proposed_zoning, parcel WHERE st_overlaps(parcel.the_geom, all_proposed_zoning.the_geom)) \
-            SELECT * \
-            FROM zp";
+            zp_overlaps AS \
+              ( SELECT all_proposed_zoning.* FROM all_proposed_zoning, parcel WHERE st_overlaps(parcel.the_geom, all_proposed_zoning.the_geom)), \
+            zp_intersects AS \
+              ( SELECT all_proposed_zoning.* FROM all_proposed_zoning, parcel WHERE st_intersects(parcel.the_geom, all_proposed_zoning.the_geom)) \
+            SELECT * FROM zp_overlaps UNION SELECT * FROM zp_intersects";
+          // const query = "WITH all_proposed_zoning AS ( SELECT * FROM phl.proposedzoning_imp_public ), \
+          //   parcel AS \
+          //     ( SELECT * FROM phl.dor_parcel WHERE dor_parcel.mapreg = '" + mapreg + "' ), \
+          //   zp AS \
+          //     ( SELECT all_proposed_zoning.* FROM all_proposed_zoning, parcel WHERE st_overlaps(parcel.the_geom, all_proposed_zoning.the_geom)) \
+          //   SELECT * \
+          //   FROM zp";
           const url = baseUrl += query;
           const response = await fetch(url);
           if (response.ok) {
