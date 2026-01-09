@@ -577,7 +577,7 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
       type: 'raster',
       tileSize: 1024,
     },
-      parcel_labels: {
+    parcelLabels: {
       tiles: [
         'https://citygeo-geoserver.databridge.phila.gov/geoserver/dor_basemap_small_labels/wms?service=WMS\
           &version=1.3.0\
@@ -645,8 +645,8 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
       }
     },
     {
-      id: 'parcel_labels',
-      source: 'parcel_labels',
+      id: 'parcelLabels',
+      source: 'parcelLabels',
       type: 'raster',
       paint: {
         'raster-opacity': 1,
