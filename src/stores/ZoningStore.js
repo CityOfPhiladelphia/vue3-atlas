@@ -127,11 +127,15 @@ export const useZoningStore = defineStore('ZoningStore', {
           const query = "WITH all_proposed_zoning AS ( SELECT * FROM phl.proposedzoning_imp_public ), \
             parcel AS \
               ( SELECT * FROM phl.dor_parcel WHERE dor_parcel.mapreg = '" + mapreg + "' ), \
-              zp_intersects AS \
-              ( SELECT all_proposed_zoning.* FROM all_proposed_zoning, parcel WHERE st_intersects(parcel.the_geom, all_proposed_zoning.the_geom)) \
-              SELECT * FROM zp_intersects";
-          // zp_overlaps AS \
-          //   ( SELECT all_proposed_zoning.* FROM all_proposed_zoning, parcel WHERE st_overlaps(parcel.the_geom, all_proposed_zoning.the_geom)), \
+              zp_overlaps AS \
+                ( SELECT all_proposed_zoning.* FROM all_proposed_zoning, parcel WHERE st_overlaps(parcel.the_geom, all_proposed_zoning.the_geom)), \
+              zp_contains AS \
+                ( SELECT all_proposed_zoning.* FROM all_proposed_zoning, parcel WHERE st_contains(all_proposed_zoning.the_geom, parcel.the_geom)), \
+              SELECT * from zp_overlaps UNION SELECT * from zp_contains";
+
+              // zp_intersects AS \
+              // ( SELECT all_proposed_zoning.* FROM all_proposed_zoning, parcel WHERE st_intersects(parcel.the_geom, all_proposed_zoning.the_geom)) \
+              // SELECT * FROM zp_intersects";
           
           // const query = "WITH all_proposed_zoning AS ( SELECT * FROM phl.proposedzoning_imp_public ), \
           //   parcel AS \
