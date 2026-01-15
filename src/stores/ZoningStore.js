@@ -130,7 +130,7 @@ export const useZoningStore = defineStore('ZoningStore', {
               zp_overlaps AS \
                 ( SELECT all_proposed_zoning.* FROM all_proposed_zoning, parcel WHERE st_overlaps(parcel.the_geom, all_proposed_zoning.the_geom)), \
               zp_contains AS \
-                ( SELECT all_proposed_zoning.* FROM all_proposed_zoning, parcel WHERE st_contains(all_proposed_zoning.the_geom, parcel.the_geom)), \
+                ( SELECT all_proposed_zoning.* FROM all_proposed_zoning, parcel WHERE st_contains(all_proposed_zoning.the_geom, parcel.the_geom)) \
               SELECT * from zp_overlaps UNION SELECT * from zp_contains";
 
               // zp_intersects AS \
