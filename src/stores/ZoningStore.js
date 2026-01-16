@@ -126,24 +126,12 @@ export const useZoningStore = defineStore('ZoningStore', {
           console.log('fillProposedZoning - mapreg:', mapreg);
           const query = "WITH all_proposed_zoning AS ( SELECT * FROM phl.proposedzoning_imp_public ), \
             parcel AS \
-              ( SELECT * FROM phl.dor_parcel WHERE dor_parcel.mapreg = '" + mapreg + "' ), \
-              zp_overlaps AS \
-                ( SELECT all_proposed_zoning.* FROM all_proposed_zoning, parcel WHERE st_overlaps(parcel.the_geom, all_proposed_zoning.the_geom)), \
-              zp_contains AS \
-                ( SELECT all_proposed_zoning.* FROM all_proposed_zoning, parcel WHERE st_contains(all_proposed_zoning.the_geom, parcel.the_geom)) \
-              SELECT * from zp_overlaps UNION SELECT * from zp_contains";
-
-              // zp_intersects AS \
-              // ( SELECT all_proposed_zoning.* FROM all_proposed_zoning, parcel WHERE st_intersects(parcel.the_geom, all_proposed_zoning.the_geom)) \
-              // SELECT * FROM zp_intersects";
-          
-          // const query = "WITH all_proposed_zoning AS ( SELECT * FROM phl.proposedzoning_imp_public ), \
-          //   parcel AS \
-          //     ( SELECT * FROM phl.dor_parcel WHERE dor_parcel.mapreg = '" + mapreg + "' ), \
-          //   zp AS \
-          //     ( SELECT all_proposed_zoning.* FROM all_proposed_zoning, parcel WHERE st_overlaps(parcel.the_geom, all_proposed_zoning.the_geom)) \
-          //   SELECT * \
-          //   FROM zp";
+            ( SELECT * FROM phl.dor_parcel WHERE dor_parcel.mapreg = '" + mapreg + "' ), \
+            zp_overlaps AS \
+              ( SELECT all_proposed_zoning.* FROM all_proposed_zoning, parcel WHERE st_overlaps(parcel.the_geom, all_proposed_zoning.the_geom) AND ST_Area(ST_Intersection(parcel.the_geom, all_proposed_zoning.the_geom)) / ST_Area(parcel.the_geom) > 0.05), \
+            zp_contains AS \
+              ( SELECT all_proposed_zoning.* FROM all_proposed_zoning, parcel WHERE st_contains(all_proposed_zoning.the_geom, parcel.the_geom)) \
+            SELECT * from zp_overlaps UNION SELECT * from zp_contains";
           const url = baseUrl += query;
           const response = await fetch(url);
           if (response.ok) {
