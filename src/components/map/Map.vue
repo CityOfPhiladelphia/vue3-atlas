@@ -661,11 +661,11 @@ const handleRegmapOpacityChange = (opacity) => {
   );
 }
 
-// for Zoning topic, change opacity of labels layer (it used to be the zoning layer)
+// for Zoning topic, change opacity of zoning layer
 const handleZoningOpacityChange = (opacity) => {
   MapStore.zoningOpacity = opacity / 100;
   map.setPaintProperty(
-    'parcelLabels',
+    'zoning',
     'raster-opacity',
     opacity / 100,
   );
