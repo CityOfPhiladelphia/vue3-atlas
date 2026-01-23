@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue';
+import { computed, watch, onMounted } from 'vue';
 import { polygon, featureCollection } from '@turf/helpers';
 
 import CustomPaginationLabels from '@/components/pagination/CustomPaginationLabels.vue';
@@ -140,7 +140,7 @@ const buildingData = computed(() => {
   ];
 });
 
-const buildingCertsTableData = ref({
+const buildingCertsTableData = computed(() => ({
   columns: [
     {
       label: 'Inspection Type',
@@ -167,7 +167,7 @@ const buildingCertsTableData = ref({
     }
   ],
   rows: selectedBuildingCerts.value || [],
-})
+}))
 
 // Carto version with original date formats
 // const buildingCertsTableDataCarto = ref({
