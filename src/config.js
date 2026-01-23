@@ -430,10 +430,30 @@ const dorDrawnMapStyle = mergeDeep(imageryInfo,{
   sources: {
     dor: {
       tiles: [
-        'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/dor_basemap/MapServer/tile/{z}/{y}/{x}',
+        'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/dor_basemap_no_labels/MapServer/tile/{z}/{y}/{x}',
       ],
       type: 'raster',
       tileSize: 256,
+    },
+    parcelLabels: {
+      tiles: [
+        'https://citygeo-geoserver.databridge.phila.gov/geoserver/dor_basemap_small_labels/wms?service=WMS\
+          &version=1.3.0\
+          &request=GetMap\
+          &layers=dor_basemap_small_labels\
+          &bbox={bbox-epsg-3857}\
+          &width=1024\
+          &height=1024\
+          &srs=EPSG%3A3857\
+          &format=image/png8\
+          &transparent=true\
+          &tiled=true\
+          &buffer=150'
+          // Note: &tiled=true&buffer=150 necessary to have small labels cross tile boundaries properly.
+      ],
+      type: 'raster',
+      tileSize: 1024,
+      minzoom: 16.5
     },
     addressMarker: {
       type: 'geojson',
@@ -461,6 +481,14 @@ const dorDrawnMapStyle = mergeDeep(imageryInfo,{
       id: 'dor',
       source: 'dor',
       type: 'raster',
+    },
+    {
+      id: 'parcelLabels',
+      source: 'parcelLabels',
+      type: 'raster',
+      paint: {
+        'raster-opacity': 1,
+      }
     },
     {
       id: 'cyclomediaRecordings',
@@ -528,23 +556,43 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
   sources: {
     dor: {
       tiles: [
-        'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/dor_basemap/MapServer/tile/{z}/{y}/{x}',
+        'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/dor_basemap_no_labels/MapServer/tile/{z}/{y}/{x}',
       ],
       type: 'raster',
       tileSize: 256,
     },
+    parcelLabels: {
+      tiles: [
+        'https://citygeo-geoserver.databridge.phila.gov/geoserver/dor_basemap_small_labels/wms?service=WMS\
+          &version=1.3.0\
+          &request=GetMap\
+          &layers=dor_basemap_small_labels\
+          &bbox={bbox-epsg-3857}\
+          &width=1024\
+          &height=1024\
+          &srs=EPSG%3A3857\
+          &format=image/png8\
+          &transparent=true\
+          &tiled=true\
+          &buffer=150'
+          // Note: &tiled=true&buffer=150 necessary to have small labels cross tile boundaries properly.
+      ],
+      type: 'raster',
+      tileSize: 1024,
+      minzoom: 16
+    },
     zoning: {
       tiles: [
-        'https://citygeo-geoserver.databridge.phila.gov/geoserver/wms?service=WMS&version=1.1.0&request=GetMap&layers=atlas_zoning_grouped&bbox={bbox-epsg-3857}&width=1024&height=1024&srs=EPSG%3A3857&styles=&format=image/png8&transparent=true'
-        // 'https://citygeo-geocoder-pub.databridge.phila.gov/arcgis/rest/services/Atlas/ZoningMap/MapServer/export?dpi=120\
-        //   &transparent=true\
-        //   &format=png32\
-        //   &bbox={bbox-epsg-3857}\
-        //   &bboxSR=3857\
-        //   &imageSR=3857\
-        //   &size=512,512\
-        //   &f=image\
-        // ',
+        'https://citygeo-geoserver.databridge.phila.gov/geoserver/wms?service=WMS\
+          &version=1.3.0\
+          &request=GetMap\
+          &layers=atlas_zoning_grouped\
+          &bbox={bbox-epsg-3857}\
+          &width=1024\
+          &height=1024\
+          &srs=EPSG%3A3857\
+          &format=image/png8\
+          &transparent=true'
       ],
       type: 'raster',
       tileSize: 1024,
@@ -586,6 +634,14 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
         'circle-stroke-width': 1,
         'circle-stroke-color': '#a1a1a1',
         'circle-opacity': 0.5,
+      }
+    },
+    {
+      id: 'parcelLabels',
+      source: 'parcelLabels',
+      type: 'raster',
+      paint: {
+        'raster-opacity': 1,
       }
     },
     {
