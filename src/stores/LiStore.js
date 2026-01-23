@@ -114,6 +114,35 @@ export const useLiStore = defineStore('LiStore', {
       try {
         const GeocodeStore = useGeocodeStore();
         const feature = GeocodeStore.aisData.features[0].properties.bin.split('|');
+        let bins = [];
+        // if (import.meta.env.VITE_DEBUG == 'true') console.log('li-building-cert-summary, feature:', feature);
+        if (feature.length) {
+          bins = feature;
+          // if (import.meta.env.VITE_DEBUG == 'true') console.log('after loop, bins:', bins);
+        } else if (this.liBuildingFootprints.data.features.length) {
+          bins = [this.liBuildingFootprints.data.features[0].attributes.bin];
+        }
+        const whereClause = `structure_id IN ('${bins.join("','")}')`;
+        const url = `https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/BUILDING_CERT_SUMMARY/FeatureServer/0/query?where=${encodeURIComponent(whereClause)}&outFields=*&f=json`;
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          // Transform ArcGIS response format to match Carto format for compatibility
+          this.liBuildingCertSummary = {
+            rows: data.features ? data.features.map(f => f.attributes) : []
+          };
+        } else {
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('liBuildingCertSummary - await resolved but HTTP status was not successful')
+        }
+      } catch {
+        if (import.meta.env.VITE_DEBUG == 'true') console.error('liBuildingCertSummary - await never resolved, failed to fetch address data')
+      }
+    },
+    async fillLiBuildingCertSummaryCarto() {
+      // if (import.meta.env.VITE_DEBUG == 'true') console.log('fillLiBuildingCertSummaryCarto is running');
+      try {
+        const GeocodeStore = useGeocodeStore();
+        const feature = GeocodeStore.aisData.features[0].properties.bin.split('|');
         let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
         let bin = "";
         // if (import.meta.env.VITE_DEBUG == 'true') console.log('li-building-cert-summary, feature:', feature);
@@ -143,6 +172,37 @@ export const useLiStore = defineStore('LiStore', {
     },
     async fillLiBuildingCerts() {
       // if (import.meta.env.VITE_DEBUG == 'true') console.log('fillLiBuildingCerts is running');
+      try {
+        const GeocodeStore = useGeocodeStore();
+        const feature = GeocodeStore.aisData.features[0].properties.bin.split('|');
+        let bins = [];
+        if (feature.length) {
+          bins = feature;
+        } else if (this.liBuildingFootprints.data.features.length) {
+          bins = [this.liBuildingFootprints.data.features[0].attributes.bin];
+        }
+        const whereClause = `bin IN ('${bins.join("','")}')`;
+        const url = `https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/BUILDING_CERTS/FeatureServer/0/query?where=${encodeURIComponent(whereClause)}&outFields=*&f=json`;
+        const response = await fetch(url);
+        if (response.ok) {
+          const jsonData = await response.json();
+          // Transform ArcGIS response format to match Carto format for compatibility
+          let data = {
+            rows: jsonData.features ? jsonData.features.map(f => f.attributes) : []
+          };
+          data.rows.forEach((item) => {
+            item.link = `<a target='_blank' href='https://li.phila.gov/property-history/search/building-certification-detail?address="${encodeURIComponent(item.address)}"&Id=${item.bin}'>${item.buildingcerttype} <i class='fa fa-external-link'></i></a>`;
+          })
+          this.liBuildingCerts = data;
+        } else {
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('liBuildingCerts - await resolved but HTTP status was not successful')
+        }
+      } catch {
+        if (import.meta.env.VITE_DEBUG == 'true') console.error('liBuildingCerts - await never resolved, failed to fetch address data')
+      }
+    },
+    async fillLiBuildingCertsCarto() {
+      // if (import.meta.env.VITE_DEBUG == 'true') console.log('fillLiBuildingCertsCarto is running');
       try {
         const GeocodeStore = useGeocodeStore();
         const feature = GeocodeStore.aisData.features[0].properties.bin.split('|');

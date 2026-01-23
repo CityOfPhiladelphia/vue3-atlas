@@ -151,7 +151,7 @@ const buildingCertsTableData = ref({
       label: 'Date Inspected',
       field: 'inspectiondate',
       type: 'date',
-      dateInputFormat: "yyyy-MM-dd'T'HH:mm:ssX",
+      dateInputFormat: 'T',
       dateOutputFormat: 'MM/dd/yyyy',
     },
     {
@@ -162,12 +162,42 @@ const buildingCertsTableData = ref({
       label: 'Expiration Date',
       field: 'expirationdate',
       type: 'date',
-      dateInputFormat: "yyyy-MM-dd'T'HH:mm:ssX",
+      dateInputFormat: 'T',
       dateOutputFormat: 'MM/dd/yyyy',
     }
   ],
   rows: selectedBuildingCerts.value || [],
 })
+
+// Carto version with original date formats
+// const buildingCertsTableDataCarto = ref({
+//   columns: [
+//     {
+//       label: 'Inspection Type',
+//       field: 'link',
+//       html: true,
+//     },
+//     {
+//       label: 'Date Inspected',
+//       field: 'inspectiondate',
+//       type: 'date',
+//       dateInputFormat: "yyyy-MM-dd'T'HH:mm:ssX",
+//       dateOutputFormat: 'MM/dd/yyyy',
+//     },
+//     {
+//       label: 'Inspection Result',
+//       field: 'inspectionresult',
+//     },
+//     {
+//       label: 'Expiration Date',
+//       field: 'expirationdate',
+//       type: 'date',
+//       dateInputFormat: "yyyy-MM-dd'T'HH:mm:ssX",
+//       dateOutputFormat: 'MM/dd/yyyy',
+//     }
+//   ],
+//   rows: selectedBuildingCerts.value || [],
+// })
 
 const permitsTableData = computed(() => {
   return {
