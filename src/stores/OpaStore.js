@@ -22,6 +22,24 @@ export const useOpaStore = defineStore('OpaStore', {
       try {
         const GeocodeStore = useGeocodeStore();
         const OpaNum = GeocodeStore.aisData.features[0].properties.opa_account_num;
+        const response = await fetch(`https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/OPA_PROPERTIES_PUBLIC/FeatureServer/0/query?where=parcel_number%3D%27${OpaNum}%27&outFields=*&f=json`);
+        if (response.ok) {
+          const data = await response.json();
+          // Transform ArcGIS response format to match Carto format for compatibility with getters
+          this.opaData = {
+            rows: data.features ? data.features.map(f => f.attributes) : []
+          };
+        } else {
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('opaData - await resolved but HTTP status was not successful')
+        }
+      } catch {
+        if (import.meta.env.VITE_DEBUG == 'true') console.error('opaData - await never resolved, failed to fetch address data')
+      }
+    },
+    async fillOpaDataCarto() {
+      try {
+        const GeocodeStore = useGeocodeStore();
+        const OpaNum = GeocodeStore.aisData.features[0].properties.opa_account_num;
         const response = await fetch(`https://phl.carto.com/api/v2/sql?q=select+*+from+opa_properties_public+where+parcel_number+%3D+%27${OpaNum}%27`);
         if (response.ok) {
           this.opaData = await response.json()
