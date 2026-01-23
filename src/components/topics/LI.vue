@@ -170,7 +170,7 @@ const buildingCertsTableData = computed(() => ({
 }))
 
 // Carto version with original date formats
-// const buildingCertsTableDataCarto = ref({
+// const buildingCertsTableDataCarto = computed({
 //   columns: [
 //     {
 //       label: 'Inspection Type',
