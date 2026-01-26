@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { useGeocodeStore } from '@/stores/GeocodeStore.js'
+import { API_SOURCES } from '@/config/apiSources.js';
 
 import useTransforms from '@/composables/useTransforms';
 const { titleCase, prettyNumber, currency, date } = useTransforms();
@@ -19,6 +20,12 @@ export const useOpaStore = defineStore('OpaStore', {
       this.assessmentHistory = {};
     },
     async fillOpaData() {
+      if (API_SOURCES.opaData === 'arcgis') {
+        return this._fillOpaDataArcGIS();
+      }
+      return this._fillOpaDataCarto();
+    },
+    async _fillOpaDataArcGIS() {
       try {
         const GeocodeStore = useGeocodeStore();
         const OpaNum = GeocodeStore.aisData.features[0].properties.opa_account_num;
@@ -37,7 +44,7 @@ export const useOpaStore = defineStore('OpaStore', {
         if (import.meta.env.VITE_DEBUG == 'true') console.error('opaData - await never resolved, failed to fetch address data')
       }
     },
-    async fillOpaDataCarto() {
+    async _fillOpaDataCarto() {
       try {
         const GeocodeStore = useGeocodeStore();
         const OpaNum = GeocodeStore.aisData.features[0].properties.opa_account_num;
