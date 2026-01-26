@@ -16,12 +16,13 @@ export default function useTransforms() {
     if (!value) return;
     let valueTransformed;
     // if (import.meta.env.VITE_DEBUG == 'true') console.log('date transform running, value:', value, 'typeof value:', typeof value);
-    // if (typeof value === 'string') {
-      // console.log('date transform parseISO(value):', parseISO(value));
-    valueTransformed = formatInTimeZone(value, 'America/New_York', 'MM/dd/yyyy');
-    // } else {
-    //   valueTransformed = formatInTimeZone(value, 'America/New_York', 'MM/dd/yyyy');
-    // }
+    // Handle ArcGIS epoch timestamps (numbers) and Carto date strings
+    let dateValue = value;
+    if (typeof value === 'number') {
+      // ArcGIS returns epoch milliseconds
+      dateValue = new Date(value);
+    }
+    valueTransformed = formatInTimeZone(dateValue, 'America/New_York', 'MM/dd/yyyy');
     return valueTransformed;
   }
 
