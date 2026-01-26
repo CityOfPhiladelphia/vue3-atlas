@@ -1,9 +1,19 @@
 import { defineStore } from 'pinia';
 import { useGeocodeStore } from '@/stores/GeocodeStore.js'
+import { API_SOURCES } from '@/config/apiSources.js';
 
 import useTransforms from '@/composables/useTransforms';
 const { date } = useTransforms();
 import axios from 'axios';
+
+// Helper to convert ArcGIS epoch timestamps to ISO date strings for table components
+// Format: yyyy-MM-dd'T'HH:mm:ssZ (matches table dateInputFormat)
+const epochToIso = (epoch) => {
+  if (!epoch || typeof epoch !== 'number' || epoch <= 0) return null;
+  const d = new Date(epoch);
+  // Remove milliseconds from ISO string to match expected format
+  return d.toISOString().replace(/\.\d{3}Z$/, 'Z');
+};
 
 export const useLiStore = defineStore('LiStore', {
   state: () => {
@@ -110,6 +120,12 @@ export const useLiStore = defineStore('LiStore', {
       }
     },
     async fillLiBuildingCertSummary() {
+      if (API_SOURCES.buildingCertSummary === 'arcgis') {
+        return this._fillLiBuildingCertSummaryArcGIS();
+      }
+      return this._fillLiBuildingCertSummaryCarto();
+    },
+    async _fillLiBuildingCertSummaryArcGIS() {
       // if (import.meta.env.VITE_DEBUG == 'true') console.log('fillLiBuildingCertSummary is running');
       try {
         const GeocodeStore = useGeocodeStore();
@@ -138,7 +154,7 @@ export const useLiStore = defineStore('LiStore', {
         if (import.meta.env.VITE_DEBUG == 'true') console.error('liBuildingCertSummary - await never resolved, failed to fetch address data')
       }
     },
-    async fillLiBuildingCertSummaryCarto() {
+    async _fillLiBuildingCertSummaryCarto() {
       // if (import.meta.env.VITE_DEBUG == 'true') console.log('fillLiBuildingCertSummaryCarto is running');
       try {
         const GeocodeStore = useGeocodeStore();
@@ -171,6 +187,12 @@ export const useLiStore = defineStore('LiStore', {
       }
     },
     async fillLiBuildingCerts() {
+      if (API_SOURCES.buildingCerts === 'arcgis') {
+        return this._fillLiBuildingCertsArcGIS();
+      }
+      return this._fillLiBuildingCertsCarto();
+    },
+    async _fillLiBuildingCertsArcGIS() {
       // if (import.meta.env.VITE_DEBUG == 'true') console.log('fillLiBuildingCerts is running');
       try {
         const GeocodeStore = useGeocodeStore();
@@ -201,7 +223,7 @@ export const useLiStore = defineStore('LiStore', {
         if (import.meta.env.VITE_DEBUG == 'true') console.error('liBuildingCerts - await never resolved, failed to fetch address data')
       }
     },
-    async fillLiBuildingCertsCarto() {
+    async _fillLiBuildingCertsCarto() {
       // if (import.meta.env.VITE_DEBUG == 'true') console.log('fillLiBuildingCertsCarto is running');
       try {
         const GeocodeStore = useGeocodeStore();
@@ -237,6 +259,71 @@ export const useLiStore = defineStore('LiStore', {
     },
 
     async fillLiPermits() {
+      if (API_SOURCES.permits === 'arcgis') {
+        return this._fillLiPermitsArcGIS();
+      }
+      return this._fillLiPermitsCarto();
+    },
+    async _fillLiPermitsArcGIS() {
+      try {
+        const GeocodeStore = useGeocodeStore();
+        const feature = GeocodeStore.aisData.features[0];
+        const streetaddress = feature.properties.street_address;
+        const opa_account_num = feature.properties.opa_account_num;
+        const pwd_parcel_id = feature.properties.pwd_parcel_id;
+        const addressId = feature.properties.li_address_key ? feature.properties.li_address_key.replace(/\|/g, "','") : null;
+        const eclipseLocationId = feature.properties.eclipse_location_id ? feature.properties.eclipse_location_id.replace(/\|/g, "','") : null;
+
+        // Build WHERE conditions dynamically for ArcGIS
+        const conditions = [];
+        if (streetaddress) {
+          conditions.push(`ADDRESS='${streetaddress}'`);
+        }
+        if (addressId) {
+          conditions.push(`ADDRESSOBJECTID IN ('${addressId}')`);
+        }
+        if (pwd_parcel_id) {
+          conditions.push(`PARCEL_ID_NUM IN ('${pwd_parcel_id}')`);
+        }
+        if (eclipseLocationId) {
+          conditions.push(`ADDRESSOBJECTID IN ('${eclipseLocationId}')`);
+        }
+        if (opa_account_num) {
+          conditions.push(`OPA_ACCOUNT_NUM IN ('${opa_account_num}')`);
+        }
+
+        const whereClause = conditions.length > 0 ? conditions.join(' OR ') : '1=1';
+        const url = `https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/PERMITS/FeatureServer/0/query?where=${encodeURIComponent(whereClause)}&outFields=*&orderByFields=PERMITTYPE&f=json`;
+
+        const response = await fetch(url);
+        if (response.ok) {
+          const jsonData = await response.json();
+          // Transform ArcGIS response to match Carto format, lowercase field names
+          const rows = jsonData.features ? jsonData.features.map(f => {
+            const attrs = {};
+            for (const key in f.attributes) {
+              attrs[key.toLowerCase()] = f.attributes[key];
+            }
+            // Convert epoch timestamps to ISO strings for table component
+            attrs.permitissuedate = epochToIso(attrs.permitissuedate);
+            return attrs;
+          }) : [];
+          const data = { rows };
+          data.rows.forEach((permit) => {
+            permit.link = `<a target='_blank' href='https://li.phila.gov/Property-History/search/Permit-Detail?address="${encodeURIComponent(permit.address)}"&Id=${permit.permitnumber}'>${permit.permitnumber} <i class='fa fa-external-link'></i></a>`;
+          });
+          this.liPermits = data;
+          this.loadingLiPermits = false;
+        } else {
+          this.loadingLiPermits = false;
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('permits - await resolved but HTTP status was not successful')
+        }
+      } catch {
+        this.loadingLiPermits = false;
+        if (import.meta.env.VITE_DEBUG == 'true') console.error('permits - await never resolved, failed to fetch address data')
+      }
+    },
+    async _fillLiPermitsCarto() {
       try {
         // if (import.meta.env.VITE_DEBUG == 'true') console.log('fillLiPermits is running');
         const GeocodeStore = useGeocodeStore();
@@ -421,6 +508,67 @@ export const useLiStore = defineStore('LiStore', {
     },
 
     async fillLiViolations() {
+      if (API_SOURCES.violations === 'arcgis') {
+        return this._fillLiViolationsArcGIS();
+      }
+      return this._fillLiViolationsCarto();
+    },
+    async _fillLiViolationsArcGIS() {
+      try {
+        const GeocodeStore = useGeocodeStore();
+        const feature = GeocodeStore.aisData.features[0];
+        const streetaddress = feature.properties.street_address;
+        const opa_account_num = feature.properties.opa_account_num;
+        const addressId = feature.properties.li_address_key;
+
+        // Build WHERE clause for ArcGIS using correct uppercase field names
+        let whereParts = [];
+        if (opa_account_num) whereParts.push(`OPA_ACCOUNT_NUM='${opa_account_num}'`);
+        if (streetaddress) whereParts.push(`ADDRESS='${streetaddress}'`);
+        if (addressId) whereParts.push(`ADDRESSOBJECTID='${addressId}'`);
+        const whereClause = whereParts.length > 0 ? whereParts.join(' OR ') : '1=1';
+        // Use VIOLATIONS service (not LI_VIOLATIONS) - field names match Carto
+        const url = `https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/VIOLATIONS/FeatureServer/0/query?where=${encodeURIComponent(whereClause)}&outFields=*&orderByFields=CASENUMBER+DESC&f=json`;
+
+        const response = await fetch(url);
+        if (response.ok) {
+          const jsonData = await response.json();
+          // Transform ArcGIS response to match Carto format, lowercase field names
+          const rows = jsonData.features ? jsonData.features.map(f => {
+            const attrs = {};
+            for (const key in f.attributes) {
+              attrs[key.toLowerCase()] = f.attributes[key];
+            }
+            // Convert epoch timestamps to ISO strings for table component
+            attrs.casecreateddate = epochToIso(attrs.casecreateddate);
+            return attrs;
+          }) : [];
+          const data = { rows };
+          data.rows.forEach((item) => {
+            let address = item.address;
+            if (item.unit_num && item.unit_num != null) {
+              address += ' Unit ' + item.unit_num;
+            }
+            item.link = "<a target='_blank' href='https://li.phila.gov/Property-History/search/Violation-Detail?address="+encodeURIComponent(address)+"&Id="+item.casenumber+"'>"+item.casenumber+" <i class='fa fa-external-link'></i></a>";
+            item.novLink = null;
+            if (item.publicnov) {
+              item.novLink = `<a target='_blank' href='${item.publicnov}'>${item.violationcodetitle} <i class='fa fa-external-link'></i></a>`
+            } else {
+              item.novLink = item.violationcodetitle;
+            }
+          });
+          this.liViolations = data;
+          this.loadingLiViolations = false;
+        } else {
+          this.loadingLiViolations = false;
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('liViolations - await resolved but HTTP status was not successful')
+        }
+      } catch {
+        this.loadingLiViolations = false;
+        if (import.meta.env.VITE_DEBUG == 'true') console.error('liViolations - await never resolved, failed to fetch address data')
+      }
+    },
+    async _fillLiViolationsCarto() {
       try {
         const GeocodeStore = useGeocodeStore();
         const feature = GeocodeStore.aisData.features[0];
@@ -471,6 +619,77 @@ export const useLiStore = defineStore('LiStore', {
     },
 
     async fillLiBusinessLicenses() {
+      if (API_SOURCES.businessLicenses === 'arcgis') {
+        return this._fillLiBusinessLicensesArcGIS();
+      }
+      return this._fillLiBusinessLicensesCarto();
+    },
+    async _fillLiBusinessLicensesArcGIS() {
+      try {
+        const GeocodeStore = useGeocodeStore();
+        const feature = GeocodeStore.aisData.features[0];
+        const streetaddress = feature.properties.street_address;
+        const opa_account_num = feature.properties.opa_account_num;
+        const pwd_parcel_id = feature.properties.pwd_parcel_id;
+        const addressId = feature.properties.li_address_key ? feature.properties.li_address_key.replace(/\|/g, "','") : null;
+        const eclipseLocationId = feature.properties.eclipse_location_id ? feature.properties.eclipse_location_id.replace(/\|/g, "','") : null;
+
+        // Build WHERE conditions dynamically for ArcGIS
+        const conditions = [];
+        if (streetaddress) {
+          conditions.push(`ADDRESS='${streetaddress}'`);
+        }
+        if (addressId) {
+          conditions.push(`ADDRESSOBJECTID IN ('${addressId}')`);
+        }
+        if (pwd_parcel_id) {
+          conditions.push(`PARCEL_ID_NUM IN ('${pwd_parcel_id}')`);
+        }
+        if (eclipseLocationId) {
+          conditions.push(`ADDRESSOBJECTID IN ('${eclipseLocationId}')`);
+        }
+        if (opa_account_num) {
+          conditions.push(`OPA_ACCOUNT_NUM IN ('${opa_account_num}')`);
+        }
+
+        // Require addressed_license = 'Yes'
+        const baseCondition = conditions.length > 0 ? `(${conditions.join(' OR ')})` : '1=1';
+        const whereClause = `${baseCondition} AND ADDRESSED_LICENSE='Yes'`;
+        const url = `https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/BUSINESS_LICENSES/FeatureServer/0/query?where=${encodeURIComponent(whereClause)}&outFields=*&orderByFields=LICENSETYPE&f=json`;
+
+        const response = await fetch(url);
+        if (response.ok) {
+          const jsonData = await response.json();
+          // Transform ArcGIS response to match Carto format, lowercase field names
+          const rows = jsonData.features ? jsonData.features.map(f => {
+            const attrs = {};
+            for (const key in f.attributes) {
+              attrs[key.toLowerCase()] = f.attributes[key];
+            }
+            // Convert epoch timestamps to ISO strings for table component
+            attrs.initialissuedate = epochToIso(attrs.initialissuedate);
+            return attrs;
+          }) : [];
+          const data = { rows };
+          data.rows.forEach((item) => {
+            let address = item.address;
+            if (item.unit_num && item.unit_num != null) {
+              address += ' Unit ' + item.unit_num;
+            }
+            item.link = "<a target='_blank' href='https://li.phila.gov/Property-History/search/Business-License-Detail?address="+encodeURIComponent(address)+"&Id="+item.licensenum+"'>"+item.licensenum+" <i class='fa fa-external-link'></i></a>";
+          });
+          this.liBusinessLicenses = data;
+          this.loadingLiBusinessLicenses = false;
+        } else {
+          this.loadingLiBusinessLicenses = false;
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('liBusinessLicenses - await resolved but HTTP status was not successful')
+        }
+      } catch {
+        this.loadingLiBusinessLicenses = false;
+        if (import.meta.env.VITE_DEBUG == 'true') console.error('liBusinessLicenses - await never resolved, failed to fetch address data')
+      }
+    },
+    async _fillLiBusinessLicensesCarto() {
       try {
         const GeocodeStore = useGeocodeStore();
         const feature = GeocodeStore.aisData.features[0];
@@ -519,32 +738,60 @@ export const useLiStore = defineStore('LiStore', {
       }
     },
     async fillLiAppeals() {
+      if (API_SOURCES.appeals === 'arcgis') {
+        return this._fillLiAppealsArcGIS();
+      }
+      return this._fillLiAppealsCarto();
+    },
+    async _fillLiAppealsArcGIS() {
       if (import.meta.env.VITE_DEBUG == 'true') console.log('fillLiAppeals is running');
       try {
         const GeocodeStore = useGeocodeStore();
         const feature = GeocodeStore.aisData.features[0];
-        let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
         const streetaddress = feature.properties.street_address;
         const pwd_parcel_id = feature.properties.pwd_parcel_id;
-        const addressId = feature.properties.li_address_key.replace(/\|/g, "', '");
-        const eclipseLocationId = feature.properties.eclipse_location_id.replace(/\|/g, "', '");
-        // console.log('eclipseLocationId:', eclipseLocationId);
-        const eclipseQuery = feature.properties.eclipse_location_id ? `addressobjectid IN ('${eclipseLocationId}')` : ``;
-        const opaQuery = feature.properties.opa_account_num ? `opa_account_num IN ('${feature.properties.opa_account_num}')` : ``;
-        const liQuery = `applicationtype not in ('Zoning Board of Adjustment', 'RB_ZBA') and applicationtype is not null`;
+        const addressId = feature.properties.li_address_key ? feature.properties.li_address_key.replace(/\|/g, "','") : null;
+        const eclipseLocationId = feature.properties.eclipse_location_id ? feature.properties.eclipse_location_id.replace(/\|/g, "','") : null;
+        const opaAccountNum = feature.properties.opa_account_num;
 
-        let query = `SELECT * FROM APPEALS \
-        WHERE (address = '${streetaddress}' AND ${liQuery} \
-        OR addressobjectid IN ('${addressId}') AND ${liQuery} \
-        OR parcel_id_num IN ('${pwd_parcel_id}') AND ${liQuery} \
-        OR ${eclipseQuery} AND ${liQuery}) \
-        OR ${opaQuery} AND ${liQuery} \
-        ORDER BY appealtype`;
+        // Build WHERE conditions dynamically for ArcGIS
+        const conditions = [];
+        if (streetaddress) {
+          conditions.push(`ADDRESS='${streetaddress}'`);
+        }
+        if (addressId) {
+          conditions.push(`ADDRESSOBJECTID IN ('${addressId}')`);
+        }
+        if (pwd_parcel_id) {
+          conditions.push(`PARCEL_ID_NUM IN ('${pwd_parcel_id}')`);
+        }
+        if (eclipseLocationId) {
+          conditions.push(`ADDRESSOBJECTID IN ('${eclipseLocationId}')`);
+        }
+        if (opaAccountNum) {
+          conditions.push(`OPA_ACCOUNT_NUM IN ('${opaAccountNum}')`);
+        }
 
-        const url = baseUrl += query;
+        // Filter out ZBA appeals and require applicationtype
+        const baseCondition = conditions.length > 0 ? `(${conditions.join(' OR ')})` : '1=1';
+        const whereClause = `${baseCondition} AND APPLICATIONTYPE NOT IN ('Zoning Board of Adjustment', 'RB_ZBA') AND APPLICATIONTYPE IS NOT NULL`;
+        const url = `https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/APPEALS/FeatureServer/0/query?where=${encodeURIComponent(whereClause)}&outFields=*&orderByFields=APPEALTYPE&f=json`;
+
+        console.log('fillLiAppeals fetching url:', url);
         const response = await fetch(url);
+        console.log('fillLiAppeals response.ok:', response.ok);
         if (response.ok) {
-          const data = await response.json();
+          const jsonData = await response.json();
+          // Transform ArcGIS response to match Carto format, lowercase field names
+          const rows = jsonData.features ? jsonData.features.map(f => {
+            const attrs = {};
+            for (const key in f.attributes) {
+              attrs[key.toLowerCase()] = f.attributes[key];
+            }
+            return attrs;
+          }) : [];
+          const data = { rows };
+          console.log('fillLiAppeals data.rows.length:', data.rows?.length);
           data.rows.forEach((item) => {
             let address = item.address;
             if (item.unit_num && item.unit_num != null) {
@@ -552,17 +799,77 @@ export const useLiStore = defineStore('LiStore', {
             }
             item.appeallink = "<a target='_blank' href='https://li.phila.gov/Property-History/search/appeal-detail?address="+encodeURIComponent(address)+"&Id="+item.appealnumber+"'>"+item.appealnumber+" <i class='fa fa-external-link'></i></a>";
             item.calendarlink = "<a target='_blank' href='https://li.phila.gov/appeals-calendar/appeal?from=2-7-2000&to=4-7-2050&region=all&Id="+item.appealnumber+"'>"+date(item.scheduleddate, 'MM/dd/yyyy')+" <i class='fa fa-external-link'></i></a>";
-            // item.calendarlink = date(item.scheduleddate, 'MM/dd/yyyy');
           });
+          console.log('fillLiAppeals forEach completed, setting liAppeals');
           this.liAppeals = data;
           this.loadingLiAppeals = false;
         } else {
           this.loadingLiAppeals = false;
-          if (import.meta.env.VITE_DEBUG == 'true') console.warn('liAppeals - await resolved but HTTP status was not successful')
+          console.warn('liAppeals - await resolved but HTTP status was not successful')
         }
-      } catch {
-        this.loadingLiAppealss = false;
-        if (import.meta.env.VITE_DEBUG == 'true') console.error('liAppeals - await never resolved, failed to fetch address data')
+      } catch (err) {
+        this.loadingLiAppeals = false;
+        console.error('liAppeals catch block error:', err)
+      }
+    },
+    async _fillLiAppealsCarto() {
+      if (import.meta.env.VITE_DEBUG == 'true') console.log('fillLiAppealsCarto is running');
+      try {
+        const GeocodeStore = useGeocodeStore();
+        const feature = GeocodeStore.aisData.features[0];
+        let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
+        const streetaddress = feature.properties.street_address;
+        const pwd_parcel_id = feature.properties.pwd_parcel_id;
+        const addressId = feature.properties.li_address_key ? feature.properties.li_address_key.replace(/\|/g, "', '") : null;
+        const eclipseLocationId = feature.properties.eclipse_location_id ? feature.properties.eclipse_location_id.replace(/\|/g, "', '") : null;
+        const opaAccountNum = feature.properties.opa_account_num;
+        const liQuery = `applicationtype not in ('Zoning Board of Adjustment', 'RB_ZBA') and applicationtype is not null`;
+
+        // Build WHERE conditions dynamically to avoid malformed SQL when values are missing
+        const conditions = [];
+        if (streetaddress) {
+          conditions.push(`(address = '${streetaddress}' AND ${liQuery})`);
+        }
+        if (addressId) {
+          conditions.push(`(addressobjectid IN ('${addressId}') AND ${liQuery})`);
+        }
+        if (pwd_parcel_id) {
+          conditions.push(`(parcel_id_num IN ('${pwd_parcel_id}') AND ${liQuery})`);
+        }
+        if (eclipseLocationId) {
+          conditions.push(`(addressobjectid IN ('${eclipseLocationId}') AND ${liQuery})`);
+        }
+        if (opaAccountNum) {
+          conditions.push(`(opa_account_num IN ('${opaAccountNum}') AND ${liQuery})`);
+        }
+
+        let query = `SELECT * FROM APPEALS WHERE ${conditions.join(' OR ')} ORDER BY appealtype`;
+
+        const url = baseUrl += query;
+        console.log('fillLiAppealsCarto fetching url:', url);
+        const response = await fetch(url);
+        console.log('fillLiAppealsCarto response.ok:', response.ok);
+        if (response.ok) {
+          const data = await response.json();
+          console.log('fillLiAppealsCarto data.rows.length:', data.rows?.length);
+          data.rows.forEach((item) => {
+            let address = item.address;
+            if (item.unit_num && item.unit_num != null) {
+              address += ' Unit ' + item.unit_num;
+            }
+            item.appeallink = "<a target='_blank' href='https://li.phila.gov/Property-History/search/appeal-detail?address="+encodeURIComponent(address)+"&Id="+item.appealnumber+"'>"+item.appealnumber+" <i class='fa fa-external-link'></i></a>";
+            item.calendarlink = "<a target='_blank' href='https://li.phila.gov/appeals-calendar/appeal?from=2-7-2000&to=4-7-2050&region=all&Id="+item.appealnumber+"'>"+date(item.scheduleddate, 'MM/dd/yyyy')+" <i class='fa fa-external-link'></i></a>";
+          });
+          console.log('fillLiAppealsCarto forEach completed, setting liAppeals');
+          this.liAppeals = data;
+          this.loadingLiAppeals = false;
+        } else {
+          this.loadingLiAppeals = false;
+          console.warn('liAppeals - await resolved but HTTP status was not successful')
+        }
+      } catch (err) {
+        this.loadingLiAppeals = false;
+        console.error('liAppeals catch block error:', err)
       }
     },
   },
