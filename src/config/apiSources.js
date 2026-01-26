@@ -13,8 +13,7 @@ export const API_SOURCES = {
 
   // LiStore - migrated
   permits: 'arcgis',
-  inspections: 'carto',
+  inspections: 'arcgis',
   businessLicenses: 'arcgis',
   // Note: zoningAppeals not migrated - no ArcGIS service available
-  // Note: inspections not migrated - no ArcGIS service available
 };
