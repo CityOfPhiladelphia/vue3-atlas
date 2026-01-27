@@ -460,6 +460,85 @@ export const useLiStore = defineStore('LiStore', {
     },
 
     async fillLiInspections() {
+      if (API_SOURCES.inspections === 'arcgis') {
+        return this._fillLiInspectionsArcGIS();
+      }
+      return this._fillLiInspectionsCarto();
+    },
+    async _fillLiInspectionsArcGIS() {
+      try {
+        const GeocodeStore = useGeocodeStore();
+        const feature = GeocodeStore.aisData.features[0];
+        const streetaddress = feature.properties.street_address;
+        const opa_account_num = feature.properties.opa_account_num;
+        const pwd_parcel_id = feature.properties.pwd_parcel_id;
+        const addressId = feature.properties.li_address_key ? feature.properties.li_address_key.replace(/\|/g, "','") : null;
+        const eclipseLocationId = feature.properties.eclipse_location_id ? feature.properties.eclipse_location_id.replace(/\|/g, "','") : null;
+
+        // Build WHERE conditions dynamically for ArcGIS
+        // Note: CASE_INVESTIGATIONS service uses lowercase field names (unlike other services)
+        const conditions = [];
+        if (streetaddress) {
+          conditions.push(`address='${streetaddress}'`);
+        }
+        if (addressId) {
+          conditions.push(`addressobjectid IN ('${addressId}')`);
+        }
+        if (pwd_parcel_id) {
+          conditions.push(`parcel_id_num IN ('${pwd_parcel_id}')`);
+        }
+        if (eclipseLocationId) {
+          conditions.push(`addressobjectid IN ('${eclipseLocationId}')`);
+        }
+        if (opa_account_num) {
+          conditions.push(`opa_account_num IN ('${opa_account_num}')`);
+        }
+
+        const whereClause = conditions.length > 0 ? conditions.join(' OR ') : '1=1';
+        const url = `https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/CASE_INVESTIGATIONS/FeatureServer/0/query?where=${encodeURIComponent(whereClause)}&outFields=*&f=json`;
+
+        const response = await fetch(url);
+        if (response.ok) {
+          const jsonData = await response.json();
+          const rows = jsonData.features ? jsonData.features.map(f => {
+            const attrs = {};
+            for (const key in f.attributes) {
+              attrs[key.toLowerCase()] = f.attributes[key];
+            }
+            // Convert epoch timestamps to ISO strings
+            attrs.investigationcompleted = epochToIso(attrs.investigationcompleted);
+            return attrs;
+          }) : [];
+          const data = { rows };
+          data.rows.forEach((item) => {
+            let address = item.address;
+            if (item.unit_num && item.unit_num != null) {
+              address += ' Unit ' + item.unit_num;
+            }
+            item.link = "<a target='_blank' href='https://li.phila.gov/Property-History/search/Violation-Detail?address="+encodeURIComponent(address)+"&Id="+item.casenumber+"'>"+item.casenumber+" <i class='fa fa-external-link'></i></a>";
+
+            let description;
+            if (item.investigationtype) {
+              description = item.investigationtype;
+            } else if (item.caseresponsibility) {
+              description = item.caseresponsibility;
+            } else if (item.casetype) {
+              description = item.casetype;
+            }
+            item.description = description;
+          });
+          this.liInspections = data;
+          this.loadingLiInspections = false;
+        } else {
+          this.loadingLiInspections = false;
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('liInspections - await resolved but HTTP status was not successful')
+        }
+      } catch {
+        this.loadingLiInspections = false;
+        if (import.meta.env.VITE_DEBUG == 'true') console.error('liInspections - await never resolved, failed to fetch address data')
+      }
+    },
+    async _fillLiInspectionsCarto() {
       try {
         const GeocodeStore = useGeocodeStore();
         const feature = GeocodeStore.aisData.features[0];
