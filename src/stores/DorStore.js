@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { useParcelsStore } from './ParcelsStore';
 import { useGeocodeStore } from './GeocodeStore';
+import { API_SOURCES } from '@/config/apiSources.js';
 
 import bboxPolygon from '@turf/bbox-polygon';
 import axios from 'axios';
@@ -102,10 +103,55 @@ export const useDorStore = defineStore("DorStore", {
       this.dorCondos = {};
     },
     async fillDorCondos() {
+      if (API_SOURCES.dorCondos === 'arcgis') {
+        return this._fillDorCondosArcGIS();
+      }
+      return this._fillDorCondosCarto();
+    },
+    async _fillDorCondosArcGIS() {
       return new Promise((resolve) => {
         (async () => {
           this.dorCondos = {};
-          if (import.meta.env.VITE_DEBUG == 'true') console.log('fillRegmaps is running');
+          if (import.meta.env.VITE_DEBUG == 'true') console.log('fillDorCondos (ArcGIS) is running');
+          const ParcelsStore = useParcelsStore();
+          const parcels = ParcelsStore.dor.features;
+          if (!parcels) return resolve();
+          const baseUrl = 'https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/Condominium/FeatureServer/0/query';
+          for (const feature of parcels) {
+            try {
+              if (import.meta.env.VITE_DEBUG == 'true') console.log('feature:', feature);
+              const whereClause = `mapref='${feature.properties.mapreg}' AND status IN (1,3)`;
+              const params = new URLSearchParams({
+                where: whereClause,
+                outFields: '*',
+                f: 'json',
+              });
+              const response = await fetch(`${baseUrl}?${params}`);
+              if (response.ok) {
+                const data = await response.json();
+                if (import.meta.env.VITE_DEBUG == 'true') console.log('fillDorCondos data:', data);
+                const rows = data.features ? data.features.map(f => f.attributes) : [];
+                for (let row of rows) {
+                  row.condo_parcel = row.recmap + '-' + row.condoparcel;
+                  row.unit_number = 'Unit #' + row.condounit;
+                }
+                this.dorCondos[feature.properties.objectid] = { rows };
+              } else {
+                if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillDorCondos - await resolved but HTTP status was not successful');
+              }
+            } catch {
+              if (import.meta.env.VITE_DEBUG == 'true') console.error('fillDorCondos - await never resolved, failed to fetch data');
+            }
+          }
+          return resolve();
+        })();
+      });
+    },
+    async _fillDorCondosCarto() {
+      return new Promise((resolve) => {
+        (async () => {
+          this.dorCondos = {};
+          if (import.meta.env.VITE_DEBUG == 'true') console.log('fillDorCondos (Carto) is running');
           const ParcelsStore = useParcelsStore();
           const parcels = ParcelsStore.dor.features;
           if (!parcels) return resolve();

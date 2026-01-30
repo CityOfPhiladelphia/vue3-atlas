@@ -16,4 +16,7 @@ export const API_SOURCES = {
   inspections: 'arcgis',
   businessLicenses: 'arcgis',
   // Note: zoningAppeals not migrated - no ArcGIS service available
+
+  // DorStore
+  dorCondos: 'arcgis',
 };
