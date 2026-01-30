@@ -447,9 +447,7 @@ const dorDrawnMapStyle = mergeDeep(imageryInfo,{
           &srs=EPSG%3A3857\
           &format=image/png8\
           &transparent=true\
-          &tiled=true\
-          &buffer=150'
-          // Note: &tiled=true&buffer=150 necessary to have small labels cross tile boundaries properly.
+          &tiled=true'
       ],
       type: 'raster',
       tileSize: 1024,
@@ -573,9 +571,7 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
           &srs=EPSG%3A3857\
           &format=image/png8\
           &transparent=true\
-          &tiled=true\
-          &buffer=150'
-          // Note: &tiled=true&buffer=150 necessary to have small labels cross tile boundaries properly.
+          &tiled=true'
       ],
       type: 'raster',
       tileSize: 1024,
