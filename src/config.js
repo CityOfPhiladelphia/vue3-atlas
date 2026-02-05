@@ -451,7 +451,7 @@ const dorDrawnMapStyle = mergeDeep(imageryInfo,{
       ],
       type: 'raster',
       tileSize: 1024,
-      minzoom: 16.5
+      minzoom: 15
     },
     addressMarker: {
       type: 'geojson',
@@ -575,7 +575,7 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
       ],
       type: 'raster',
       tileSize: 1024,
-      minzoom: 16
+      minzoom: 15
     },
     zoning: {
       tiles: [
@@ -1267,7 +1267,7 @@ const cityServicesDrawnMapStyle = mergeDeep(imageryInfo,{
         // 'icon-image': 'school-solid',
         'icon-image': [
           'match',
-          ['get', 'GRADE_LEVEL'],
+          ['get', 'grade_level'],
           'PRE-K/KINDERGARTEN',
           'pink-school-solid',
           'ELEMENTARY SCHOOL',
