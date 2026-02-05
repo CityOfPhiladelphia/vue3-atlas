@@ -20,6 +20,23 @@ const { titleCase, currency } = useTransforms();
 
 import VerticalTable from '@/components/VerticalTable.vue';
 
+let mailingAddressFormatted = computed(() => {
+  let mailingAddress = [];
+  let item = OpaStore.opaData.rows[0];
+  if(item.mailing_city_state !== null) {
+    let addressFields = [ 'mailing_care_of', 'mailing_address_1', 'mailing_street', 'mailing_address_2', 'mailing_city_state', 'mailing_zip' ];
+    addressFields.map(a => item[a] != null ?
+      a === 'mailing_city_state' ?
+        mailingAddress.push(titleCase(item[a].split(' ')[0]) + ', ' + item[a].split(' ')[1]) : mailingAddress.push(titleCase(item[a]) + ' <br>')
+      :'')
+    return mailingAddress.join(' ');
+  } else {
+    let zip = item.zip_code.substring(0,5) + '-' + item.zip_code.substring(5,10);
+    mailingAddress.push(titleCase(this.activeAddress), '<br>Philadelphia, PA,', zip);
+    return mailingAddress.join(' ');
+  }
+})
+
 const atlasVertTableData = computed(() => {
   if(GeocodeStore.aisData.features && GeocodeStore.aisData.features.length || OpaStore.rows && OpaStore.rows.length) {
     return [
@@ -36,8 +53,36 @@ const atlasVertTableData = computed(() => {
         value: GeocodeStore.aisData.features[0].properties.opa_owners,
       },
       {
+        label: 'Mailing Address',
+        value: mailingAddressFormatted.value,
+      },
+      // {
+      //   label: 'Building Description',
+      //   value: OpaStore.opa
+      // },
+      {
+        label: 'Improvement Area',
+        value: OpaStore.opaData.rows[0].total_livable_area === null ? 'Not Available ' :
+          OpaStore.opaData.rows[0].total_livable_area ?
+            OpaStore.opaData.rows[0].total_livable_area.toLocaleString('en-US', {
+              minimumFractionDigits: 0,
+            }) + ' sq ft':
+            null,
+      },
+      {
+        label: 'Year Built',
+        value: OpaStore.opaData.rows[0].year_built === '0000' ? 'Not Available' :
+          OpaStore.opaData.rows[0].year_built === null ? 'Not Available' :
+            OpaStore.opaData.rows[0].year_built + (OpaStore.opaData.rows[0].year_built_estimate ? ' (estimated)' : ''),
+      },
+      {
         label: 'Assessed Value',
-        value: OpaStore.getMarketValue,
+        value: OpaStore.getMarketValue + '<br><a target="_blank" href="https://tax-services.phila.gov/">View tax balance & pay bill</a>',
+      },
+      {
+        label: 'Homestead Exemption',
+        value: OpaStore.opaData.rows[0].homestead_exemption > 0 ? 'This property has the homestead exemption' : 'This property does not have the homestead exemption' + '<br>\
+        <a target="_blank" href="https://www.phila.gov/services/payments-assistance-taxes/taxes/property-and-real-estate-taxes/real-estate-tax/">Learn about property tax programs</a>',
       },
       {
         label: 'Sale Date',
