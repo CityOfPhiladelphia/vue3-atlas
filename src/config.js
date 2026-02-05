@@ -1267,7 +1267,7 @@ const cityServicesDrawnMapStyle = mergeDeep(imageryInfo,{
         // 'icon-image': 'school-solid',
         'icon-image': [
           'match',
-          ['get', 'GRADE_LEVEL'],
+          ['get', 'grade_level'],
           'PRE-K/KINDERGARTEN',
           'pink-school-solid',
           'ELEMENTARY SCHOOL',
