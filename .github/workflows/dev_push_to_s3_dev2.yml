@@ -6,7 +6,7 @@ name: dev Push to S3 dev2 bucket
 on:
   push:
     branches:
-      - fix/zoning-slider-rollback
+      - fix/512-tiles
 jobs:
   build:
 

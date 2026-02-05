@@ -442,15 +442,15 @@ const dorDrawnMapStyle = mergeDeep(imageryInfo,{
           &request=GetMap\
           &layers=dor_basemap_small_labels\
           &bbox={bbox-epsg-3857}\
-          &width=1024\
-          &height=1024\
-          &srs=EPSG%3A3857\
+          &width=512\
+          &height=512\
+          &srs=EPSG%3A900913\
           &format=image/png8\
           &transparent=true\
           &tiled=true'
       ],
       type: 'raster',
-      tileSize: 1024,
+      tileSize: 512,
       minzoom: 15
     },
     addressMarker: {
@@ -566,15 +566,15 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
           &request=GetMap\
           &layers=dor_basemap_small_labels\
           &bbox={bbox-epsg-3857}\
-          &width=1024\
-          &height=1024\
-          &srs=EPSG%3A3857\
+          &width=512\
+          &height=512\
+          &srs=EPSG%3A900913\
           &format=image/png8\
           &transparent=true\
           &tiled=true'
       ],
       type: 'raster',
-      tileSize: 1024,
+      tileSize: 512,
       minzoom: 15
     },
     zoning: {
@@ -584,14 +584,14 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
           &request=GetMap\
           &layers=atlas_zoning_grouped\
           &bbox={bbox-epsg-3857}\
-          &width=1024\
-          &height=1024\
-          &srs=EPSG%3A3857\
+          &width=512\
+          &height=512\
+          &srs=EPSG%3A900913\
           &format=image/png8\
           &transparent=true'
       ],
       type: 'raster',
-      tileSize: 1024,
+      tileSize: 512,
     },
     addressMarker: {
       type: 'geojson',
