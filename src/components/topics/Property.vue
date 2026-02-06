@@ -56,10 +56,10 @@ const atlasVertTableData = computed(() => {
         label: 'Mailing Address',
         value: mailingAddressFormatted.value,
       },
-      // {
-      //   label: 'Building Description',
-      //   value: OpaStore.opa
-      // },
+      {
+        label: 'Building Description',
+        value: OpaStore.opaData.rows[0].building_code_description_new === null ? 'Not Available' : OpaStore.opaData.rows[0].building_code_description_new,
+      },
       {
         label: 'Improvement Area',
         value: OpaStore.opaData.rows[0].total_livable_area === null ? 'Not Available ' :
@@ -77,11 +77,12 @@ const atlasVertTableData = computed(() => {
       },
       {
         label: 'Assessed Value',
-        value: OpaStore.getMarketValue + '<br><a target="_blank" href="https://tax-services.phila.gov/">View tax balance & pay bill</a>',
+        value: OpaStore.getMarketValue + '<br><a target="_blank" href="https://tax-services.phila.gov/TAP/EWebServices/realestate/search/' + GeocodeStore.aisData.features[0].properties.opa_account_num + '">View tax balance & pay bill</a>',
       },
       {
         label: 'Homestead Exemption',
-        value: OpaStore.opaData.rows[0].homestead_exemption > 0 ? 'This property has the homestead exemption' : 'This property does not have the homestead exemption' + '<br>\
+        value: OpaStore.opaData.rows[0].homestead_exemption > 0 ? 'This property has the homestead exemption' + '<br>\
+        <a target="_blank" href="https://www.phila.gov/services/payments-assistance-taxes/taxes/property-and-real-estate-taxes/real-estate-tax/">Learn about property tax programs</a>' : 'This property does not have the homestead exemption' + '<br>\
         <a target="_blank" href="https://www.phila.gov/services/payments-assistance-taxes/taxes/property-and-real-estate-taxes/real-estate-tax/">Learn about property tax programs</a>',
       },
       {
