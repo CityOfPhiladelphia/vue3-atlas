@@ -447,13 +447,11 @@ const dorDrawnMapStyle = mergeDeep(imageryInfo,{
           &srs=EPSG%3A3857\
           &format=image/png8\
           &transparent=true\
-          &tiled=true\
-          &buffer=150'
-          // Note: &tiled=true&buffer=150 necessary to have small labels cross tile boundaries properly.
+          &tiled=true'
       ],
       type: 'raster',
       tileSize: 1024,
-      minzoom: 16.5
+      minzoom: 15
     },
     addressMarker: {
       type: 'geojson',
@@ -573,13 +571,11 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
           &srs=EPSG%3A3857\
           &format=image/png8\
           &transparent=true\
-          &tiled=true\
-          &buffer=150'
-          // Note: &tiled=true&buffer=150 necessary to have small labels cross tile boundaries properly.
+          &tiled=true'
       ],
       type: 'raster',
       tileSize: 1024,
-      minzoom: 16
+      minzoom: 15
     },
     zoning: {
       tiles: [
@@ -1271,7 +1267,7 @@ const cityServicesDrawnMapStyle = mergeDeep(imageryInfo,{
         // 'icon-image': 'school-solid',
         'icon-image': [
           'match',
-          ['get', 'GRADE_LEVEL'],
+          ['get', 'grade_level'],
           'PRE-K/KINDERGARTEN',
           'pink-school-solid',
           'ELEMENTARY SCHOOL',

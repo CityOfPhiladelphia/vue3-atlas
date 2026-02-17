@@ -10,7 +10,10 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --ignore-path .eslintignore",
-    "lint:fix": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .eslintignore"
+    "lint:fix": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .eslintignore",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@cyclomedia/streetsmart-api": "25.7.0",
@@ -65,7 +68,8 @@
     "eslint-plugin-vue": "^9.17.0",
     "sass": "^1.74.1",
     "vite": "^5.1.6",
-    "vite-plugin-vue-devtools": "^7.7.0"
+    "vite-plugin-vue-devtools": "^7.7.0",
+    "vitest": "^4.0.18"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "4.6.1"
