@@ -1,10 +1,8 @@
 import { getCyclomediaRecordings } from '@/util/call-api';
 
 class RecordingsClient {
-  constructor(baseUrl, username, password, srid = 3857, proxy) {
+  constructor(baseUrl, srid = 3857, proxy) {
     this.baseUrl = baseUrl;
-    this.username = username;
-    this.password = password;
     this.srid = srid;
     this.proxy = proxy;
   }
@@ -18,27 +16,14 @@ class RecordingsClient {
     const url = (this.proxy || '') + this.baseUrl;
     try {
       const data = await getCyclomediaRecordings(url, this.srid, swCoord.lng, swCoord.lat, neCoord.lng, neCoord.lat)
-      const responseXml = new window.DOMParser().parseFromString(data, "text/xml")
-      const recordingEls = [].slice.call(responseXml.getElementsByTagNameNS('*', 'Recording'));
 
       // check for > 1
-      if (recordingEls.length < 1) {
+      if (data.length < 1) {
         if (import.meta.env.VITE_DEBUG) console.log('no cyclomedia recordings for bounds');
         return;
       }
 
-      const recordings = recordingEls.map(recordingEl => {
-        const imageId = recordingEl.getElementsByTagNameNS('*', 'imageId')[0].firstChild.data;
-        const coords = recordingEl.getElementsByTagNameNS('*', 'pos')[0].firstChild.data;
-        const [lng, lat] = coords.split(' ').map(parseFloat);
-        return {
-          imageId,
-          lng,
-          lat,
-        };
-      });
-
-      callback(recordings);
+      callback(data);
     } catch (error) {
       console.error(error)
     }

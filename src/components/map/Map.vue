@@ -1147,8 +1147,6 @@ const turnOnCyclomedia = async () => {
 // an object class called CyclomediaRecordingsClient is used for adding the cyclomedia recordings circles to the map
 let cyclomediaRecordingsClient = new CyclomediaRecordingsClient(
   'https://atlasapi.cyclomedia.com/api/recording/wfs',
-  import.meta.env.VITE_CYCLOMEDIA_USERNAME,
-  import.meta.env.VITE_CYCLOMEDIA_PASSWORD,
   4326
 );
 
@@ -1162,9 +1160,8 @@ const updateCyclomediaRecordings = async () => {
         type: 'FeatureCollection',
         features: []
       }
-      let features = [];
       for (let item of recordings) {
-        features.push({
+        geojson.features.push({
           type: 'Feature',
           geometry: {
             type: 'Point',
@@ -1176,11 +1173,10 @@ const updateCyclomediaRecordings = async () => {
           }
         })
       }
-      geojson.features = features;
       // if (import.meta.env.VITE_DEBUG == 'true') console.log("map.getSource('cyclomediaRecordings'):", 'map.getStyle().layers:', map.getStyle().layers);
       map.getSource('cyclomediaRecordings').setData(geojson);
       // I don't know why this works - maybe because the mergeDeep is still running
-      $config.dorDrawnMapStyle.sources.cyclomediaRecordings.data.features = features;
+      $config.dorDrawnMapStyle.sources.cyclomediaRecordings.data.features = geojson.features;
     },
   );
 }

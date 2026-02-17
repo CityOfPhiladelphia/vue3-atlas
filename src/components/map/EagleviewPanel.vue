@@ -1,7 +1,7 @@
 <script setup>
 
 import $config from '@/config';
-import { onMounted, computed, watch, onBeforeMount } from 'vue';
+import { onMounted, computed, watch } from 'vue';
 import { point } from '@turf/helpers';
 
 import { useMapStore } from '@/stores/MapStore';
@@ -90,15 +90,9 @@ watch(
   }
 )
 
-onBeforeMount(async () => {
-  if (!MapStore.eagleviewToken) {
-    MapStore.eagleviewToken = await getEagleviewToken();
-  }
-})
-
 onMounted(async () => {
   const config = {
-    authToken: MapStore.eagleviewToken,
+    authToken: MapStore.eagleviewToken ? MapStore.eagleviewToken : await getEagleviewToken(),
     measurementPanelEnabled: false,
     searchBarEnabled: false,
     enableDualPaneButton: false,
@@ -114,6 +108,7 @@ onMounted(async () => {
       }
     }
   }
+
   map = new window.ev.EmbeddedExplorer().mount('eagleview', config);
   if (MapStore.currentAddressCoords.length) {
     map.addFeatures({
