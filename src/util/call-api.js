@@ -2,6 +2,7 @@ import { StreetSmartApi } from "@cyclomedia/streetsmart-api";
 
 export async function getAgoToken() {
   try {
+    console.log("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
     const response = await fetch('https://a2lvwn3tcb.execute-api.us-east-1.amazonaws.com/getAgoTok')
     const data = await response.json();
     return data.token;
@@ -13,6 +14,7 @@ export async function getAgoToken() {
 
 export async function getEagleviewToken() {
   try {
+    console.log("YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY")
     const response = await fetch('https://a2lvwn3tcb.execute-api.us-east-1.amazonaws.com/getEagleTok');
     const data = await response.json();
     return data.access_token;
@@ -50,6 +52,7 @@ export async function getCyclomediaRecordings(url, srid, swLng, swLat, neLng, ne
   });
 
   try {
+    console.log("ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ")
     const response = await fetch(`https://a2lvwn3tcb.execute-api.us-east-1.amazonaws.com/getCycloRecs?${searchParams.toString()}`)
     const data = await response.json()
     data.forEach((item, i, arr) => arr[i] = JSON.parse(item))
