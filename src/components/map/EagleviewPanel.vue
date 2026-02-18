@@ -91,8 +91,9 @@ watch(
 )
 
 onMounted(async () => {
+  MapStore.eagleviewToken = MapStore.eagleviewToken ? MapStore.eagleviewToken : await getEagleviewToken();
   const config = {
-    authToken: MapStore.eagleviewToken ? MapStore.eagleviewToken : await getEagleviewToken(),
+    authToken: MapStore.eagleviewToken,
     measurementPanelEnabled: false,
     searchBarEnabled: false,
     enableDualPaneButton: false,
