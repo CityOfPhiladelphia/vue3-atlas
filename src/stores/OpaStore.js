@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { useGeocodeStore } from '@/stores/GeocodeStore.js'
+import { API_SOURCES } from '@/config/apiSources.js';
 
 import useTransforms from '@/composables/useTransforms';
 const { titleCase, prettyNumber, currency, date } = useTransforms();
@@ -19,6 +20,31 @@ export const useOpaStore = defineStore('OpaStore', {
       this.assessmentHistory = {};
     },
     async fillOpaData() {
+      if (API_SOURCES.opaData === 'arcgis') {
+        return this._fillOpaDataArcGIS();
+      }
+      return this._fillOpaDataCarto();
+    },
+    async _fillOpaDataArcGIS() {
+      try {
+        const GeocodeStore = useGeocodeStore();
+        const OpaNum = GeocodeStore.aisData.features[0].properties.opa_account_num;
+        const whereClause = `parcel_number='${OpaNum}'`;
+        const response = await fetch(`https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/OPA_PROPERTIES_PUBLIC/FeatureServer/0/query?where=${encodeURIComponent(whereClause)}&outFields=*&f=json`);
+        if (response.ok) {
+          const data = await response.json();
+          // Transform ArcGIS response format to match Carto format for compatibility with getters
+          this.opaData = {
+            rows: data.features ? data.features.map(f => f.attributes) : []
+          };
+        } else {
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('opaData - await resolved but HTTP status was not successful')
+        }
+      } catch {
+        if (import.meta.env.VITE_DEBUG == 'true') console.error('opaData - await never resolved, failed to fetch address data')
+      }
+    },
+    async _fillOpaDataCarto() {
       try {
         const GeocodeStore = useGeocodeStore();
         const OpaNum = GeocodeStore.aisData.features[0].properties.opa_account_num;
