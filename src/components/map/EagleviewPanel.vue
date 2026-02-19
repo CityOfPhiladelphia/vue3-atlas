@@ -92,49 +92,49 @@ watch(
 
 onMounted(async () => {
   MapStore.eagleviewToken = MapStore.eagleviewToken ? MapStore.eagleviewToken : await getEagleviewToken();
-  if (MapStore.eagleviewToken) {
-    const config = {
-      authToken: MapStore.eagleviewToken,
-      measurementPanelEnabled: false,
-      searchBarEnabled: false,
-      enableDualPaneButton: false,
-      view: {
-        lonLat: currentAddressCoords.value,
-        zoom: 17,
-        pitch: 0,
-        rotation: 0
-      },
-      preferences: {
-        imageDisplay: {
-          'mainPane': 'oblique'
-        }
-      }
-    }
-
-    map = new window.ev.EmbeddedExplorer().mount('eagleview', config);
-    if (MapStore.currentAddressCoords.length) {
-      map.addFeatures({
-        geoJson: [
-          point(
-            [currentAddressCoords.value.lon, currentAddressCoords.value.lat],
-            eagleviewProperties
-          )
-        ]
-      });
-    }
-
-    map.getLayers();
-    map.on('onLayersDataLoad', () => {
-    map.updateLayers({
-      filter: (layer) => {
-        layer.visible = false;
-        }
-      });
-    });
-  }
-  else {
+  if (!MapStore.eagleviewToken) {
     throw new Error("Failed to get access token for EagleView")
   }
+  const config = {
+    authToken: MapStore.eagleviewToken,
+    measurementPanelEnabled: false,
+    searchBarEnabled: false,
+    enableDualPaneButton: false,
+    view: {
+      lonLat: currentAddressCoords.value,
+      zoom: 17,
+      pitch: 0,
+      rotation: 0
+    },
+    preferences: {
+      imageDisplay: {
+        'mainPane': 'oblique'
+      }
+    }
+  }
+
+  map = new window.ev.EmbeddedExplorer().mount('eagleview', config);
+  if (MapStore.currentAddressCoords.length) {
+    map.addFeatures({
+      geoJson: [
+        point(
+          [currentAddressCoords.value.lon, currentAddressCoords.value.lat],
+          eagleviewProperties
+        )
+      ]
+    });
+  }
+
+  map.getLayers();
+  map.on('onLayersDataLoad', () => {
+    map.updateLayers(
+      {
+        filter: (layer) => {
+          layer.visible = false;
+        }
+      }
+    );
+  });
 });
 
 const popoutClicked = () => {
