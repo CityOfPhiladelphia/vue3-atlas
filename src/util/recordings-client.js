@@ -16,9 +16,7 @@ class RecordingsClient {
     const url = (this.proxy || '') + this.baseUrl;
     try {
       const data = await getCyclomediaRecordings(url, this.srid, swCoord.lng, swCoord.lat, neCoord.lng, neCoord.lat)
-      console.log(data)
 
-      // check for > 1
       if (!data) {
         if (import.meta.env.VITE_DEBUG) console.log('no cyclomedia recordings for bounds');
         return;
