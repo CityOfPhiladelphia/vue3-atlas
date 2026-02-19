@@ -51,9 +51,12 @@ export async function getCyclomediaRecordings(url, srid, swLng, swLat, neLng, ne
 
   try {
     const response = await fetch(`https://a2lvwn3tcb.execute-api.us-east-1.amazonaws.com/getCycloRecs?${searchParams.toString()}`)
-    const data = await response.json()
-    data.forEach((item, i, arr) => arr[i] = JSON.parse(item))
-    return data
+    const data = await response.json();
+    if (response.ok) {
+      data.forEach((item, i, arr) => arr[i] = JSON.parse(item));
+      return data;
+    }
+
   } catch (error) {
     console.error(error)
   }
