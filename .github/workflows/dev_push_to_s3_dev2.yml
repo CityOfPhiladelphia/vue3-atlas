@@ -45,7 +45,7 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: |
         aws s3 sync dist s3://$AWS_S3_BUCKET --region us-east-1 --delete
-        aws s3 cp s3://$AWS_S3_BUCKET s3://$AWS_S3_BUCKET --recursive --exclude "*" --include "*.html" --metadata-directive REPLACE --acl public-read --content-type "text/html; charset=utf-8"
+        aws s3 cp s3://$AWS_S3_BUCKET s3://$AWS_S3_BUCKET --recursive --exclude "*" --include "*.html" --metadata-directive REPLACE --acl public-read --cache-control s-maxage=31536000,max-age=0,must-revalidate,no-cache,no-store --content-type "text/html; charset=utf-8"
         aws cloudfront create-invalidation --distribution-id $AWS_CLOUDFRONT_DISTRIBUTION --paths "/*"
 
 
@@ -75,5 +75,5 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_CITYATLAS }}
       run: |
         aws s3 sync dist s3://$AWS_S3_BUCKET --region us-east-1 --delete
-        aws s3 cp s3://$AWS_S3_BUCKET s3://$AWS_S3_BUCKET --recursive --exclude "*" --include "*.html" --metadata-directive REPLACE --acl public-read --content-type "text/html; charset=utf-8"
+        aws s3 cp s3://$AWS_S3_BUCKET s3://$AWS_S3_BUCKET --recursive --exclude "*" --include "*.html" --metadata-directive REPLACE --acl public-read --cache-control s-maxage=31536000,max-age=0,must-revalidate,no-cache,no-store --content-type "text/html; charset=utf-8"
         aws cloudfront create-invalidation --distribution-id $AWS_CLOUDFRONT_DISTRIBUTION --paths "/*"
