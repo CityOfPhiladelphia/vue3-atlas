@@ -38,6 +38,5 @@ coverage
 /playwright/.auth/
 /playwright-report/
 
-/.beads/
 # Claude Code
 .claude/
