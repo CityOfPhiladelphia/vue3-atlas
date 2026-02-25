@@ -41,9 +41,6 @@ onMounted( () => {
 });
 
 const condos = computed(() => {
-  if (CondosStore.loadingCondosData) {
-    return [];
-  }
   let features = [];
   if (import.meta.env.VITE_DEBUG == 'true') console.log('Object.keys(CondosStore.condosData.pages).sort():', Object.keys(CondosStore.condosData.pages).sort());
   for (let dataPage of Object.keys(CondosStore.condosData.pages).sort()) {
