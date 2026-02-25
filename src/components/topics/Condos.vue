@@ -78,7 +78,13 @@ const condosTableData = computed(() => {
     </div>
 
     <h2 class="subtitle mb-3 is-5">
-      Condominiums ({{ totalSize }})
+      Condominiums
+      <font-awesome-icon
+        v-if="CondosStore.loadingCondosData"
+        icon="fa-solid fa-spinner"
+        spin
+      />
+      <span v-else>({{ totalSize }})</span>
     </h2>
 
     <div class="horizontal-table">
