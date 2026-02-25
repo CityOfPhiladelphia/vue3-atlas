@@ -41,9 +41,6 @@ onMounted( () => {
 });
 
 const condos = computed(() => {
-  if (CondosStore.loadingCondosData) {
-    return [];
-  }
   let features = [];
   if (import.meta.env.VITE_DEBUG == 'true') console.log('Object.keys(CondosStore.condosData.pages).sort():', Object.keys(CondosStore.condosData.pages).sort());
   for (let dataPage of Object.keys(CondosStore.condosData.pages).sort()) {
@@ -81,7 +78,13 @@ const condosTableData = computed(() => {
     </div>
 
     <h2 class="subtitle mb-3 is-5">
-      Condominiums ({{ totalSize }})
+      Condominiums
+      <font-awesome-icon
+        v-if="CondosStore.loadingCondosData"
+        icon="fa-solid fa-spinner"
+        spin
+      />
+      <span v-else>({{ totalSize }})</span>
     </h2>
 
     <div class="horizontal-table">
