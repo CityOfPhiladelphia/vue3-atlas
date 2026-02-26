@@ -22,7 +22,23 @@ export async function getEagleviewToken() {
   return '';
 }
 
+export async function getcyclimediaTIDtoken() {
+  try {
+    const response = await fetch('https://3mc2xsgnaj.execute-api.us-east-1.amazonaws.com/getCycloTid');
+    const data = await response.text();
+    return data;
+  } catch (err) {
+    console.log(err)
+  }
+  return '';
+}
+
 export async function cyclomediaInit(element) {
+  const tidToken = await getcyclimediaTIDtoken();
+  console.log("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+  console.log(tidToken)
+
+
   await StreetSmartApi.init({
     targetElement: element,
     username: import.meta.env.VITE_VERSION == 'cityatlas' ? import.meta.env.VITE_CITYATLAS_CYCLOMEDIA_USERNAME : import.meta.env.VITE_CYCLOMEDIA_USERNAME,
