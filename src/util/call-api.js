@@ -22,35 +22,22 @@ export async function getEagleviewToken() {
   return '';
 }
 
-export async function getcyclimediaTIDtoken() {
+export async function getcyclimediaTIDtoken(imageId = 'W0E2O3QH') {
+  const accountId = '39419';
+  const dateTime = new Date(Date.now()).toISOString().replace(/[-:TZ]|\.\d{3}/g, '');
+  const token = `W${accountId}&${dateTime}&UTC&${imageId}`;
+  console.log(token)
+  const searchParams = new URLSearchParams({
+    token: token
+  });
   try {
-    const response = await fetch('https://3mc2xsgnaj.execute-api.us-east-1.amazonaws.com/getCycloTid');
+    const response = await fetch(`https://3mc2xsgnaj.execute-api.us-east-1.amazonaws.com/getCycloTid?${searchParams.toString()}`);
     const data = await response.text();
     return data;
   } catch (err) {
     console.log(err)
   }
   return '';
-}
-
-export async function cyclomediaInit(element) {
-  const tidToken = await getcyclimediaTIDtoken();
-  console.log("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-  console.log(tidToken)
-
-
-  await StreetSmartApi.init({
-    targetElement: element,
-    username: import.meta.env.VITE_VERSION == 'cityatlas' ? import.meta.env.VITE_CITYATLAS_CYCLOMEDIA_USERNAME : import.meta.env.VITE_CYCLOMEDIA_USERNAME,
-    password: import.meta.env.VITE_VERSION == 'cityatlas' ? import.meta.env.VITE_CITYATLAS_CYCLOMEDIA_PASSWORD : import.meta.env.VITE_CYCLOMEDIA_PASSWORD,
-    apiKey: import.meta.env.VITE_CYCLOMEDIA_API_KEY,
-    srs: 'EPSG:4326',
-    locale: 'en-us',
-    addressSettings: {
-      locale: 'en-us',
-      database: 'CMDatabase'
-    }
-  })
 }
 
 export async function getCyclomediaRecordings(url, srid, swLng, swLat, neLng, neLat) {
@@ -67,8 +54,8 @@ export async function getCyclomediaRecordings(url, srid, swLng, swLat, neLng, ne
 
   try {
     const response = await fetch(`https://3mc2xsgnaj.execute-api.us-east-1.amazonaws.com/getCycloRecs?${searchParams.toString()}`)
-    const data = await response.json()
-    data.forEach((item, i, arr) => arr[i] = JSON.parse(item))
+    const data = await response.json();
+    data.forEach((item, i, arr) => arr[i] = JSON.parse(item));
     return data
   } catch (error) {
     console.error(error)

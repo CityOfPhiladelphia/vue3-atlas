@@ -12,7 +12,7 @@ const router = useRouter();
 import { StreetSmartApi } from "@cyclomedia/streetsmart-api";
 import $config from '@/config';
 
-import { cyclomediaInit } from '@/util/call-api';
+import { getcyclimediaTIDtoken } from '@/util/call-api';
 
 const cyclomediaInitialized = ref(false);
 const streetView = useTemplateRef('cycloviewer')
@@ -139,9 +139,25 @@ watch(
 
 onMounted(async () => {
   if (!cyclomediaInitialized.value) {
-    if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue onMounted, initializing cyclomedia');
-    await cyclomediaInit(streetView.value);
-    if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue onMounted, cyclomedia initialized');
+    if (import.meta.env.VITE_DEBUG == 'true') { console.log('CyclomediaPanel.vue onMounted, initializing cyclomedia') }
+    const tidToken = await getcyclimediaTIDtoken();
+    console.log("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+    console.log(tidToken)
+
+    await StreetSmartApi.init({
+      targetElement: streetView.value,
+      // username: import.meta.env.VITE_VERSION == 'cityatlas' ? import.meta.env.VITE_CITYATLAS_CYCLOMEDIA_USERNAME : import.meta.env.VITE_CYCLOMEDIA_USERNAME,
+      // password: import.meta.env.VITE_VERSION == 'cityatlas' ? import.meta.env.VITE_CITYATLAS_CYCLOMEDIA_PASSWORD : import.meta.env.VITE_CYCLOMEDIA_PASSWORD,
+      tid: tidToken,
+      apiKey: import.meta.env.VITE_CYCLOMEDIA_API_KEY,
+      srs: 'EPSG:4326',
+      locale: 'en-us',
+      addressSettings: {
+        locale: 'en-us',
+        database: 'CMDatabase'
+      }
+    })
+    if (import.meta.env.VITE_DEBUG == 'true') { console.log('CyclomediaPanel.vue onMounted, cyclomedia initialized') }
     cyclomediaInitialized.value = true;
   }
   if (GeocodeStore.aisData.features) {
