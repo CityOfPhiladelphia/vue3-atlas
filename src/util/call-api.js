@@ -1,5 +1,3 @@
-import { StreetSmartApi } from "@cyclomedia/streetsmart-api";
-
 export async function getAgoToken() {
   try {
     const response = await fetch('https://3mc2xsgnaj.execute-api.us-east-1.amazonaws.com/getAgoTok')
@@ -23,10 +21,10 @@ export async function getEagleviewToken() {
 }
 
 export async function getcyclimediaTIDtoken(imageId = 'W0E2O3QH') {
-  const accountId = '39419';
-  const dateTime = new Date(Date.now()).toISOString().replace(/[-:TZ]|\.\d{3}/g, '');
+  const accountId = import.meta.env.VITE_CYCLOMEDIA_TID_ACCOUNTID;
+  const dateTime = new Date(Date.now()).toISOString().replace(/[-:TZ]|\d{2}\.\d{3}/g, '');
   const token = `W${accountId}&${dateTime}&UTC&${imageId}`;
-  console.log(token)
+  console.log("Token:", token)
   const searchParams = new URLSearchParams({
     token: token
   });

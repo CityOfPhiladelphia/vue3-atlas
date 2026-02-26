@@ -9,10 +9,12 @@ import { useRouter, useRoute } from 'vue-router';
 const route = useRoute();
 const router = useRouter();
 
-import { StreetSmartApi } from "@cyclomedia/streetsmart-api";
+import { useCyclomedia } from '../../composables/cyclomedia/useCyclomedia';
+const cyclomedia = useCyclomedia();
+
 import $config from '@/config';
 
-import { getcyclimediaTIDtoken } from '@/util/call-api';
+
 
 const cyclomediaInitialized = ref(false);
 const streetView = useTemplateRef('cycloviewer')
@@ -59,18 +61,7 @@ const setNewLocation = async (coords) => {
       };
     }
     if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue setNewLocation, lastYear:', lastYear, 'thisYear:', thisYear, 'coords:', coords);
-    const response = await StreetSmartApi.open(
-      params,
-      {
-        viewerType: StreetSmartApi.ViewerType.PANORAMA,
-        srs: 'EPSG:4326',
-        panoramaViewer: {
-          closable: false,
-          maximizable: false,
-          navbarVisible: false
-        },
-      }
-    )
+    const response = await cyclomedia.open(params)
     const viewer = response[0];
     if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue setNewLocation, viewer:', viewer, 'response:', response);
     if (viewer.props.ui['panorama.reportBlurring'].visible) viewer.toggleReportBlurring();
@@ -140,23 +131,7 @@ watch(
 onMounted(async () => {
   if (!cyclomediaInitialized.value) {
     if (import.meta.env.VITE_DEBUG == 'true') { console.log('CyclomediaPanel.vue onMounted, initializing cyclomedia') }
-    const tidToken = await getcyclimediaTIDtoken();
-    console.log("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-    console.log(tidToken)
-
-    await StreetSmartApi.init({
-      targetElement: streetView.value,
-      // username: import.meta.env.VITE_VERSION == 'cityatlas' ? import.meta.env.VITE_CITYATLAS_CYCLOMEDIA_USERNAME : import.meta.env.VITE_CYCLOMEDIA_USERNAME,
-      // password: import.meta.env.VITE_VERSION == 'cityatlas' ? import.meta.env.VITE_CITYATLAS_CYCLOMEDIA_PASSWORD : import.meta.env.VITE_CYCLOMEDIA_PASSWORD,
-      tid: tidToken,
-      apiKey: import.meta.env.VITE_CYCLOMEDIA_API_KEY,
-      srs: 'EPSG:4326',
-      locale: 'en-us',
-      addressSettings: {
-        locale: 'en-us',
-        database: 'CMDatabase'
-      }
-    })
+    await cyclomedia.init(streetView.value)
     if (import.meta.env.VITE_DEBUG == 'true') { console.log('CyclomediaPanel.vue onMounted, cyclomedia initialized') }
     cyclomediaInitialized.value = true;
   }
@@ -168,7 +143,7 @@ onMounted(async () => {
 })
 
 const popoutClicked = () => {
-  window.open('//cyclomedia.phila.gov/?lat=' + MapStore.cyclomediaCameraLngLat[1] + '&lng=' + MapStore.cyclomediaCameraLngLat[0], '_blank');
+  document.open('//cyclomedia.phila.gov/?lat=' + MapStore.cyclomediaCameraLngLat[1] + '&lng=' + MapStore.cyclomediaCameraLngLat[0], '_blank');
   let startQuery = { ...route.query };
   delete startQuery['streetview'];
   router.push({ query: { ...startQuery } });

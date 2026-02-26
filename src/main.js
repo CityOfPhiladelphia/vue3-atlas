@@ -29,6 +29,9 @@ import Textbox from "@phila/phila-ui-textbox";
 import LangSelector from "@phila/phila-ui-lang-selector";
 import Callout from "@phila/phila-ui-callout";
 
+import { loadCyclomedia } from './composables/cyclomedia/useCyclomedia';
+loadCyclomedia();
+
 // if (import.meta.env.VITE_DEBUG == 'true') console.log('MobileNav', MobileNav, 'Dropdown:', Dropdown);
 
 const app = createApp(App);

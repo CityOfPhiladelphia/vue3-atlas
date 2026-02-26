@@ -16,7 +16,6 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@cyclomedia/streetsmart-api": "25.7.0",
     "@fortawesome/fontawesome-pro": "6.7.2",
     "@fortawesome/fontawesome-svg-core": "6.7.2",
     "@fortawesome/free-solid-svg-icons": "6.7.2",
