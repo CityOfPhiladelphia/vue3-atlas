@@ -29,7 +29,7 @@ export function useCyclomedia() {
    * @returns {Promise}
    */
   const init = async (element) => {
-    const tidToken = await getcyclimediaTIDtoken();
+    const tidToken = await getcyclimediaTIDtoken('W0E2O3QH');
     console.log("TID: ", tidToken)
     const initConfig = {
       targetElement: element,
@@ -42,13 +42,15 @@ export function useCyclomedia() {
         database: 'CMDatabase',
       }
     }
-    if (!window.StreetSmartApi) return null;
+    if (!window.StreetSmartApi) {
+      throw new Error("Failed to find scripts for running Cyclomedia");
+    }
     try {
       await window.StreetSmartApi.init(initConfig);
-      return
+      return true;
     } catch (error) {
       console.error('StreetSmartApi init failed:', error);
-      return null;
+      return false;
     }
   }
 

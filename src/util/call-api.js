@@ -29,9 +29,8 @@ export async function getcyclimediaTIDtoken(imageId = 'W0E2O3QH') {
     token: token
   });
   try {
-    const response = await fetch(`https://3mc2xsgnaj.execute-api.us-east-1.amazonaws.com/getCycloTid?${searchParams.toString()}`);
-    const data = await response.text();
-    return data;
+    const response = await (await fetch(`https://3mc2xsgnaj.execute-api.us-east-1.amazonaws.com/getCycloTid?${searchParams.toString()}`)).text();
+    return response;
   } catch (err) {
     console.log(err)
   }
