@@ -31,6 +31,7 @@ jobs:
         FA_AUTH_TOKEN: ${{ secrets.FA_AUTH_TOKEN }}
         VITE_GATEKEEPER_KEY: ${{ secrets.VITE_GATEKEEPER_KEY }}
         VITE_CYCLOMEDIA_TID_ACCOUNTID: ${{ secrets.VITE_CYCLOMEDIA_TID_ACCOUNTID }}
+        VITE_CYCLOMEDIA_API_KEY: ${{ secrets.VITE_CYCLOMEDIA_API_KEY }}
 
     - name: Deploy to Dev s3, Set index headers, and Invalidate Cloudfront
       env:
@@ -64,7 +65,6 @@ jobs:
         AWS_CLOUDFRONT_DISTRIBUTION: E30K7WK1IOAAG5
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_CITYATLAS }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_CITYATLAS }}
-        VITE_CYCLOMEDIA_API_KEY: ${{ secrets.VITE_CYCLOMEDIA_API_KEY }}
       run: |
         aws s3 sync dist s3://$AWS_S3_BUCKET --region us-east-1 --delete
         aws s3 cp s3://$AWS_S3_BUCKET s3://$AWS_S3_BUCKET --recursive --exclude "*" --include "*.html" --metadata-directive REPLACE --acl public-read --cache-control s-maxage=31536000,max-age=1,must-revalidate --content-type "text/html; charset=utf-8"
