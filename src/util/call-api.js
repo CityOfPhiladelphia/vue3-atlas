@@ -20,7 +20,10 @@ export async function getEagleviewToken() {
   return '';
 }
 
-export async function getcyclimediaTIDtoken(imageId = 'W0E2O3QH') {
+export async function getcyclimediaTIDtoken(imageId) {
+  if (!imageId) {
+    throw new Error("imageId required to get cyclomedia TID token")
+  }
   const accountId = import.meta.env.VITE_CYCLOMEDIA_TID_ACCOUNTID;
   const dateTime = new Date(Date.now()).toISOString().replace(/[-:TZ]|\d{2}\.\d{3}/g, '');
   const token = `W${accountId}&${dateTime}&UTC&${imageId}`;

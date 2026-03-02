@@ -28,8 +28,8 @@ export function useCyclomedia() {
    * @param {HTMLElement | VueTemplateRef} element - the element where Cyclomedia app will be rendered
    * @returns {Promise}
    */
-  const init = async (element) => {
-    const tidToken = await getcyclimediaTIDtoken('W0E2O3QH');
+  const init = async (element, imageId = 'W0E2O3QH') => {
+    const tidToken = await getcyclimediaTIDtoken(imageId);
     console.log("TID: ", tidToken)
     const initConfig = {
       targetElement: element,
