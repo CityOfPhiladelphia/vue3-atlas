@@ -26,7 +26,7 @@ export async function getcyclimediaTIDtoken(imageId) {
   }
   const accountId = import.meta.env.VITE_CYCLOMEDIA_TID_ACCOUNTID;
   const dateTime = new Date(Date.now()).toISOString().replace(/[-:TZ]|\d{2}\.\d{3}/g, '');
-  const token = `W${accountId}&${dateTime}&UTC&${imageId}`;
+  const token = `X${accountId}&${dateTime}&UTC&${imageId}`;
   console.log("Token:", token)
   const searchParams = new URLSearchParams({
     token: token
