@@ -61,9 +61,8 @@ const setNewLocation = async (coords) => {
       };
     }
     if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue setNewLocation, lastYear:', lastYear, 'thisYear:', thisYear, 'coords:', coords);
-    const response = await cyclomedia.open(params)
-    const viewer = response[0];
-    if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue setNewLocation, viewer:', viewer, 'response:', response);
+    const viewer = await cyclomedia.open(params)
+    if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue setNewLocation, viewer:', viewer);
     if (viewer.props.ui['panorama.reportBlurring'].visible) viewer.toggleReportBlurring();
     if (viewer.getCenterMapVisible()) viewer.toggleCenterMapVisibility();
 
@@ -131,14 +130,17 @@ watch(
 onMounted(async () => {
   if (!cyclomediaInitialized.value) {
     if (import.meta.env.VITE_DEBUG == 'true') { console.log('CyclomediaPanel.vue onMounted, initializing cyclomedia') }
-    await cyclomedia.init(streetView.value)
-    if (import.meta.env.VITE_DEBUG == 'true') { console.log('CyclomediaPanel.vue onMounted, cyclomedia initialized') }
-    cyclomediaInitialized.value = true;
+    cyclomediaInitialized.value = await cyclomedia.init(streetView.value);
   }
-  if (GeocodeStore.aisData.features) {
-    setNewLocation(GeocodeStore.aisData.features[0].geometry.coordinates);
-  } else {
-    setNewLocation([-75.163471, 39.953338]);
+  if (!cyclomediaInitialized.value) {
+    throw new Error("Cyclomedia failed to initialize")
+  }
+  else {
+    if (GeocodeStore.aisData.features) {
+      setNewLocation(GeocodeStore.aisData.features[0].geometry.coordinates);
+    } else {
+      setNewLocation([-75.163471, 39.953338]);
+    }
   }
 })
 

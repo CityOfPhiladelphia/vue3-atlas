@@ -8,14 +8,14 @@ import { getcyclimediaTIDtoken } from '@/util/call-api';
    *
    * @returns {Boolean} - true if all scripts were loaded successfully
    */
-  export const loadCyclomedia = async () => {
-    try {
-      return await useExternalModule(streetSmartApi_scripts)
-    } catch (error) {
-      console.error(error);
-      return false;
-    }
+export const loadCyclomedia = async () => {
+  try {
+    return await useExternalModule(streetSmartApi_scripts)
+  } catch (error) {
+    console.error(error);
+    return false;
   }
+}
 
 /**
  *
@@ -30,7 +30,6 @@ export function useCyclomedia() {
    */
   const init = async (element, imageId = 'W0E2O3QH') => {
     const tidToken = await getcyclimediaTIDtoken(imageId);
-    console.log("TID: ", tidToken)
     const initConfig = {
       targetElement: element,
       tid: tidToken,
@@ -67,7 +66,8 @@ export function useCyclomedia() {
       panoramaViewer: {
         closable: false,
         maximizable: false,
-        navbarVisible: false
+        navbarVisible: false,
+        recordingsVisible: false
       }
     }
     if (!window.StreetSmartApi) return null;

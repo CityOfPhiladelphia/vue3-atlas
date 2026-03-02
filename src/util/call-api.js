@@ -1,8 +1,6 @@
 export async function getAgoToken() {
   try {
-    const response = await fetch('https://3mc2xsgnaj.execute-api.us-east-1.amazonaws.com/getAgoTok')
-    const data = await response.json();
-    return data.token;
+    return await (await fetch('https://3mc2xsgnaj.execute-api.us-east-1.amazonaws.com/getAgoTok')).json();
   } catch (err) {
     console.log(err);
   }
@@ -11,9 +9,7 @@ export async function getAgoToken() {
 
 export async function getEagleviewToken() {
   try {
-    const response = await fetch('https://3mc2xsgnaj.execute-api.us-east-1.amazonaws.com/getEagleTok');
-    const data = await response.json();
-    return data.access_token;
+    return await (await fetch('https://3mc2xsgnaj.execute-api.us-east-1.amazonaws.com/getEagleTok')).json();
   } catch (err) {
     console.log(err)
   }
@@ -21,19 +17,14 @@ export async function getEagleviewToken() {
 }
 
 export async function getcyclimediaTIDtoken(imageId) {
-  if (!imageId) {
-    throw new Error("imageId required to get cyclomedia TID token")
-  }
   const accountId = import.meta.env.VITE_CYCLOMEDIA_TID_ACCOUNTID;
-  const dateTime = new Date(Date.now()).toISOString().replace(/[-:TZ]|\d{2}\.\d{3}/g, '');
-  const token = `W${accountId}&${dateTime}&UTC&${imageId}`;
-  console.log("Token:", token)
+  const dateTime = new Date(Date.now()).toISOString().replace(/(\d{4}-\d{2}-\d{2})(?:T)(\d{2}:\d{2}:\d{2})(?:\.\d{3})(Z)/, '$1 $2$3');
+  const token = `X${accountId}&${imageId}&${dateTime}&Z`;
   const searchParams = new URLSearchParams({
     token: token
   });
   try {
-    const response = await (await fetch(`https://3mc2xsgnaj.execute-api.us-east-1.amazonaws.com/getCycloTid?${searchParams.toString()}`)).text();
-    return response;
+    return await (await fetch(`https://3mc2xsgnaj.execute-api.us-east-1.amazonaws.com/getCycloTid?${searchParams.toString()}`)).text();
   } catch (err) {
     console.log(err)
   }
@@ -53,8 +44,7 @@ export async function getCyclomediaRecordings(url, srid, swLng, swLat, neLng, ne
   });
 
   try {
-    const response = await fetch(`https://3mc2xsgnaj.execute-api.us-east-1.amazonaws.com/getCycloRecs?${searchParams.toString()}`)
-    const data = await response.json();
+    const data = await (await fetch(`https://3mc2xsgnaj.execute-api.us-east-1.amazonaws.com/getCycloRecs?${searchParams.toString()}`)).json();
     data.forEach((item, i, arr) => arr[i] = JSON.parse(item));
     return data
   } catch (error) {

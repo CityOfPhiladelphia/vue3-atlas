@@ -69,7 +69,7 @@ export const useCity311Store = defineStore('City311Store', {
           'spatialRel': 'esriSpatialRelContains',
           'f': 'geojson',
           'geometry': JSON.stringify({ "rings": [xyCoordsReduced], "spatialReference": { "wkid": 4326 }}),
-          'token': this.agoToken,
+          'token': this.agoToken.token,
         };
 
         const response = await axios.get(url, { params });

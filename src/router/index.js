@@ -264,7 +264,7 @@ const topicDataFetch = async (topic, data) => {
     case 'city311': {
       const City311Store = useCity311Store();
       if (!City311Store.agoToken) {
-        City311Store.agoToken = await getAgoToken();
+        City311Store.agoToken = !City311Store.agoToken || Date.now() - City311Store.agoToken.expires > 0 ? await getAgoToken() : City311Store.agoToken;
       }
       await City311Store.fillCity311(data);
       return;

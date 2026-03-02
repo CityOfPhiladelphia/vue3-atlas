@@ -91,12 +91,12 @@ watch(
 )
 
 onMounted(async () => {
-  MapStore.eagleviewToken = MapStore.eagleviewToken ? MapStore.eagleviewToken : await getEagleviewToken();
+  MapStore.eagleviewToken = !MapStore.eagleviewToken || Date.now() - MapStore.eagleviewToken.expires > 0 ? await getEagleviewToken() : MapStore.eagleviewToken;
   if (!MapStore.eagleviewToken) {
     throw new Error("Failed to get access token for EagleView")
   }
   const config = {
-    authToken: MapStore.eagleviewToken,
+    authToken: MapStore.eagleviewToken.access_token,
     measurementPanelEnabled: false,
     searchBarEnabled: false,
     enableDualPaneButton: false,
