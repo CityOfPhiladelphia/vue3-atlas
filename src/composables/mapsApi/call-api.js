@@ -1,5 +1,4 @@
 import * as mapsApi from './MapsApiProxyStack.json';
-import * as mapApps from './mapApps.json';
 
 export async function getAgoToken() {
   try {
