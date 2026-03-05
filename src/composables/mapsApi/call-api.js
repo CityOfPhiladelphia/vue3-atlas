@@ -47,8 +47,9 @@ export async function getCyclomediaRecordings(url, srid, swLng, swLat, neLng, ne
 
   try {
     const data = await (await fetch(`${mapsApi.getCycloRecs}?${searchParams.toString()}`)).json();
-    data.forEach((item, i, arr) => arr[i] = JSON.parse(item));
-    return data
+    if (!Array.isArray(data)) { return [] }
+    data.forEach((item, i, arr) => arr[i] = JSON.parse(item))
+    return data;
   } catch (error) {
     console.error(error)
   }
