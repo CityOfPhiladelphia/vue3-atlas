@@ -14,7 +14,7 @@ const router = useRouter();
 import ParcelsControl from '@/components/map/ParcelsControl.vue';
 import LabelsControl from '@/components/map/LabelsControl.vue';
 
-import { getEagleviewToken } from '@/util/call-api';
+import { getEagleviewToken } from '@/composables/mapsApi/call-api';
 
 const currentAddressCoords = computed(() => {
   if (MapStore.currentAddressCoords.length) {

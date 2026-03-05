@@ -1,4 +1,4 @@
-import { getCyclomediaRecordings } from '@/util/call-api';
+import { getCyclomediaRecordings } from '@/composables/mapsApi/call-api';
 
 class RecordingsClient {
   constructor(baseUrl, srid = 3857, proxy) {

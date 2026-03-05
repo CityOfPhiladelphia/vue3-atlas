@@ -1,0 +1,6 @@
+{
+	"getAgoTok": "https://3mc2xsgnaj.execute-api.us-east-1.amazonaws.com/getAgoTok",
+	"getCycloRecs": "https://3mc2xsgnaj.execute-api.us-east-1.amazonaws.com/getCycloRecs",
+	"getCycloTid": "https://3mc2xsgnaj.execute-api.us-east-1.amazonaws.com/getCycloTid",
+	"getEagleTok": "https://3mc2xsgnaj.execute-api.us-east-1.amazonaws.com/getEagleTok"
+}

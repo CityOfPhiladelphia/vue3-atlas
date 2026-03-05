@@ -1,6 +1,6 @@
 import { streetSmartApi_scripts } from '@/composables/cyclomedia/cyclomediaScripts';
 import { useExternalModule } from '@/composables/externalScripts/useExternalModule';
-import { getcyclimediaTIDtoken } from '@/util/call-api';
+import { getcyclimediaTIDtoken } from '@/composables/mapsApi/call-api';
 
 /**
    * Loads all the scrpits required to run Cyclomedia's StreetSmartApi

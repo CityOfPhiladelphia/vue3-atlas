@@ -18,7 +18,7 @@ import { useMainStore } from '@/stores/MainStore.js'
 import useRouting from '@/composables/useRouting';
 const { routeApp } = useRouting();
 
-import { getAgoToken } from '@/util/call-api';
+import { getAgoToken } from '@/composables/mapsApi/call-api';
 
 // this runs on address search and as part of datafetch()
 const clearStoreData = async () => {

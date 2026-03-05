@@ -1,6 +1,8 @@
+import * as mapsApi from './MapsApiProxyStack.json';
+
 export async function getAgoToken() {
   try {
-    return await (await fetch('https://3mc2xsgnaj.execute-api.us-east-1.amazonaws.com/getAgoTok')).json();
+    return await (await fetch(mapsApi.getAgoTok)).json();
   } catch (err) {
     console.log(err);
   }
@@ -9,7 +11,7 @@ export async function getAgoToken() {
 
 export async function getEagleviewToken() {
   try {
-    return await (await fetch('https://3mc2xsgnaj.execute-api.us-east-1.amazonaws.com/getEagleTok')).json();
+    return await (await fetch(mapsApi.getEagleTok)).json();
   } catch (err) {
     console.log(err)
   }
@@ -24,7 +26,7 @@ export async function getcyclimediaTIDtoken(imageId) {
     token: token
   });
   try {
-    return await (await fetch(`https://3mc2xsgnaj.execute-api.us-east-1.amazonaws.com/getCycloTid?${searchParams.toString()}`)).text();
+    return await (await fetch(`${mapsApi.getCycloTid}?${searchParams.toString()}`)).text();
   } catch (err) {
     console.log(err)
   }
@@ -44,7 +46,7 @@ export async function getCyclomediaRecordings(url, srid, swLng, swLat, neLng, ne
   });
 
   try {
-    const data = await (await fetch(`https://3mc2xsgnaj.execute-api.us-east-1.amazonaws.com/getCycloRecs?${searchParams.toString()}`)).json();
+    const data = await (await fetch(`${mapsApi.getCycloRecs}?${searchParams.toString()}`)).json();
     data.forEach((item, i, arr) => arr[i] = JSON.parse(item));
     return data
   } catch (error) {
