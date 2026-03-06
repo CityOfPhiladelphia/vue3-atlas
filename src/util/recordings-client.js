@@ -17,7 +17,7 @@ class RecordingsClient {
     const neCoord = bounds.getNorthEast();
     try {
       const data = await getCyclomediaRecordings(this.srid, swCoord.lng, swCoord.lat, neCoord.lng, neCoord.lat)
-      if (data.length()) { callback(data) }
+      if (data) { callback(data) }
       else if (import.meta.env.VITE_DEBUG) { console.log('no cyclomedia recordings for bounds') }
       this.requestInProcess = false;
     } catch (error) {
