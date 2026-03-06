@@ -2,7 +2,8 @@ import * as mapsApi from './MapsApiProxyStack.json';
 
 export async function getAgoToken() {
   try {
-    return await (await fetch(mapsApi.getAgoTok)).json();
+    const token = await (await fetch(mapsApi.getAgoTok)).json() || '';
+    return token;
   } catch (err) {
     console.log(err);
   }
@@ -11,7 +12,8 @@ export async function getAgoToken() {
 
 export async function getEagleviewToken() {
   try {
-    return await (await fetch(mapsApi.getEagleTok)).json();
+    const token = await (await fetch(mapsApi.getEagleTok)).json() || '';
+    return token;
   } catch (err) {
     console.log(err)
   }
@@ -26,8 +28,10 @@ export async function getcyclimediaTIDtoken(imageId) {
     token: token
   });
   try {
-    return await (await fetch(`${mapsApi.getCycloTid}?${searchParams.toString()}`)).text();
-  } catch (err) {
+    const tid = await (await fetch(`${mapsApi.getCycloTid}?${searchParams.toString()}`)).text() || '';
+    return tid;
+  }
+  catch (err) {
     console.log(err)
   }
   return '';
@@ -46,12 +50,9 @@ export async function getCyclomediaRecordings(srid, swLng, swLat, neLng, neLat) 
 
   try {
     const data = await (await fetch(`${mapsApi.getCycloRecs}?${searchParams.toString()}`)).json();
-    if (!data) { return [] }
-    console.log(data)
-    data.split(';').filter(Boolean).forEach((item, i, arr) => arr[i] = JSON.parse(item));
-    console.log(data)
-    return data;
+    return Array.isArray(data) ? data : [];
   } catch (error) {
-    console.error(error)
+    console.error(error);
+    return [];
   }
 }
