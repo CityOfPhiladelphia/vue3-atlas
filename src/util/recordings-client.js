@@ -10,7 +10,7 @@ class RecordingsClient {
   // this takes map bounds and an EPSG coordinate system id, e.g. 3857
   // and returns an array of cyclomedia recording points
   async getRecordings(bounds, callback) {
-    if (this.requestInProcess) { if (import.meta.env.VITE_DEBUG) { console.log('recordings-client.js, request in progress...') } return; }
+    if (this.requestInProcess) { console.log('XXXXXXXXXXXXXXXXXXXXXXXXXXXXX recordings-client.js, request in progress...'); return; }
     if (import.meta.env.VITE_DEBUG) { console.log('recordings-client.js, getRecordings is running, bounds:', bounds) };
     this.requestInProcess = true;
     const swCoord = bounds.getSouthWest();
