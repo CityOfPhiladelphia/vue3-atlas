@@ -33,11 +33,10 @@ export async function getcyclimediaTIDtoken(imageId) {
   return '';
 }
 
-export async function getCyclomediaRecordings(url, srid, swLng, swLat, neLng, neLat) {
+export async function getCyclomediaRecordings(srid, swLng, swLat, neLng, neLat) {
   const version = import.meta.env.VITE_VERSION;
   const searchParams = new URLSearchParams({
     version: version,
-    url: url,
     srid: srid,
     swLng: swLng,
     swLat: swLat,
