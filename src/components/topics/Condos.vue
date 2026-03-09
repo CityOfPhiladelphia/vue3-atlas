@@ -1,6 +1,6 @@
 <script setup>
 
-import { computed, watch, onMounted } from 'vue';
+import { computed, watch, onMounted, ref } from 'vue';
 import { RouterLink, useRoute } from 'vue-router'
 const route = useRoute();
 
@@ -12,7 +12,7 @@ import CustomPaginationLabelsCondos from '@/components/pagination/CustomPaginati
 const totalSize = computed(() => CondosStore.condosData.total_size);
 
 const paginationOptions = (tableLength) => ({
-  enabled: tableLength > 5,
+  enabled: !CondosStore.searchActive && tableLength > 5,
   mode: 'pages',
   perPage: 10,
   position: 'top',
@@ -40,6 +40,17 @@ onMounted( () => {
   if (import.meta.env.VITE_DEBUG == 'true') console.log('Condos.vue onMounted, CondosStore.lastPageUsed:', CondosStore.lastPageUsed);
 });
 
+const searchInput = ref('');
+
+const handleSearch = async () => {
+  await CondosStore.submitSearch(searchInput.value);
+};
+
+const handleClear = () => {
+  searchInput.value = '';
+  CondosStore.clearSearch();
+};
+
 const condos = computed(() => {
   let features = [];
   if (import.meta.env.VITE_DEBUG == 'true') console.log('Object.keys(CondosStore.condosData.pages).sort():', Object.keys(CondosStore.condosData.pages).sort());
@@ -47,6 +58,15 @@ const condos = computed(() => {
     features = features.concat(CondosStore.condosData.pages[dataPage].features);
   }
   return features;
+});
+
+const filteredCondos = computed(() => {
+  if (!CondosStore.searchActive) return null;
+  const term = CondosStore.searchTerm.toLowerCase();
+  return condos.value.filter(f => {
+    const unitNum = (f.properties.unit_num || '').toLowerCase();
+    return unitNum.includes(term);
+  });
 });
 
 const condosTableData = computed(() => {
@@ -62,7 +82,7 @@ const condosTableData = computed(() => {
         field: 'properties.opa_account_num',
       },
     ],
-    rows: condos.value || [],
+    rows: CondosStore.searchActive ? (filteredCondos.value || []) : (condos.value || []),
   }
 });
 
@@ -90,6 +110,27 @@ const condosTableData = computed(() => {
       />
       <span v-else>({{ totalSize }})</span>
     </h2>
+
+    <div class="condo-search">
+      <form @submit.prevent="handleSearch" class="condo-search-form">
+        <input
+          v-model="searchInput"
+          type="text"
+          placeholder="Search by unit"
+          class="condo-search-input"
+        />
+        <button type="submit" class="condo-search-button">Search</button>
+      </form>
+      <div v-if="CondosStore.searchActive" class="condo-search-active">
+        <span v-if="filteredCondos && filteredCondos.length > 0">
+          Showing {{ filteredCondos.length }} result{{ filteredCondos.length === 1 ? '' : 's' }} for "{{ CondosStore.searchTerm }}"
+        </span>
+        <span v-else>
+          No units matching "{{ CondosStore.searchTerm }}"
+        </span>
+        <button type="button" class="condo-clear-button" @click="handleClear">Clear search</button>
+      </div>
+    </div>
 
     <div class="horizontal-table">
       <vue-good-table
@@ -177,6 +218,55 @@ only screen and (max-width: 768px),
     td:nth-of-type(2):before { content: "OPA Account #"; }
   }
 
+}
+
+.condo-search {
+  margin-bottom: 1rem;
+}
+
+.condo-search-form {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.condo-search-input {
+  flex: 1;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  font-size: 0.9rem;
+}
+
+.condo-search-button {
+  padding: 0.4rem 1rem;
+  background: #0f4d90;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.condo-search-button:hover {
+  background: #0a3661;
+}
+
+.condo-search-active {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.condo-clear-button {
+  background: none;
+  border: none;
+  color: #0f4d90;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 0.9rem;
+  padding: 0;
 }
 
 </style>
