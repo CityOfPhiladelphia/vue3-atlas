@@ -15,6 +15,8 @@ export const useCondosStore = defineStore('CondosStore', {
       dataPageFilled: null,
       lastPageUsed: 1,
       loadingCondosData: false,
+      searchTerm: '',
+      searchActive: false,
     };
   },
   actions: {
@@ -60,6 +62,32 @@ export const useCondosStore = defineStore('CondosStore', {
       } catch {
         if (import.meta.env.VITE_DEBUG == 'true') console.error('Condos - await never resolved, failed to fetch condo data')
       }
+    },
+    async fetchAllPages() {
+      const GeocodeStore = useGeocodeStore();
+      const address = GeocodeStore.aisData.features[0].properties.street_address;
+      const totalPages = this.condosData.page_count;
+      if (totalPages <= 1) return;
+      this.loadingCondosData = true;
+      for (let i = 2; i <= totalPages; i++) {
+        if (!this.condosData.pages['page_' + i]) {
+          await this.fillCondoData(address, i);
+        }
+      }
+      this.loadingCondosData = false;
+    },
+    async submitSearch(term) {
+      if (!term.trim()) {
+        this.clearSearch();
+        return;
+      }
+      this.searchTerm = term.trim();
+      await this.fetchAllPages();
+      this.searchActive = true;
+    },
+    clearSearch() {
+      this.searchTerm = '';
+      this.searchActive = false;
     },
   }
 })
