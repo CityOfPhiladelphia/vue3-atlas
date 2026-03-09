@@ -65,16 +65,21 @@ export const useCondosStore = defineStore('CondosStore', {
     },
     async fetchAllPages() {
       const GeocodeStore = useGeocodeStore();
-      const address = GeocodeStore.aisData.features[0].properties.street_address;
+      const features = GeocodeStore.aisData.features;
+      if (!features || !features.length) return;
+      const address = features[0].properties.street_address;
       const totalPages = this.condosData.page_count;
       if (totalPages <= 1) return;
       this.loadingCondosData = true;
-      for (let i = 2; i <= totalPages; i++) {
-        if (!this.condosData.pages['page_' + i]) {
-          await this.fillCondoData(address, i);
+      try {
+        for (let i = 2; i <= totalPages; i++) {
+          if (!this.condosData.pages['page_' + i]) {
+            await this.fillCondoData(address, i);
+          }
         }
+      } finally {
+        this.loadingCondosData = false;
       }
-      this.loadingCondosData = false;
     },
     async submitSearch(term) {
       if (!term.trim()) {
