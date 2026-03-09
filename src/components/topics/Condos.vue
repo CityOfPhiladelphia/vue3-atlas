@@ -87,6 +87,10 @@ const condosTableData = computed(() => {
       <span v-else>({{ totalSize }})</span>
     </h2>
 
+    <div class="topic-info">
+      Note: Occasionally, similar addresses may be listed here that are not part of a planned community. Refer to the deed and other legal documents for legal definitions, relationships, and obligations pertaining to any property.
+    </div>
+
     <div class="horizontal-table">
       <vue-good-table
         id="condos"

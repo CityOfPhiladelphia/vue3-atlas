@@ -24,7 +24,6 @@ export const useCondosStore = defineStore('CondosStore', {
         const GeocodeStore = useGeocodeStore();
         const AddressLoaded = GeocodeStore.aisData.features
         if (!AddressLoaded) { return }
-        const aisData = AddressLoaded[0];
         let params = {
           include_units: true,
           opa_only: true,
@@ -36,26 +35,11 @@ export const useCondosStore = defineStore('CondosStore', {
           if (import.meta.env.VITE_DEBUG == 'true') console.log('Condos - await resolved and HTTP status is successful')
           this.dataPageFilled = page;
           if (response.data.features.length > 0) {
-            let newData = {
-              // page_count: response.data.page_count,
-              // total_size: response.data.total_size,
-              features: [],
-            }
-            // if (import.meta.env.VITE_DEBUG == 'true') console.log('in condo-list, data:', data, 'state:', state);
-            for (let feature of response.data.features) {
-              if (import.meta.env.VITE_DEBUG == 'true') console.log('feature.properties.address_low_frac:', feature.properties.address_low_frac, 'aisData.properties.address_low_frac:', aisData.properties.address_low_frac, 'feature.properties.street_address:', feature.properties.street_address, 'aisData.properties.street_address:', aisData.properties.street_address);
-              if (feature.properties.address_low_frac !== aisData.properties.address_low_frac || feature.properties.street_address === aisData.properties.street_address) {
-                // return;
-                response.data.total_size = response.data.total_size - 1;
-              } else {
-                newData.features.push(feature);
-              }
-            }
             if (page === 1) {
               this.condosData.page_count = response.data.page_count;
               this.condosData.total_size = response.data.total_size;
             }
-            this.condosData.pages['page_'+page] = newData;
+            this.condosData.pages['page_'+page] = { features: response.data.features };
           }
         } else {
           if (import.meta.env.VITE_DEBUG == 'true') console.log('Condos - await resolved but no data features')
