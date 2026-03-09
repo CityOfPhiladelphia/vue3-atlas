@@ -77,6 +77,10 @@ const condosTableData = computed(() => {
       Condominium units at your search address, as recorded for property assessment purposes. Click one of the addresses below to see information for that unit. Use the back button to return to this list. Source: Office of Property Assessment
     </div>
 
+    <div class="topic-info">
+      Note: Occasionally, similar addresses may be listed here that are not part of a planned community. Refer to the deed and other legal documents for legal definitions, relationships, and obligations pertaining to any property.
+    </div>
+
     <h2 class="subtitle mb-3 is-5">
       Condominiums
       <font-awesome-icon
@@ -86,10 +90,6 @@ const condosTableData = computed(() => {
       />
       <span v-else>({{ totalSize }})</span>
     </h2>
-
-    <div class="topic-info">
-      Note: Occasionally, similar addresses may be listed here that are not part of a planned community. Refer to the deed and other legal documents for legal definitions, relationships, and obligations pertaining to any property.
-    </div>
 
     <div class="horizontal-table">
       <vue-good-table
