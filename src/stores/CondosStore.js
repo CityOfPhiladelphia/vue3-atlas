@@ -15,6 +15,8 @@ export const useCondosStore = defineStore('CondosStore', {
       dataPageFilled: null,
       lastPageUsed: 1,
       loadingCondosData: false,
+      searchTerm: '',
+      searchActive: false,
     };
   },
   actions: {
@@ -36,26 +38,23 @@ export const useCondosStore = defineStore('CondosStore', {
           if (import.meta.env.VITE_DEBUG == 'true') console.log('Condos - await resolved and HTTP status is successful')
           this.dataPageFilled = page;
           if (response.data.features.length > 0) {
-            let newData = {
-              // page_count: response.data.page_count,
-              // total_size: response.data.total_size,
-              features: [],
+            // Remove all features that share an OPA account number with another feature
+            const opaCounts = {};
+            for (const f of response.data.features) {
+              const opa = f.properties.opa_account_num;
+              opaCounts[opa] = (opaCounts[opa] || 0) + 1;
             }
-            // if (import.meta.env.VITE_DEBUG == 'true') console.log('in condo-list, data:', data, 'state:', state);
-            for (let feature of response.data.features) {
-              if (import.meta.env.VITE_DEBUG == 'true') console.log('feature.properties.address_low_frac:', feature.properties.address_low_frac, 'aisData.properties.address_low_frac:', aisData.properties.address_low_frac, 'feature.properties.street_address:', feature.properties.street_address, 'aisData.properties.street_address:', aisData.properties.street_address);
-              if (feature.properties.address_low_frac !== aisData.properties.address_low_frac || feature.properties.street_address === aisData.properties.street_address) {
-                // return;
-                response.data.total_size = response.data.total_size - 1;
-              } else {
-                newData.features.push(feature);
-              }
+            let features = response.data.features.filter(f => opaCounts[f.properties.opa_account_num] === 1);
+            // If only 1 feature remains and it's the searched address itself, exclude it
+            if (features.length === 1 && features[0].properties.street_address === aisData.properties.street_address) {
+              features = [];
             }
+            const duplicatesRemoved = response.data.features.length - features.length;
             if (page === 1) {
               this.condosData.page_count = response.data.page_count;
-              this.condosData.total_size = response.data.total_size;
+              this.condosData.total_size = response.data.total_size - duplicatesRemoved;
             }
-            this.condosData.pages['page_'+page] = newData;
+            this.condosData.pages['page_'+page] = { features };
           }
         } else {
           if (import.meta.env.VITE_DEBUG == 'true') console.log('Condos - await resolved but no data features')
@@ -63,6 +62,37 @@ export const useCondosStore = defineStore('CondosStore', {
       } catch {
         if (import.meta.env.VITE_DEBUG == 'true') console.error('Condos - await never resolved, failed to fetch condo data')
       }
+    },
+    async fetchAllPages() {
+      const GeocodeStore = useGeocodeStore();
+      const features = GeocodeStore.aisData.features;
+      if (!features || !features.length) return;
+      const address = features[0].properties.street_address;
+      const totalPages = this.condosData.page_count;
+      if (totalPages <= 1) return;
+      this.loadingCondosData = true;
+      try {
+        for (let i = 2; i <= totalPages; i++) {
+          if (!this.condosData.pages['page_' + i]) {
+            await this.fillCondoData(address, i);
+          }
+        }
+      } finally {
+        this.loadingCondosData = false;
+      }
+    },
+    async submitSearch(term) {
+      if (!term.trim()) {
+        this.clearSearch();
+        return;
+      }
+      this.searchTerm = term.trim();
+      await this.fetchAllPages();
+      this.searchActive = true;
+    },
+    clearSearch() {
+      this.searchTerm = '';
+      this.searchActive = false;
     },
   }
 })
