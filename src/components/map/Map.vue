@@ -155,12 +155,12 @@ onMounted(async () => {
   map.addControl(new maplibregl.GeolocateControl(), 'bottom-left');
 
   // whenever the map moves, check whether the cyclomedia recording circles are on and update them if so
-  map.on('moveend', () => {
+  map.on('moveend', async () => {
     // if (import.meta.env.VITE_DEBUG == 'true') console.log('map moveend event, e:', e, 'map.getZoom()', map.getZoom(), 'map.getStyle().layers:', map.getStyle().layers, 'map.getStyle().sources:', map.getStyle().sources);
     if (MapStore.cyclomediaOn) {
       map.getZoom() > 16.5 ? MapStore.cyclomediaRecordingsOn = true : MapStore.cyclomediaRecordingsOn = false;
       if (MapStore.cyclomediaRecordingsOn) {
-        updateCyclomediaRecordings();
+        await updateCyclomediaRecordings();
       } else {
         let geojson = { type: 'FeatureCollection', features: [] };
         map.getSource('cyclomediaRecordings').setData(geojson);

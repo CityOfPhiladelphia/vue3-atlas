@@ -19,11 +19,9 @@ class RecordingsClient {
       const data = await getCyclomediaRecordings(this.srid, swCoord.lng, swCoord.lat, neCoord.lng, neCoord.lat)
       if (data.length) { callback(data) }
       else if (import.meta.env.VITE_DEBUG) { console.log('no cyclomedia recordings for bounds') }
-      this.requestInProcess = false;
-    } catch (error) {
-      this.requestInProcess = false;
-      console.error(error)
     }
+    catch (error) { console.error(error) }
+    this.requestInProcess = false;
   }
 }
 
