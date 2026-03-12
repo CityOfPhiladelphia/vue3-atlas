@@ -1,6 +1,6 @@
 {
-  "getAgoTok": "https://y8ea8u6ns8.execute-api.us-east-1.amazonaws.com/getAgoTok",
-  "getCycloRecs": "https://y8ea8u6ns8.execute-api.us-east-1.amazonaws.com/getCycloRecs",
-  "getCycloTid": "https://y8ea8u6ns8.execute-api.us-east-1.amazonaws.com/getCycloTid",
-  "getEagleTok": "https://y8ea8u6ns8.execute-api.us-east-1.amazonaws.com/getEagleTok"
+  "getAgoTok": "https://uet1hoa1n6.execute-api.us-east-1.amazonaws.com/getAgoTok",
+  "getCycloRecs": "https://uet1hoa1n6.execute-api.us-east-1.amazonaws.com/getCycloRecs",
+  "getCycloTid": "https://uet1hoa1n6.execute-api.us-east-1.amazonaws.com/getCycloTid",
+  "getEagleTok": "https://uet1hoa1n6.execute-api.us-east-1.amazonaws.com/getEagleTok"
 }
