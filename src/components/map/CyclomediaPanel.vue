@@ -73,6 +73,7 @@ const setNewLocation = async (coords) => {
     )
     const viewer = response[0];
     if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue setNewLocation, viewer:', viewer, 'response:', response);
+    viewer.setOrientation({ pitch: 0 });
     if (viewer.props.ui['panorama.reportBlurring'].visible) viewer.toggleReportBlurring();
     if (viewer.getCenterMapVisible()) viewer.toggleCenterMapVisibility();
 
@@ -104,9 +105,6 @@ const setNewLocation = async (coords) => {
       if (import.meta.env.VITE_DEBUG == 'true') console.log('update cyclomedia date, viewer.props.recording.year:', viewer.props.recording.year);
       MapStore.cyclomediaYear = viewer.props.recording.year;
       // $emit('updateCyclomediaDate', e.recording.year);
-      const orientation = viewer.getOrientation();
-      viewer.setOrientation({ pitch: 0 });
-      if (import.meta.env.VITE_DEBUG == 'true') console.log('orientation:', orientation);
       if (viewer.props.orientation.xyz !== MapStore.cyclomediaCameraXyz) {
         const lngLat = [viewer.props.orientation.xyz[0], viewer.props.orientation.xyz[1]];
         MapStore.setCyclomediaCameraLngLat(lngLat, viewer.props.orientation.xyz);
