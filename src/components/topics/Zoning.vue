@@ -48,6 +48,7 @@ onBeforeMount(() => {
   }
 });
 
+
 const longCodes = computed(() => {
   if (ZoningStore.zoningBase[selectedParcelId.value] && ZoningStore.zoningBase[selectedParcelId.value].rows) {
     const codes = [];
@@ -90,6 +91,11 @@ const overlaysTableData = computed(() => {
       {
         label: 'Code Section',
         field: 'link',
+        html: true,
+      },
+      {
+        label: 'Show Overlay',
+        field: 'show_overlay_button',
         html: true,
       },
     ],
@@ -517,6 +523,11 @@ const rcosTableData = computed(() => {
 </template>
 
 <style>
+
+.show-overlay-active {
+  background-color: rgba(75, 0, 130, 0.8);
+  color: white;
+}
 
 #parcel-div {
   margin-bottom: 1.5rem;

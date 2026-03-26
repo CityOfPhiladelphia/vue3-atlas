@@ -29,6 +29,7 @@ export const useZoningStore = defineStore('ZoningStore', {
       loadingZoningData: true,
       proposedZoning: {},
       loadingProposedZoning: false,
+      selectedOverlay: null,
     };
   },
   actions: {
@@ -291,8 +292,8 @@ export const useZoningStore = defineStore('ZoningStore', {
               ( SELECT * FROM phl.dor_parcel WHERE dor_parcel.mapreg = '" + mapreg + "' ), \
             zp AS \
               ( SELECT all_zoning.* FROM all_zoning, parcel WHERE st_intersects(parcel.the_geom, all_zoning.the_geom)) \
-            SELECT code_section, code_section_link, objectid, overlay_name, overlay_symbol, pending, pendingbill, pendingbillurl, sunset_date, type \
-            FROM zp";
+            SELECT code_section, code_section_link, objectid, overlay_name, overlay_symbol, pending, pendingbill, pendingbillurl, sunset_date, type, ST_AsGeoJSON(the_geom) as geometry \
+              FROM zp";
           const url = baseUrl += query;
           const response = await fetch(url);
           if (response.ok) {
@@ -300,6 +301,8 @@ export const useZoningStore = defineStore('ZoningStore', {
             if (import.meta.env.VITE_DEBUG == 'true') console.log('data:', data);
             data.rows.forEach(row => {
               row.link = `<a target='_blank' href='${row.code_section_link}'>${row.code_section} <i class='fas fa-external-link'></i></a>`
+              if (row.geometry) row.geometry = JSON.parse(row.geometry);
+              row.show_overlay_button = `<button class='show-overlay-button' data-objectid='${row.objectid}' onclick="window.dispatchEvent(new CustomEvent('show-overlay', { detail: { objectid: ${row.objectid} } }))">Show on Map</button>`;
             });
             this.zoningOverlays[feature.properties.objectid] = data;
             this.loadingZoningOverlays = false;
