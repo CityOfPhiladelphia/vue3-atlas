@@ -671,7 +671,7 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
       type: 'fill',
       layout: {},
       paint: {
-        'fill-color': 'rgba(0, 0, 0, 0.5)',
+        'fill-color': 'rgba(0, 0, 0, 0.3)',
       }
     },
     {
@@ -681,7 +681,7 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
       layout: {},
       paint: {
         'line-color': 'rgba(0, 0, 0, 1)',
-        'line-width': 5,
+        'line-width': 4,
       }
     },
     {

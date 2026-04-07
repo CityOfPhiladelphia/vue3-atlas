@@ -524,9 +524,18 @@ const rcosTableData = computed(() => {
 
 <style>
 
+.show-overlay-button {
+  border-radius: 6px;
+  border-width: 1px;
+}
+
+.show-overlay-button:hover:not(.show-overlay-active) {
+  background-color: rgba(255, 255, 255, 0.7);
+}
+
 .show-overlay-active {
-  background-color: rgba(75, 0, 130, 0.8);
-  color: white;
+  background-color: rgb(243, 198, 19);
+  color: black;
 }
 
 #parcel-div {
