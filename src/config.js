@@ -671,8 +671,17 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
       type: 'fill',
       layout: {},
       paint: {
-        'fill-color': 'rgba(75, 0, 130, 0.75)',
-        'fill-outline-color': 'rgba(50, 0, 100, 1)',
+        'fill-color': 'rgba(0, 0, 0, 0.5)',
+      }
+    },
+    {
+      id: 'selectedOverlayLine',
+      source: 'selectedOverlay',
+      type: 'line',
+      layout: {},
+      paint: {
+        'line-color': 'rgba(0, 0, 0, 1)',
+        'line-width': 5,
       }
     },
     {
