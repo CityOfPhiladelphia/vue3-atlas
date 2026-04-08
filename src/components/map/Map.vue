@@ -36,6 +36,8 @@ import { useCityServicesStore } from '@/stores/CityServicesStore';
 const CityServicesStore = useCityServicesStore();
 import { useCity311Store } from '@/stores/City311Store';
 const City311Store = useCity311Store();
+import { useZoningStore } from '@/stores/ZoningStore';
+const ZoningStore = useZoningStore();
 
 // ROUTER
 import { useRouter, useRoute } from 'vue-router';
@@ -124,6 +126,37 @@ onMounted(async () => {
       turnOnEagleview();
     }
   })
+
+  window.addEventListener('show-overlay', (event) => {
+    const { objectid } = event.detail;
+    const emptyData = { type: 'FeatureCollection', features: [] };
+
+    // clear previous active button
+    document.querySelectorAll('#overlays button.show-overlay-active').forEach(el => el.classList.remove('show-overlay-active'));
+
+    if (ZoningStore.selectedOverlay === objectid) {
+      ZoningStore.selectedOverlay = null;
+      map.getSource('selectedOverlay').setData(emptyData);
+      return;
+    }
+
+    const selectedParcelId = MainStore.selectedParcelId;
+    const overlayData = ZoningStore.zoningOverlays[selectedParcelId];
+    if (!overlayData) return;
+    const overlayRow = overlayData.rows.find(row => row.objectid === objectid);
+    if (!overlayRow || !overlayRow.geometry) return;
+
+    // highlight the active button
+    const button = document.querySelector(`#overlays button[data-objectid='${objectid}']`);
+    if (button) button.classList.add('show-overlay-active');
+
+    ZoningStore.selectedOverlay = objectid;
+    map.getSource('selectedOverlay').setData({
+      type: 'Feature',
+      properties: { overlay_name: overlayRow.overlay_name },
+      geometry: overlayRow.geometry,
+    });
+  });
 
   // add the address marker and camera icon sources
   const markerImage = await map.loadImage(markerSrc.value)

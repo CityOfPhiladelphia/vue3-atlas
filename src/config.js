@@ -600,6 +600,16 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
       type: 'raster',
       tileSize: 1024,
     },
+    selectedOverlay: {
+      type: 'geojson',
+      data: {
+        type: 'Feature',
+        geometry: {
+          type: 'Polygon',
+          coordinates: [[[]]],
+        }
+      }
+    },
     addressMarker: {
       type: 'geojson',
       data: {
@@ -653,6 +663,25 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
       type: 'raster',
       paint: {
         'raster-opacity': 1,
+      }
+    },
+    {
+      id: 'selectedOverlay',
+      source: 'selectedOverlay',
+      type: 'fill',
+      layout: {},
+      paint: {
+        'fill-color': 'rgba(0, 0, 0, 0.3)',
+      }
+    },
+    {
+      id: 'selectedOverlayLine',
+      source: 'selectedOverlay',
+      type: 'line',
+      layout: {},
+      paint: {
+        'line-color': 'rgba(0, 0, 0, 1)',
+        'line-width': 4,
       }
     },
     {
