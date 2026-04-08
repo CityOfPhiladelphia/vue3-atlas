@@ -11,8 +11,6 @@ import distance from '@turf/distance';
 
 import { format } from 'date-fns';
 
-if (import.meta.env.VITE_DEBUG == 'true') console.log('import.meta.env.VITE_AGO_USERNAME:', import.meta.env.VITE_AGO_USERNAME, 'import.meta.env.VITE_AGO_PASSWORD:', import.meta.env.VITE_AGO_PASSWORD);
-
 export const useCity311Store = defineStore('City311Store', {
   state: () => {
     return {
