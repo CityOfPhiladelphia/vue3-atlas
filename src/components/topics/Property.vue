@@ -32,7 +32,7 @@ let mailingAddressFormatted = computed(() => {
     return mailingAddress.join(' ');
   } else {
     let zip = item.zip_code.substring(0,5) + '-' + item.zip_code.substring(5,10);
-    mailingAddress.push(titleCase(this.activeAddress), '<br>Philadelphia, PA,', zip);
+    mailingAddress.push(titleCase(MainStore.currentAddress), '<br>Philadelphia, PA,', zip);
     return mailingAddress.join(' ');
   }
 })
