@@ -281,7 +281,7 @@ const dorDocsTableData = computed(() => {
         copies of the deeds below, you must purchase a subscription to 
         <a
           target="_blank"
-          href="https://epay.phila-records.com/phillyepay/web/"
+          href="https://epayss.phila-records.com/web/"
         >PhilaDox</a>.
         Please note that the following list shows documents recorded from December 1999 forward,
         and may not be a complete history of title for the parcel.
