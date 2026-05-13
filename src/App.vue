@@ -214,5 +214,9 @@ const appTitle = computed(() => {
   #lang-selector button > span:not(.icon) {
     display: none;
   }
+  #lang-selector button {
+    padding: 0;
+    font-size: 1.5rem;
+  }
 }
 </style>
