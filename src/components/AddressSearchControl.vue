@@ -119,6 +119,7 @@ onBeforeUnmount(() => {
             class="input address-input"
             type="text"
             placeholder="Search for an address, OPA account, or DOR number"
+            autocomplete="off"
             @keydown.enter="replaceRoute(MainStore.addressSearchValue)"
             @keydown="onInputKeydown"
           >
