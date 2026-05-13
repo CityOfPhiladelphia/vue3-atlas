@@ -86,7 +86,7 @@ import AddressSearchControl from '@/components/AddressSearchControl.vue';
           <li>
             <a
               target="_blank"
-              href="https://vote.phila.gov/candidates-campaigns/campaign-finance/"
+              href="https://www.phila.gov/departments/board-of-ethics/campaign-finance/"
             >{{ $t('voting.introPage.link7') }}</a>
           </li>
         </ul>
