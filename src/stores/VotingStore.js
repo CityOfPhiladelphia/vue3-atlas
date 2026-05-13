@@ -16,6 +16,8 @@ export const useVotingStore = defineStore("VotingStore", {
   },
   actions: {
     async fillAllVotingData() {
+      const GeocodeStore = useGeocodeStore();
+      if (!GeocodeStore.aisData.features) return;
       this.fillDivisions();
       this.fillPollingPlaces();
       this.fillElectedOfficials();
