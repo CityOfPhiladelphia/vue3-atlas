@@ -189,6 +189,10 @@ onBeforeUnmount(() => {
   width: 100%;
 }
 
+.search-wrapper .field {
+  margin-bottom: 0;
+}
+
 .address-input {
   border-radius: 0px !important;
   border-style: solid;
