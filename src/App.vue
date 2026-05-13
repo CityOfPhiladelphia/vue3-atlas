@@ -216,7 +216,12 @@ const appTitle = computed(() => {
   }
   #lang-selector button {
     padding: 0;
-    font-size: 1.5rem;
+    height: 32px;
+    line-height: 1;
+    font-size: 1.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 </style>
