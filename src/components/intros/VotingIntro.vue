@@ -24,6 +24,7 @@ import AddressSearchControl from '@/components/AddressSearchControl.vue';
         {{ $t('voting.introPage.p3') }}
       </p>
       <ul class="bullet-list">
+        <li>{{ $t('voting.introPage.ul1.li1') }}</li>
         <li>{{ $t('voting.introPage.ul1.li2') }}</li>
         <li>{{ $t('voting.introPage.ul1.li3') }}</li>
         <li>{{ $t('voting.introPage.ul1.li4') }}</li>
@@ -33,9 +34,10 @@ import AddressSearchControl from '@/components/AddressSearchControl.vue';
       <p><b>{{ $t('voting.introPage.p4_b') }}</b>{{ $t('voting.introPage.p4') }}</p>
       <br>
 
-      <div class="topic-info">
-        {{ $t('voting.introPage.p5') }}
-      </div>
+      <div
+        class="topic-info voter-registry-notice"
+        v-html="$t('voting.introPage.p5')"
+      />
 
       <div
         class="section-header"
@@ -48,18 +50,55 @@ import AddressSearchControl from '@/components/AddressSearchControl.vue';
           <li>
             <a
               target="_blank"
-              href="https://www.phila.gov/voting"
-            >{{ $t('voting.introPage.link2') }}</a>
+              href="https://www.pavoterservices.pa.gov/pages/voterregistrationstatus.aspx"
+            >{{ $t('voting.introPage.link1') }}</a>
           </li>
           <li>
             <a
               target="_blank"
               href="https://www.pavoterservices.pa.gov/pages/ballottracking.aspx"
+            >{{ $t('voting.introPage.link2') }}</a>
+          </li>
+          <li>
+            <a
+              target="_blank"
+              href="https://vote.phila.gov/voting/vote-by-mail/vote-by-mail/"
             >{{ $t('voting.introPage.link3') }}</a>
           </li>
-          <!-- <li><a target="_blank" href="https://www.pavoterservices.pa.gov/Pages/voterregistrationstatus.aspx">{{ $t('voting.introPage.link4') }}</a></li> -->
+          <li>
+            <a
+              target="_blank"
+              href="https://vote.phila.gov/ballot-drop-off/"
+            >{{ $t('voting.introPage.link4') }}</a>
+          </li>
+          <li>
+            <a
+              target="_blank"
+              href="https://vote.phila.gov/voting/important-dates-for-voters/"
+            >{{ $t('voting.introPage.link5') }}</a>
+          </li>
+          <li>
+            <a
+              target="_blank"
+              href="https://vote.phila.gov/voting/current-elected-officials/"
+            >{{ $t('voting.introPage.link6') }}</a>
+          </li>
+          <li>
+            <a
+              target="_blank"
+              href="https://vote.phila.gov/candidates-campaigns/campaign-finance/"
+            >{{ $t('voting.introPage.link7') }}</a>
+          </li>
         </ul>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.voter-registry-notice {
+  border: 1px solid #444;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+</style>
