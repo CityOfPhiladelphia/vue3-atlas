@@ -279,7 +279,7 @@ const rcosTableData = computed(() => {
         <a
           class="table-link"
           target="_blank"
-          href="https://www.phila.gov/media/20220909084529/ZONING-QUICK-GUIDE_PCPC_9_9_22.pdf"
+          href="https://www.phila.gov/media/20260213170558/ZONING-QUICK-GUIDE_feb-2026.pdf"
         >See more info about zoning codes [PDF] <font-awesome-icon icon="fa-solid fa-external-link" /></a>
       </div>
 

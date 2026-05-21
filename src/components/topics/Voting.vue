@@ -200,10 +200,13 @@ const electionTypes = {
 }
 
 const electionDate = computed(() => {
-  if (electionSplit.value) {
-    return formatInTimeZone(electionSplit.value[fieldNames.election_date], 'America/New_York', 'MMMM d, yyyy');
+  const date = electionSplit.value?.[fieldNames.election_date];
+  if (!date) return '';
+  try {
+    return formatInTimeZone(date, 'America/New_York', 'MMMM d, yyyy');
+  } catch {
+    return '';
   }
-  return '';
 });
 
 </script>

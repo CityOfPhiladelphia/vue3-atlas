@@ -108,7 +108,8 @@ const i18n = createI18n({
   legacy: false,
   locale: 'en-US',
   fallbackLocale: 'en-US',
-  messages: messages
+  messages: messages,
+  warnHtmlMessage: false,
 })
 
 app.use(i18n)

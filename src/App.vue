@@ -210,7 +210,18 @@ const appTitle = computed(() => {
 </template>
 
 <style>
-
-
-
+@media screen and (max-width: 767px) {
+  #lang-selector button > span:not(.icon) {
+    display: none;
+  }
+  #lang-selector button {
+    padding: 0;
+    height: 32px;
+    line-height: 1;
+    font-size: 1.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
 </style>
