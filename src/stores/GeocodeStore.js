@@ -7,7 +7,6 @@ export const useGeocodeStore = defineStore("GeocodeStore", {
       aisData: {},
     };
   },
-
   actions: {
     async checkAisData(parameter) {
       try {
@@ -42,5 +41,4 @@ export const useGeocodeStore = defineStore("GeocodeStore", {
   },
   getters: {
   },
-
 });
