@@ -71,18 +71,21 @@ export function useCyclomedia() {
       }
     }
     if (!window.StreetSmartApi) return null;
-    let response = null;
     try {
-      response = await window.StreetSmartApi.open(params, openConfig);
+      const response = await window.StreetSmartApi.open(params, openConfig);
+      const viewer = await response[0];
+      if (import.meta.env.VITE_DEBUG) { console.log('useCyclomedia.js open, viewer:', viewer) }
+      for (const overlay of viewer.props.overlays) {
+        if (overlay.id === "surfaceCursorLayer" && overlay.visible === true) {
+          viewer.toggleOverlay(overlay);
+        }
+      }
+      return viewer;
     } catch (error) {
       console.error('StreetSmartApi open failed:', error);
       return null;
     }
-    const viewer = response[0];
-    if (import.meta.env.VITE_DEBUG) { console.log('CyclomediaPanel.vue setNewLocation, viewer:', viewer, 'response:', response) }
-    if (viewer.props.ui['panorama.reportBlurring'].visible) viewer.toggleReportBlurring();
-    if (viewer.getCenterMapVisible()) viewer.toggleCenterMapVisibility();
-    return viewer;
+
   }
 
   /**

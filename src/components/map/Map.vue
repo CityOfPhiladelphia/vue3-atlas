@@ -1217,8 +1217,8 @@ const updateCyclomediaRecordings = async () => {
 
 // everything for adding, moving, and orienting the cyclomedia camera icon and viewcone
 const updateCyclomediaCameraLngLat = (lngLat) => {
-  if (import.meta.env.VITE_DEBUG == 'true') console.log('Map.vue cyclo updateCyclomediaCameraLngLat is running 1, lngLat:', lngLat);
   if (!MapStore.cyclomediaOn) {
+    if (import.meta.env.VITE_DEBUG == 'true') console.log('Map.vue cyclo updateCyclomediaCameraLngLat is running 1, lngLat:', lngLat);
     return;
   } else {
     if (import.meta.env.VITE_DEBUG) console.log('Map.vue cyclo updateCyclomediaCameraLngLat is running 2, lngLat:', lngLat);

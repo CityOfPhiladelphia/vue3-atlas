@@ -19,7 +19,7 @@ const cyclomediaOn = computed(() => {
 });
 
 const toggleCyclomedia = () => {
-  let startQuery = { ...route.query };
+  const startQuery = { ...route.query };
   if (import.meta.env.VITE_DEBUG) console.log('startQuery:', startQuery);
   if (cyclomediaOn.value) {
     delete startQuery['streetview'];
@@ -85,12 +85,12 @@ button {
   margin-left: -1px;
 }
 
-@media 
+@media
 only screen and (max-width: 768px),
 (min-device-width: 768px) and (max-device-width: 1024px)  {
 
   @supports (-webkit-touch-callout: none) {
-    /* CSS specific to iOS devices */ 
+    /* CSS specific to iOS devices */
     .img-src {
       margin-left: -7px !important;
     }
