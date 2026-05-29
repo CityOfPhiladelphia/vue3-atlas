@@ -7,27 +7,23 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     environment: github-pages
 
     steps:
-    
-    - name: Checkout
-      uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v6
 
-    - name: Build
-      run: |
-        npm install
-        npm run github-pages
-      env:
-        VITE_CYCLOMEDIA_API_KEY: ${{ secrets.VITE_CYCLOMEDIA_API_KEY }}
-        VITE_CYCLOMEDIA_PASSWORD: ${{ secrets.VITE_CYCLOMEDIA_PASSWORD }}
-        VITE_CYCLOMEDIA_USERNAME: ${{ secrets.VITE_CYCLOMEDIA_USERNAME }}
+      - name: Build
+        run: |
+          npm install
+          npm run github-pages
+        env:
+          VITE_CYCLOMEDIA_API_KEY: ${{ secrets.VITE_CYCLOMEDIA_API_KEY }}
 
-    - name: Deploy
-      uses: JamesIves/github-pages-deploy-action@4.0.0
-      with:
-        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        BRANCH: gh-pages
-        FOLDER: dist
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@4.0.0
+        with:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          BRANCH: gh-pages
+          FOLDER: dist

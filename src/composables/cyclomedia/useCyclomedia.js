@@ -1,49 +1,62 @@
-import { ref } from "vue"
-import { streetSmartApi_scripts } from '@/composables/cyclomedia/cyclomediaScripts';
-import { useExternalModule } from '@/composables/externalScripts/useExternalModule';
-import { getcyclimediaTIDtoken } from '@/composables/mapsApi/call-api';
+import { computed, ref } from "vue";
+import { streetSmartApi_scripts } from "@/composables/cyclomedia/cyclomediaScripts";
+import { useExternalModule } from "@/composables/externalScripts/useExternalModule";
+import { getcyclimediaCreds, getcyclimediaTIDtoken } from "@/composables/mapsApi/call-api";
 
 const cyclomediaTid = ref(null)
+const cyclomediaCityatlasCreds = ref(null)
+
+const cyclomediaCreds = computed(async () => {
+  return cyclomediaCityatlasCreds.value ? cyclomediaCityatlasCreds.value : import.meta.env.VITE_VERSION === "cityatlas" ? await getcyclimediaCreds() : {}
+})
 
 /**
-   * Loads all the scrpits required to run Cyclomedia's StreetSmartApi
-   * Method is an alternative to installing the npm package, or loading the scripts in an HTML file
-   *
-   * @returns {Boolean} - true if all scripts were loaded successfully
-   */
+ * Loads all the scrpits required to run Cyclomedia's StreetSmartApi
+ * Method is an alternative to installing the npm package, or loading the scripts in an HTML file
+ *
+ * @returns {Boolean} - true if all scripts were loaded successfully
+ */
 export const loadCyclomedia = async () => {
   try {
-    return await useExternalModule(streetSmartApi_scripts)
+    return await useExternalModule(streetSmartApi_scripts);
   } catch (error) {
     console.error(error);
     return false;
   }
-}
+};
 
 /**
- *
  * @returns Functions to load Cyclomedia and its dependent scripts and to handle calls to Cyclomedia's StreetSmartApi
  */
 
 export function useCyclomedia() {
   /**
-   *
    * @param {HTMLElement | VueTemplateRef} element - the element where Cyclomedia app will be rendered
    * @returns {Promise}
    */
-  const init = async (element, imageId = 'W0E2O3QH') => {
-    cyclomediaTid.value = cyclomediaTid.value ? cyclomediaTid.value : await getcyclimediaTIDtoken(imageId);
-    const initConfig = {
+  const init = async (element, imageId = "W0E2O3QH") => {
+    const commonConfig = {
       targetElement: element,
-      tid: cyclomediaTid.value,
       apiKey: import.meta.env.VITE_CYCLOMEDIA_API_KEY,
-      srs: 'EPSG:4326',
-      locale: 'en-us',
+      srs: "EPSG:4326",
+      locale: "en-us",
       addressSettings: {
-        locale: 'en-us',
-        database: 'CMDatabase',
-      }
-    }
+        locale: "en-us",
+        database: "CMDatabase",
+      },
+    };
+    const initConfig =
+      import.meta.env.VITE_VERSION === "cityatlas"
+        ? {
+          ...commonConfig,
+          ...cyclomediaCreds.value
+        }
+        : {
+          ...commonConfig,
+          tid: cyclomediaTid.value
+            ? cyclomediaTid.value
+            : await getcyclimediaTIDtoken(imageId),
+        };
     if (!window.StreetSmartApi) {
       throw new Error("Failed to find scripts for running Cyclomedia");
     }
@@ -51,10 +64,10 @@ export function useCyclomedia() {
       await window.StreetSmartApi.init(initConfig);
       return true;
     } catch (error) {
-      console.error('StreetSmartApi init failed:', error);
+      console.error("StreetSmartApi init failed:", error);
       return false;
     }
-  }
+  };
 
   /**
    * Opens the Cyclomedia viewer
@@ -65,20 +78,22 @@ export function useCyclomedia() {
   const open = async (params) => {
     const openConfig = {
       viewerType: window.StreetSmartApi.ViewerType.PANORAMA,
-      srs: 'EPSG:4326',
+      srs: "EPSG:4326",
       panoramaViewer: {
         closable: false,
         maximizable: false,
         navbarVisible: false,
         recordingsVisible: false,
-        replace: true
-      }
-    }
+        replace: true,
+      },
+    };
     if (!window.StreetSmartApi) return null;
     try {
       const response = await window.StreetSmartApi.open(params, openConfig);
       const viewer = await response[0];
-      if (import.meta.env.VITE_DEBUG) { console.log('useCyclomedia.js open, viewer:', viewer) }
+      if (import.meta.env.VITE_DEBUG) {
+        console.log("useCyclomedia.js open, viewer:", viewer);
+      }
       for (const overlay of viewer.props.overlays) {
         if (overlay.id === "surfaceCursorLayer" && overlay.visible === true) {
           viewer.toggleOverlay(overlay);
@@ -86,11 +101,10 @@ export function useCyclomedia() {
       }
       return viewer;
     } catch (error) {
-      console.error('StreetSmartApi open failed:', error);
+      console.error("StreetSmartApi open failed:", error);
       return null;
     }
-
-  }
+  };
 
   /**
    * Closes the Cyclomedia viewer
@@ -99,13 +113,13 @@ export function useCyclomedia() {
    * @returns {null}
    */
   const destroy = async (element) => {
-    if (!window.StreetSmartApi) return
+    if (!window.StreetSmartApi) return;
     try {
-      await window.StreetSmartApi.destroy({ targetElement: element })
+      await window.StreetSmartApi.destroy({ targetElement: element });
     } catch (error) {
-      console.error('StreetSmartApi destroy failed:', error)
+      console.error("StreetSmartApi destroy failed:", error);
     }
-  }
+  };
 
-  return { init, open, destroy }
+  return { init, open, destroy };
 }

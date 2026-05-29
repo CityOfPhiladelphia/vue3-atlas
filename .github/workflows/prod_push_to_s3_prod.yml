@@ -9,71 +9,62 @@ on:
       - production
 jobs:
   build:
-
     runs-on: ubuntu-latest
     environment: production
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Use Node.js 24.x
-      uses: actions/setup-node@v3
-      with:
-        node-version: '24.x'
-        cache: 'npm'
+      - uses: actions/checkout@v6
+      - name: Use Node.js 24.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24.x"
+          cache: "npm"
 
-    - name: npm install, and build
-      run: |
-        printf "@fortawesome:registry=https://npm.fontawesome.com/\n//npm.fontawesome.com/:_authToken=${FONTAWESOME_NPM_AUTH_TOKEN}" >> ~/.npmrc
-        npm ci
-        npm run build-prod
-      env:
-        VITE_VERSION: 'atlas'
-        FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FA_AUTH_TOKEN }}
-        VITE_GATEKEEPER_KEY: ${{ secrets.VITE_GATEKEEPER_KEY }}
-        VITE_CYCLOMEDIA_API_KEY: ${{ secrets.VITE_CYCLOMEDIA_API_KEY }}
-        VITE_CYCLOMEDIA_PASSWORD: ${{ secrets.VITE_CYCLOMEDIA_PASSWORD }}
-        VITE_CYCLOMEDIA_USERNAME: ${{ secrets.VITE_CYCLOMEDIA_USERNAME }}
-        VITE_EAGLEVIEW_CLIENT_ID: ${{ secrets.VITE_EAGLEVIEW_CLIENT_ID }}
-        VITE_EAGLEVIEW_CLIENT_SECRET: ${{ secrets.VITE_EAGLEVIEW_CLIENT_SECRET }}
+      - name: npm install, and build
+        run: |
+          printf "@fortawesome:registry=https://npm.fontawesome.com/\n//npm.fontawesome.com/:_authToken=${FONTAWESOME_NPM_AUTH_TOKEN}" >> ~/.npmrc
+          npm ci
+          npm run build-prod
+        env:
+          VITE_VERSION: "atlas"
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FA_AUTH_TOKEN }}
+          VITE_GATEKEEPER_KEY: ${{ secrets.VITE_GATEKEEPER_KEY }}
+          VITE_CYCLOMEDIA_API_KEY: ${{ secrets.VITE_CYCLOMEDIA_API_KEY }}
 
-    - name: Deploy to atlas prod s3, Set index headers, and Invalidate Cloudfront
-      env:
-        AWS_DEFAULT_REGION: 'us-east-1'
-        AWS_S3_BUCKET: atlas.phila.gov
-        AWS_CLOUDFRONT_DISTRIBUTION: E226OSZ87TR0MC
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      run: |
-        aws s3 sync dist s3://$AWS_S3_BUCKET --region us-east-1 --delete
-        aws s3 cp s3://$AWS_S3_BUCKET s3://$AWS_S3_BUCKET --recursive --exclude "*" --include "*.html" --metadata-directive REPLACE --acl public-read --cache-control s-maxage=31536000,max-age=1,must-revalidate --content-type "text/html; charset=utf-8"
-        aws cloudfront create-invalidation --distribution-id $AWS_CLOUDFRONT_DISTRIBUTION --paths "/*"
+      - name: Deploy to atlas prod s3, Set index headers, and Invalidate Cloudfront
+        env:
+          AWS_DEFAULT_REGION: "us-east-1"
+          AWS_S3_BUCKET: atlas.phila.gov
+          AWS_CLOUDFRONT_DISTRIBUTION: E226OSZ87TR0MC
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          aws s3 sync dist s3://$AWS_S3_BUCKET --region us-east-1 --delete
+          aws s3 cp s3://$AWS_S3_BUCKET s3://$AWS_S3_BUCKET --recursive --exclude "*" --include "*.html" --metadata-directive REPLACE --acl public-read --cache-control s-maxage=31536000,max-age=1,must-revalidate --content-type "text/html; charset=utf-8"
+          aws cloudfront create-invalidation --distribution-id $AWS_CLOUDFRONT_DISTRIBUTION --paths "/*"
 
+      - name: CityAtlas - npm install and build
+        run: |
+          printf "@fortawesome:registry=https://npm.fontawesome.com/\n//npm.fontawesome.com/:_authToken=${FA_AUTH_TOKEN}" >> ~/.npmrc
+          npm ci
+          npm run build-dev
+        env:
+          VITE_VERSION: "cityatlas"
+          FA_AUTH_TOKEN: ${{ secrets.FA_AUTH_TOKEN }}
+          VITE_GATEKEEPER_KEY: ${{ secrets.VITE_GATEKEEPER_KEY }}
+          VITE_GETAGOTOK_URL: ${{ secrets.VITE_GETAGOTOK_URL }}
+          VITE_CYCLOMEDIA_API_KEY: ${{ secrets.VITE_CYCLOMEDIA_API_KEY }}
+          VITE_GETCYCLOCREDS_URL: ${{ secrets.VITE_GETCYCLOCREDS_URL }}
+          VITE_CITYATLAS_APPID: ${{ secrets.VITE_CITYATLAS_APPID }}
 
-    - name: CityAtlas - npm install and build
-      run: |
-        printf "@fortawesome:registry=https://npm.fontawesome.com/\n//npm.fontawesome.com/:_authToken=${FA_AUTH_TOKEN}" >> ~/.npmrc
-        npm ci
-        npm run build-dev
-      env:
-        VITE_VERSION: 'cityatlas'
-        FA_AUTH_TOKEN: ${{ secrets.FA_AUTH_TOKEN }}
-        VITE_GATEKEEPER_KEY: ${{ secrets.VITE_GATEKEEPER_KEY }}
-        VITE_CYCLOMEDIA_API_KEY: ${{ secrets.VITE_CYCLOMEDIA_API_KEY }}
-        VITE_CITYATLAS_CYCLOMEDIA_PASSWORD: ${{ secrets.VITE_CITYATLAS_CYCLOMEDIA_PASSWORD }}
-        VITE_CITYATLAS_CYCLOMEDIA_USERNAME: ${{ secrets.VITE_CITYATLAS_CYCLOMEDIA_USERNAME }}
-        VITE_EAGLEVIEW_CLIENT_ID: ${{ secrets.VITE_EAGLEVIEW_CLIENT_ID }}
-        VITE_EAGLEVIEW_CLIENT_SECRET: ${{ secrets.VITE_EAGLEVIEW_CLIENT_SECRET }}
-        VITE_AGO_USERNAME: ${{ secrets.VITE_AGO_USERNAME }}
-        VITE_AGO_PASSWORD: ${{ secrets.VITE_AGO_PASSWORD }}
-
-    - name: Deploy to cityatlas prod s3, Set index headers, and Invalidate Cloudfront
-      env:
-        AWS_DEFAULT_REGION: 'us-east-1'
-        AWS_S3_BUCKET: cityatlas.phila.gov
-        AWS_CLOUDFRONT_DISTRIBUTION: E2WCG2Z7GFL7JI
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_CITYATLAS }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_CITYATLAS }}
-      run: |
-        aws s3 sync dist s3://$AWS_S3_BUCKET --region us-east-1 --delete
-        aws s3 cp s3://$AWS_S3_BUCKET s3://$AWS_S3_BUCKET --recursive --exclude "*" --include "*.html" --metadata-directive REPLACE --acl public-read --cache-control s-maxage=31536000,max-age=1,must-revalidate --content-type "text/html; charset=utf-8"
-        aws cloudfront create-invalidation --distribution-id $AWS_CLOUDFRONT_DISTRIBUTION --paths "/*"
+      - name: Deploy to cityatlas prod s3, Set index headers, and Invalidate Cloudfront
+        env:
+          AWS_DEFAULT_REGION: "us-east-1"
+          AWS_S3_BUCKET: cityatlas.phila.gov
+          AWS_CLOUDFRONT_DISTRIBUTION: E2WCG2Z7GFL7JI
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_CITYATLAS }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_CITYATLAS }}
+        run: |
+          aws s3 sync dist s3://$AWS_S3_BUCKET --region us-east-1 --delete
+          aws s3 cp s3://$AWS_S3_BUCKET s3://$AWS_S3_BUCKET --recursive --exclude "*" --include "*.html" --metadata-directive REPLACE --acl public-read --cache-control s-maxage=31536000,max-age=1,must-revalidate --content-type "text/html; charset=utf-8"
+          aws cloudfront create-invalidation --distribution-id $AWS_CLOUDFRONT_DISTRIBUTION --paths "/*"

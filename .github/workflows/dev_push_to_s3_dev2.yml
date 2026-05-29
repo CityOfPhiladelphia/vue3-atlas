@@ -13,9 +13,9 @@ jobs:
     environment: development
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - name: Use Node.js 24.x
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v6
         with:
           node-version: "24.x"
           cache: "npm"
@@ -29,7 +29,6 @@ jobs:
           VITE_VERSION: "atlas"
           FA_AUTH_TOKEN: ${{ secrets.FA_AUTH_TOKEN }}
           VITE_GATEKEEPER_KEY: ${{ secrets.VITE_GATEKEEPER_KEY }}
-          VITE_CYCLOMEDIA_TID_ACCOUNTID: ${{ secrets.VITE_CYCLOMEDIA_TID_ACCOUNTID }}
           VITE_CYCLOMEDIA_API_KEY: ${{ secrets.VITE_CYCLOMEDIA_API_KEY }}
 
       - name: Deploy to Dev s3, Set index headers, and Invalidate Cloudfront
@@ -53,8 +52,10 @@ jobs:
           VITE_VERSION: "cityatlas"
           FA_AUTH_TOKEN: ${{ secrets.FA_AUTH_TOKEN }}
           VITE_GATEKEEPER_KEY: ${{ secrets.VITE_GATEKEEPER_KEY }}
-          VITE_CYCLOMEDIA_TID_ACCOUNTID: ${{ secrets.VITE_CYCLOMEDIA_TID_ACCOUNTID }}
+          VITE_GETAGOTOK_URL: ${{ secrets.VITE_GETAGOTOK_URL }}
           VITE_CYCLOMEDIA_API_KEY: ${{ secrets.VITE_CYCLOMEDIA_API_KEY }}
+          VITE_GETCYCLOCREDS_URL: ${{ secrets.VITE_GETCYCLOCREDS_URL }}
+          VITE_CITYATLAS_APPID: ${{ secrets.VITE_CITYATLAS_APPID }}
 
       - name: Deploy to Dev s3, Set index headers, and Invalidate Cloudfront
         env:

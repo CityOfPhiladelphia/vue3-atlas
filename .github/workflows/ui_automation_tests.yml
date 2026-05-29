@@ -12,16 +12,15 @@ jobs:
 
     steps:
       - name: Use Node.js 24.x
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v6
         with:
-          node-version: '24.x'
+          node-version: "24.x"
 
       - name: Install dependencies and run automation tests
         run: |
           cd automationtests
           npm install
           npm test
-

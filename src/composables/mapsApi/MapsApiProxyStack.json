@@ -1,7 +1,0 @@
-{
-  "getAgoTok": "https://haydr3k097.execute-api.us-east-1.amazonaws.com/getAgoTok",
-  "getCycloRecs": "https://haydr3k097.execute-api.us-east-1.amazonaws.com/getCycloRecs",
-  "getCycloTid": "https://haydr3k097.execute-api.us-east-1.amazonaws.com/getCycloTid",
-  "getEagleTok": "https://haydr3k097.execute-api.us-east-1.amazonaws.com/getEagleTok",
-  "queryAisAddress": "https://haydr3k097.execute-api.us-east-1.amazonaws.com/queryAisAddress"
-}

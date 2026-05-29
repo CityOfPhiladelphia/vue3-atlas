@@ -9,52 +9,47 @@ on:
       - feature/zoning-overlays
 jobs:
   build:
-
     runs-on: ubuntu-latest
     environment: development
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Use Node.js 24.x
-      uses: actions/setup-node@v3
-      with:
-        node-version: '24.x'
-        cache: 'npm'
+      - uses: actions/checkout@v6
+      - name: Use Node.js 24.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24.x"
+          cache: "npm"
 
-    - name: npm install, and build
-      run: |
-        printf "@fortawesome:registry=https://npm.fontawesome.com/\n//npm.fontawesome.com/:_authToken=${FONTAWESOME_NPM_AUTH_TOKEN}" >> ~/.npmrc
-        npm ci
-        npm run build-dev
-      env:
-        VITE_VERSION: 'atlas'
-        FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FA_AUTH_TOKEN }}
-        VITE_GATEKEEPER_KEY: ${{ secrets.VITE_GATEKEEPER_KEY }}
-        VITE_CYCLOMEDIA_API_KEY: ${{ secrets.VITE_CYCLOMEDIA_API_KEY }}
-        VITE_CYCLOMEDIA_PASSWORD: ${{ secrets.VITE_CYCLOMEDIA_PASSWORD }}
-        VITE_CYCLOMEDIA_USERNAME: ${{ secrets.VITE_CYCLOMEDIA_USERNAME }}
-        VITE_EAGLEVIEW_CLIENT_ID: ${{ secrets.VITE_EAGLEVIEW_CLIENT_ID }}
-        VITE_EAGLEVIEW_CLIENT_SECRET: ${{ secrets.VITE_EAGLEVIEW_CLIENT_SECRET }}
+      - name: npm install, and build
+        run: |
+          printf "@fortawesome:registry=https://npm.fontawesome.com/\n//npm.fontawesome.com/:_authToken=${FONTAWESOME_NPM_AUTH_TOKEN}" >> ~/.npmrc
+          npm ci
+          npm run build-dev
+        env:
+          VITE_VERSION: "atlas"
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FA_AUTH_TOKEN }}
+          VITE_GATEKEEPER_KEY: ${{ secrets.VITE_GATEKEEPER_KEY }}
+          VITE_CYCLOMEDIA_API_KEY: ${{ secrets.VITE_CYCLOMEDIA_API_KEY }}
 
-    - name: Deploy to Dev s3, Set index headers, and Invalidate Cloudfront
-      env:
-        AWS_DEFAULT_REGION: 'us-east-1'
-        AWS_S3_BUCKET: atlas-dev.phila.gov
-        AWS_CLOUDFRONT_DISTRIBUTION: E3DWSPDEMV5HQI
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      run: |
-        aws s3 sync dist s3://$AWS_S3_BUCKET --region us-east-1 --delete
-        aws s3 cp s3://$AWS_S3_BUCKET s3://$AWS_S3_BUCKET --recursive --exclude "*" --include "*.html" --metadata-directive REPLACE --acl public-read --cache-control s-maxage=31536000,max-age=1,must-revalidate --content-type "text/html; charset=utf-8"
-        aws cloudfront create-invalidation --distribution-id $AWS_CLOUDFRONT_DISTRIBUTION --paths "/*"
+      - name: Deploy to Dev s3, Set index headers, and Invalidate Cloudfront
+        env:
+          AWS_DEFAULT_REGION: "us-east-1"
+          AWS_S3_BUCKET: atlas-dev.phila.gov
+          AWS_CLOUDFRONT_DISTRIBUTION: E3DWSPDEMV5HQI
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          aws s3 sync dist s3://$AWS_S3_BUCKET --region us-east-1 --delete
+          aws s3 cp s3://$AWS_S3_BUCKET s3://$AWS_S3_BUCKET --recursive --exclude "*" --include "*.html" --metadata-directive REPLACE --acl public-read --cache-control s-maxage=31536000,max-age=1,must-revalidate --content-type "text/html; charset=utf-8"
+          aws cloudfront create-invalidation --distribution-id $AWS_CLOUDFRONT_DISTRIBUTION --paths "/*"
 
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
-    - name: Run Playwright tests
-      run: npx playwright test
-    - uses: actions/upload-artifact@v4
-      if: ${{ !cancelled() }}
-      with:
-        name: playwright-report
-        path: playwright-report/
-        retention-days: 30
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+      - name: Run Playwright tests
+        run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
