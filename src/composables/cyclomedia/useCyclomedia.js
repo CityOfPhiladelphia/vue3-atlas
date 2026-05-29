@@ -4,10 +4,10 @@ import { useExternalModule } from "@/composables/externalScripts/useExternalModu
 import { getcyclimediaCreds, getcyclimediaTIDtoken } from "@/composables/mapsApi/call-api";
 
 const cyclomediaTid = ref(null)
-const cyclomediaCityatlasCreds = ref(null)
+const cyclomediaCityatlasCredsRef = ref(null)
 
 const cyclomediaCreds = computed(async () => {
-  return cyclomediaCityatlasCreds.value ? cyclomediaCityatlasCreds.value : import.meta.env.VITE_VERSION === "cityatlas" ? await getcyclimediaCreds() : {}
+  return cyclomediaCityatlasCredsRef.value ? cyclomediaCityatlasCredsRef.value : import.meta.env.VITE_VERSION === "cityatlas" ? await getcyclimediaCreds() : {}
 })
 
 /**
