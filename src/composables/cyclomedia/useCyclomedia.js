@@ -82,7 +82,6 @@ export function useCyclomedia() {
         closable: false,
         maximizable: false,
         navbarVisible: false,
-        recordingsVisible: false,
         replace: true,
       },
     };
