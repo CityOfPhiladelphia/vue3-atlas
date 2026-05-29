@@ -1,14 +1,10 @@
-import { computed, ref } from "vue";
+import { ref } from "vue";
 import { streetSmartApi_scripts } from "@/composables/cyclomedia/cyclomediaScripts";
 import { useExternalModule } from "@/composables/externalScripts/useExternalModule";
-import { getcyclimediaCreds, getcyclimediaTIDtoken } from "@/composables/mapsApi/call-api";
+import { getCyclomediaCreds, getCyclomediaTidToken } from "@/composables/mapsApi/call-api";
 
-const cyclomediaTid = ref(null)
-const cyclomediaCityatlasCredsRef = ref(null)
+const cyclomediaCreds = ref(null)
 
-const cyclomediaCreds = computed(async () => {
-  return cyclomediaCityatlasCredsRef.value ? cyclomediaCityatlasCredsRef.value : import.meta.env.VITE_VERSION === "cityatlas" ? await getcyclimediaCreds() : {}
-})
 
 /**
  * Loads all the scrpits required to run Cyclomedia's StreetSmartApi
@@ -35,7 +31,24 @@ export function useCyclomedia() {
    * @returns {Promise}
    */
   const init = async (element, imageId = "W0E2O3QH") => {
-    const commonConfig = {
+    if (!window.StreetSmartApi) {
+      throw new Error("Failed to find scripts for running Cyclomedia");
+    }
+
+    switch (import.meta.env.VITE_VERSION) {
+      case "atlas": {
+        cyclomediaCreds.value = cyclomediaCreds.value ? cyclomediaCreds.value : { tid: await getCyclomediaTidToken(imageId) }
+        console.log(cyclomediaCreds.value)
+        break
+      }
+      case 'cityatlas': {
+        cyclomediaCreds.value = cyclomediaCreds.value ? cyclomediaCreds.value : await getCyclomediaCreds()
+        break
+      }
+    }
+
+    const initConfig = {
+      ...cyclomediaCreds.value,
       targetElement: element,
       apiKey: import.meta.env.VITE_CYCLOMEDIA_API_KEY,
       srs: "EPSG:4326",
@@ -45,21 +58,7 @@ export function useCyclomedia() {
         database: "CMDatabase",
       },
     };
-    const initConfig =
-      import.meta.env.VITE_VERSION === "cityatlas"
-        ? {
-          ...commonConfig,
-          ...cyclomediaCreds.value
-        }
-        : {
-          ...commonConfig,
-          tid: cyclomediaTid.value
-            ? cyclomediaTid.value
-            : await getcyclimediaTIDtoken(imageId),
-        };
-    if (!window.StreetSmartApi) {
-      throw new Error("Failed to find scripts for running Cyclomedia");
-    }
+
     try {
       await window.StreetSmartApi.init(initConfig);
       return true;

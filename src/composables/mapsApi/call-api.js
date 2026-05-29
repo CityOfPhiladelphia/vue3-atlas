@@ -20,7 +20,7 @@ export async function getEagleviewToken() {
   return '';
 }
 
-export async function getcyclimediaTIDtoken(imageId) {
+export async function getCyclomediaTidToken(imageId) {
   const searchParams = new URLSearchParams({
     imageId: imageId
   });
@@ -34,7 +34,10 @@ export async function getcyclimediaTIDtoken(imageId) {
   return '';
 }
 
-export async function getcyclimediaCreds() {
+export async function getCyclomediaCreds() {
+  if (import.meta.env.VITE_VERSION !== "cityatlas") {
+    return {}
+  }
   const searchParams = new URLSearchParams({
     appId: import.meta.env.VITE_VERSION === "cityatlas" ? import.meta.env.VITE_CITYATLAS_APPID : ''
   });
