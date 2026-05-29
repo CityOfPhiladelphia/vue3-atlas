@@ -1,29 +1,39 @@
 <script setup>
-import { computed, ref, onMounted, watch, useTemplateRef } from "vue";
-import { useMapStore } from "@/stores/MapStore";
-const MapStore = useMapStore();
-import { useGeocodeStore } from "@/stores/GeocodeStore";
-const GeocodeStore = useGeocodeStore();
+import { computed, ref, onMounted, onBeforeUnmount, watch, useTemplateRef } from "vue"
+import { useRouter, useRoute } from "vue-router"
+const route = useRoute()
+const router = useRouter()
 
-import { useRouter, useRoute } from "vue-router";
-const route = useRoute();
-const router = useRouter();
+// stores
+import { useMapStore } from "@/stores/MapStore"
+const MapStore = useMapStore()
+import { useGeocodeStore } from "@/stores/GeocodeStore"
+const GeocodeStore = useGeocodeStore()
 
-import { useCyclomedia } from "../../composables/cyclomedia/useCyclomedia";
-const cyclomedia = useCyclomedia();
+// cyclomedia script imports
+import { useCyclomedia } from "../../composables/cyclomedia/useCyclomedia"
+const cyclomedia = useCyclomedia()
 
+// config
 import $config from "@/config";
 
-const cyclomediaInitialized = ref(false);
-const streetView = useTemplateRef("cycloviewer");
-
+// emits
 const $emit = defineEmits([
   "updateCameraYaw",
   "updateCameraLngLat",
   "updateCameraHFov",
-]);
+])
 
+// refs and computed properties
+const cyclomediaInitialized = ref(false)
+const streetView = useTemplateRef("cycloviewer")
+const dateRange = computed(() => {
+  return MapStore.cyclomediaYear ? { from: `${MapStore.cyclomediaYear}-01-01`, to: `${MapStore.cyclomediaYear + 1}-01-01` } : undefined
+})
+
+// watchers
 watch(
+  // watch for change in current address
   () => MapStore.currentAddressCoords,
   (newLngLat) => {
     if (import.meta.env.VITE_DEBUG == "true")
@@ -36,6 +46,7 @@ watch(
 )
 
 watch(
+  // watch for cyclomedia recording dot being clicked
   () => MapStore.clickedCyclomediaRecordingCoords,
   newClickedCyclomediaRecordingCoords => {
     if (import.meta.env.VITE_DEBUG == 'true') console.log('CyclomediaPanel.vue watch clickedCyclomediaRecordingCoords, newClickedCyclomediaRecordingCoords:', newClickedCyclomediaRecordingCoords);
@@ -45,26 +56,23 @@ watch(
   }
 )
 
-const dateRange = computed(() => {
-  return MapStore.cyclomediaYear ? { from: `${MapStore.cyclomediaYear}-01-01`, to: `${MapStore.cyclomediaYear + 1}-01-01` } : undefined
-})
-
+// lifecycle functions
 onMounted(async () => {
   if (!cyclomediaInitialized.value) {
     if (import.meta.env.VITE_DEBUG == "true") {
-      console.log("CyclomediaPanel.vue onMounted, initializing cyclomedia");
+      console.log("CyclomediaPanel.vue onMounted, initializing cyclomedia")
     }
-    cyclomediaInitialized.value = await cyclomedia.init(streetView.value);
+    cyclomediaInitialized.value = await cyclomedia.init(streetView.value)
   }
   if (!cyclomediaInitialized.value) {
-    throw new Error("Cyclomedia failed to initialize");
+    throw new Error("Cyclomedia failed to initialize")
   }
 
   const coords = GeocodeStore.aisData.features ? GeocodeStore.aisData.features[0].geometry.coordinates : $config.cityCenterCoords
   const params = {
     coordinate: coords,
     dateRange: dateRange.value
-  };
+  }
   if (import.meta.env.VITE_DEBUG == "true")
     console.log(
       "CyclomediaPanel.vue onMounted, lastYear:",
@@ -73,10 +81,10 @@ onMounted(async () => {
       params.dateRange?.to,
       "coords:",
       coords,
-    );
-
+    )
   const viewer = await cyclomedia.open(params);
 
+  // event watcher for view changing to update camera location and view cone orientation
   viewer.on("VIEW_CHANGE", function (e) {
     if (import.meta.env.VITE_DEBUG == "true")
       console.log(
@@ -90,12 +98,16 @@ onMounted(async () => {
         viewer.props.orientation.xyz,
         "MapStore.cyclomediaCameraXyz:",
         MapStore.cyclomediaCameraXyz,
-      );
-
+      )
       moveCamera(viewer.props.orientation.xyz, e.detail.yaw, e.detail.hFov)
-  });
-});
+  })
+})
 
+onBeforeUnmount(() => {
+  cyclomedia.destroy(streetView.value)
+})
+
+// utility functions
 const setNewLocation = async (coords) => {
   const params = {
     coordinate: coords,
@@ -117,19 +129,18 @@ const setNewLocation = async (coords) => {
 };
 
 const moveCamera = (xyz, yaw, fov) => {
-  MapStore.cyclomediaCameraYaw = yaw;
-  MapStore.cyclomediaCameraHFov = fov;
-
   if (xyz !== MapStore.cyclomediaCameraXyz) {
     const lngLat = [
       xyz[0],
       xyz[1],
     ];
     MapStore.setCyclomediaCameraLngLat(lngLat, xyz);
-    $emit("updateCameraYaw", yaw);
-    $emit("updateCameraHFov", fov, yaw);
     $emit("updateCameraLngLat", lngLat);
   }
+  MapStore.cyclomediaCameraYaw = yaw;
+  MapStore.cyclomediaCameraHFov = fov;
+  $emit("updateCameraYaw", yaw);
+  $emit("updateCameraHFov", fov, yaw);
 }
 
 const popoutClicked = () => {
@@ -140,7 +151,7 @@ const popoutClicked = () => {
       MapStore.cyclomediaCameraLngLat[0],
     "_blank",
   );
-  let startQuery = { ...route.query };
+  const startQuery = { ...route.query };
   delete startQuery["streetview"];
   router.push({ query: { ...startQuery } });
 };

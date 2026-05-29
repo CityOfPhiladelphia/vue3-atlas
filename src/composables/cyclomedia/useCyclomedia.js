@@ -1,6 +1,9 @@
+import { ref } from "vue"
 import { streetSmartApi_scripts } from '@/composables/cyclomedia/cyclomediaScripts';
 import { useExternalModule } from '@/composables/externalScripts/useExternalModule';
 import { getcyclimediaTIDtoken } from '@/composables/mapsApi/call-api';
+
+const cyclomediaTid = ref(null)
 
 /**
    * Loads all the scrpits required to run Cyclomedia's StreetSmartApi
@@ -29,10 +32,10 @@ export function useCyclomedia() {
    * @returns {Promise}
    */
   const init = async (element, imageId = 'W0E2O3QH') => {
-    const tidToken = await getcyclimediaTIDtoken(imageId);
+    cyclomediaTid.value = cyclomediaTid.value ? cyclomediaTid.value : await getcyclimediaTIDtoken(imageId);
     const initConfig = {
       targetElement: element,
-      tid: tidToken,
+      tid: cyclomediaTid.value,
       apiKey: import.meta.env.VITE_CYCLOMEDIA_API_KEY,
       srs: 'EPSG:4326',
       locale: 'en-us',
@@ -67,7 +70,8 @@ export function useCyclomedia() {
         closable: false,
         maximizable: false,
         navbarVisible: false,
-        recordingsVisible: false
+        recordingsVisible: false,
+        replace: true
       }
     }
     if (!window.StreetSmartApi) return null;
@@ -95,12 +99,11 @@ export function useCyclomedia() {
    * @returns {null}
    */
   const destroy = async (element) => {
-    if (!window.StreetSmartApi) return null;
+    if (!window.StreetSmartApi) return
     try {
-      return await window.StreetSmartApi.destroy({ targetElement: element });
+      await window.StreetSmartApi.destroy({ targetElement: element })
     } catch (error) {
-      console.error('StreetSmartApi open failed:', error);
-      return null;
+      console.error('StreetSmartApi destroy failed:', error)
     }
   }
 
