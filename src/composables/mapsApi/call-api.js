@@ -1,4 +1,11 @@
-import { mapsApiEndpoints } from './MapsApiProxyStack';
+const mapsApiEndpoints = {
+  "getAgoTok": import.meta.env.VITE_VERSION === "cityatlas" ? import.meta.env.VITE_GETAGOTOK_URL : '',
+  "getCycloCreds": import.meta.env.VITE_VERSION === "cityatlas" ? import.meta.env.VITE_GETCYCLOCREDS_URL : '',
+  "getCycloRecs": "https://haydr3k097.execute-api.us-east-1.amazonaws.com/getCycloRecs",
+  "getCycloTid": "https://haydr3k097.execute-api.us-east-1.amazonaws.com/getCycloTid",
+  "getEagleTok": "https://haydr3k097.execute-api.us-east-1.amazonaws.com/getEagleTok",
+  "queryAisAddress": "https://haydr3k097.execute-api.us-east-1.amazonaws.com/queryAisAddress"
+}
 
 export async function getAgoToken() {
   try {

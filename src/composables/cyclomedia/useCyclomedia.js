@@ -3,29 +3,28 @@ import { streetSmartApi_scripts } from "@/composables/cyclomedia/cyclomediaScrip
 import { useExternalModule } from "@/composables/externalScripts/useExternalModule";
 import { getCyclomediaCreds, getCyclomediaTidToken } from "@/composables/mapsApi/call-api";
 
-const cyclomediaCreds = ref(null)
-
-
 /**
  * Loads all the scrpits required to run Cyclomedia's StreetSmartApi
  * Method is an alternative to installing the npm package, or loading the scripts in an HTML file
  *
  * @returns {Boolean} - true if all scripts were loaded successfully
  */
-export const loadCyclomedia = async () => {
+export async function loadCyclomedia() {
   try {
     return await useExternalModule(streetSmartApi_scripts);
   } catch (error) {
     console.error(error);
     return false;
   }
-};
+}
 
 /**
- * @returns Functions to load Cyclomedia and its dependent scripts and to handle calls to Cyclomedia's StreetSmartApi
+ * @returns Functions to load Cyclomedia and to handle calls to Cyclomedia's StreetSmartApi
  */
 
 export function useCyclomedia() {
+  const cyclomediaCreds = ref(null)
+
   /**
    * @param {HTMLElement | VueTemplateRef} element - the element where Cyclomedia app will be rendered
    * @returns {Promise}
@@ -75,6 +74,10 @@ export function useCyclomedia() {
    * @returns {viewer | null} - returns viewer Object if open is successful
    */
   const open = async (params) => {
+    if (!window.StreetSmartApi) {
+      throw new Error("Failed to find scripts for running Cyclomedia");
+    }
+
     const openConfig = {
       viewerType: window.StreetSmartApi.ViewerType.PANORAMA,
       srs: "EPSG:4326",
@@ -85,7 +88,7 @@ export function useCyclomedia() {
         replace: true,
       },
     };
-    if (!window.StreetSmartApi) return null;
+
     try {
       const response = await window.StreetSmartApi.open(params, openConfig);
       const viewer = await response[0];
@@ -111,7 +114,10 @@ export function useCyclomedia() {
    * @returns {null}
    */
   const destroy = async (element) => {
-    if (!window.StreetSmartApi) return;
+    if (!window.StreetSmartApi) {
+      throw new Error("Failed to find scripts for running Cyclomedia");
+    }
+
     try {
       await window.StreetSmartApi.destroy({ targetElement: element });
     } catch (error) {

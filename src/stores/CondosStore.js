@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia';
 import { useGeocodeStore } from '@/stores/GeocodeStore.js'
-import axios from 'axios';
 
 export const useCondosStore = defineStore('CondosStore', {
   state: () => {
@@ -27,34 +26,36 @@ export const useCondosStore = defineStore('CondosStore', {
         const AddressLoaded = GeocodeStore.aisData.features
         if (!AddressLoaded) { return }
         const aisData = AddressLoaded[0];
-        let params = {
+        let params = new URLSearchParams({
+          client_id: import.meta.env.VITE_DEBUG ? import.meta.env.VITE_AIS_CLIENTID_ATLAS : '',
           include_units: true,
           opa_only: true,
           page: page,
-        };
-        const response = await axios(`https://api.phila.gov/ais/v1/search/${encodeURIComponent(address)}`, { params });
-        // if (import.meta.env.VITE_DEBUG == 'true') console.log('condos response:', response);
-        if (response.status === 200) {
-          if (import.meta.env.VITE_DEBUG == 'true') console.log('Condos - await resolved and HTTP status is successful')
+        });
+        const response = await fetch(`https://haydr3k097.execute-api.us-east-1.amazonaws.com/queryAis/search/${encodeURIComponent(address)}?${params.toString()}`);
+        if (import.meta.env.VITE_DEBUG == 'true') console.log('condos response:', response);
+        if (response.ok) {
+          const data = await response.json()
+          if (import.meta.env.VITE_DEBUG == 'true') console.log('Condos - await resolved and HTTP status is successful', response)
           this.dataPageFilled = page;
-          if (response.data.features.length > 0) {
+          if (data.features.length > 0) {
             // Remove all features that share an OPA account number with another feature
             const opaCounts = {};
-            for (const f of response.data.features) {
+            for (const f of data.features) {
               const opa = f.properties.opa_account_num;
               opaCounts[opa] = (opaCounts[opa] || 0) + 1;
             }
-            let features = response.data.features.filter(f => opaCounts[f.properties.opa_account_num] === 1);
+            let features = data.features.filter(f => opaCounts[f.properties.opa_account_num] === 1);
             // If only 1 feature remains and it's the searched address itself, exclude it
             if (features.length === 1 && features[0].properties.street_address === aisData.properties.street_address) {
               features = [];
             }
-            const duplicatesRemoved = response.data.features.length - features.length;
+            const duplicatesRemoved = data.features.length - features.length;
             if (page === 1) {
-              this.condosData.page_count = response.data.page_count;
-              this.condosData.total_size = response.data.total_size - duplicatesRemoved;
+              this.condosData.page_count = data.page_count;
+              this.condosData.total_size = data.total_size - duplicatesRemoved;
             }
-            this.condosData.pages['page_'+page] = { features };
+            this.condosData.pages['page_' + page] = { features };
           }
         } else {
           if (import.meta.env.VITE_DEBUG == 'true') console.log('Condos - await resolved but no data features')
