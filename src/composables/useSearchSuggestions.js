@@ -13,14 +13,14 @@ export function useSearchSuggestions(search) {
 
     try {
       const response = await fetch(
-        `https://ais-autocomplete.citygeo.phila.city/autocomplete?q=${stringValue.replace(/ /, '+')}`
+        `https://haydr3k097.execute-api.us-east-1.amazonaws.com/queryAis/autocomplete?q=${encodeURIComponent(stringValue)}&client_id=${import.meta.env.DEV ? import.meta.env.VITE_AIS_CLIENTID_ATLAS : ''}`
       );
       const suggestions = await response.json();
       const suggestedAddresses = suggestions.count
         ? Array.from(
-            suggestions.results.addresses,
-            (suggestion) => suggestion.address
-          )
+          suggestions.results.addresses,
+          (suggestion) => suggestion.address
+        )
         : [];
       searchSuggestions.value = suggestedAddresses;
     } catch (err) {
