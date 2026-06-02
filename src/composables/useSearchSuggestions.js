@@ -15,14 +15,11 @@ export function useSearchSuggestions(search) {
       const response = await fetch(
         `https://haydr3k097.execute-api.us-east-1.amazonaws.com/queryAis/autocomplete?q=${encodeURIComponent(stringValue)}&client_id=${import.meta.env.DEV ? import.meta.env.VITE_AIS_CLIENTID_ATLAS : ''}`
       );
-      const suggestions = await response.json();
-      const suggestedAddresses = suggestions.count
-        ? Array.from(
-          suggestions.results.addresses,
-          (suggestion) => suggestion.address
-        )
-        : [];
-      searchSuggestions.value = suggestedAddresses;
+      if (response.ok) {
+        const suggestions = await response.json()
+        searchSuggestions.value = suggestions
+        return
+      }
     } catch (err) {
       searchSuggestionsError.value = err;
     }
