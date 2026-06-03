@@ -40,17 +40,17 @@ export const useCity311Store = defineStore('City311Store', {
 
         const url = 'https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/SALESFORCE_CASES_1YEAR/FeatureServer/0/query?';
         const xyCoords = buffer[0];
-        let xyCoordsReduced = [[ parseFloat(xyCoords[0][0].toFixed(6)), parseFloat(xyCoords[0][1].toFixed(6)) ]];
+        let xyCoordsReduced = [[parseFloat(xyCoords[0][0].toFixed(6)), parseFloat(xyCoords[0][1].toFixed(6))]];
         var i;
 
 
         for (i = 0; i < xyCoords.length; i++) {
-          if (i%3 == 0) {
-            let newXyCoordReduced = [ parseFloat(xyCoords[i][0].toFixed(6)), parseFloat(xyCoords[i][1].toFixed(6)) ];
+          if (i % 3 == 0) {
+            let newXyCoordReduced = [parseFloat(xyCoords[i][0].toFixed(6)), parseFloat(xyCoords[i][1].toFixed(6))];
             xyCoordsReduced.push(newXyCoordReduced);
           }
         }
-        xyCoordsReduced.push([ parseFloat(xyCoords[0][0].toFixed(6)), parseFloat(xyCoords[0][1].toFixed(6)) ]);
+        xyCoordsReduced.push([parseFloat(xyCoords[0][0].toFixed(6)), parseFloat(xyCoords[0][1].toFixed(6))]);
 
         const today = new Date();
         const dd = String(today.getDate()).padStart(2, '0');
@@ -68,8 +68,8 @@ export const useCity311Store = defineStore('City311Store', {
           'geometryType': 'esriGeometryPolygon',
           'spatialRel': 'esriSpatialRelContains',
           'f': 'geojson',
-          'geometry': JSON.stringify({ "rings": [xyCoordsReduced], "spatialReference": { "wkid": 4326 }}),
-          'token': this.agoToken.token,
+          'geometry': JSON.stringify({ "rings": [xyCoordsReduced], "spatialReference": { "wkid": 4326 } }),
+          'token': this.agoToken.access_token,
         };
 
         const response = await axios.get(url, { params });
@@ -87,9 +87,9 @@ export const useCity311Store = defineStore('City311Store', {
             if (Array.isArray(featureCoords[0])) {
               let instance;
               if (feature.geometry.type === 'LineString') {
-                instance = lineString([ featureCoords[0], featureCoords[1] ], { name: 'line 1' });
+                instance = lineString([featureCoords[0], featureCoords[1]], { name: 'line 1' });
               } else {
-                instance = polygon([ featureCoords[0] ]);
+                instance = polygon([featureCoords[0]]);
               }
               const vertices = explode(instance);
               const closestVertex = nearest(from, vertices);
