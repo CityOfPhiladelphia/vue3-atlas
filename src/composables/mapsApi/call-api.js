@@ -7,59 +7,69 @@ const mapsApiEndpoints = {
   "queryAisAddress": "https://haydr3k097.execute-api.us-east-1.amazonaws.com/queryAisAddress"
 }
 
-export async function getAgoToken() {
+async function getTokenFromMapsProxy(url) {
+  const failure = ''
   try {
-    const token = await (await fetch(mapsApiEndpoints.getAgoTok)).json() || '';
-    return token;
-  } catch (err) {
-    console.log(err);
+    const response = await fetch(url)
+    if (!response.ok) {
+      console.error(`${response.status}: ${response.body}`)
+      return failure
+    }
+    return await response.json() || failure
+  } catch (error) {
+    console.log(error)
   }
-  return '';
+  return failure;
 }
 
-export async function getEagleviewToken() {
-  try {
-    const token = await (await fetch(mapsApiEndpoints.getEagleTok)).json() || '';
-    return token;
-  } catch (err) {
-    console.log(err)
-  }
-  return '';
-}
+export const getAgoToken = async () => await getTokenFromMapsProxy(mapsApiEndpoints.getAgoTok)
+export const getEagleviewToken = async () => await getTokenFromMapsProxy(mapsApiEndpoints.getEagleTok)
+
 
 export async function getCyclomediaTidToken(imageId) {
+  const failure = ''
   const searchParams = new URLSearchParams({
     imageId: imageId
   });
   try {
-    const tid = await (await fetch(`${mapsApiEndpoints.getCycloTid}?${searchParams.toString()}`)).text() || '';
-    return tid;
+    const response = await fetch(`${mapsApiEndpoints.getCycloTid}?${searchParams.toString()}`)
+    if (!response.ok) {
+      console.error(`${response.status}: ${response.body}`)
+      return failure
+    }
+    return await response.text() || failure
   }
-  catch (err) {
-    console.log(err)
+  catch (error) {
+    console.error(error)
   }
-  return '';
+  return failure;
 }
 
 export async function getCyclomediaCreds() {
+  const failure = {}
   if (import.meta.env.VITE_VERSION !== "cityatlas") {
-    return {}
+    return failure
   }
   const searchParams = new URLSearchParams({
     appId: import.meta.env.VITE_VERSION === "cityatlas" ? import.meta.env.VITE_CITYATLAS_APPID : ''
-  });
+  })
   try {
-    const creds = await (await fetch(`${mapsApiEndpoints.getCycloCreds}?${searchParams.toString()}`)).json() || '';
-    return creds;
+    const response = await fetch(`${mapsApiEndpoints.getCycloCreds}?${searchParams.toString()}`)
+    if (!response.ok) {
+      console.error(`${response.status}: ${response.body}`)
+      return failure
+    }
+    return await response.json() || failure
   }
-  catch (err) {
-    console.log(err)
+  catch (error) {
+    console.log(error)
   }
-  return {};
+  return failure
 }
 
 export async function getCyclomediaRecordings(srid, swLng, swLat, neLng, neLat) {
-  const version = import.meta.env.VITE_VERSION;
+  const failure = []
+  const version = import.meta.env.VITE_VERSION
   const searchParams = new URLSearchParams({
     version: version,
     srid: srid,
@@ -67,13 +77,18 @@ export async function getCyclomediaRecordings(srid, swLng, swLat, neLng, neLat) 
     swLat: swLat,
     neLng: neLng,
     neLat: neLat
-  });
+  })
 
   try {
-    const data = await (await fetch(`${mapsApiEndpoints.getCycloRecs}?${searchParams.toString()}`)).json();
-    return Array.isArray(data) ? data : [];
+    const response = await fetch(`${mapsApiEndpoints.getCycloRecs}?${searchParams.toString()}`)
+    if (!response.ok) {
+      console.error(`${response.status}: ${response.body}`)
+      return failure
+    }
+    const data = await response.json()
+    return Array.isArray(data) ? data : failure
   } catch (error) {
-    console.error(error);
-    return [];
+    console.error(error)
+    return failure
   }
 }
