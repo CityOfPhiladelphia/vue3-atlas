@@ -25,7 +25,6 @@ async function getTokenFromMapsProxy(url) {
 export const getAgoToken = async () => await getTokenFromMapsProxy(mapsApiEndpoints.getAgoTok)
 export const getEagleviewToken = async () => await getTokenFromMapsProxy(mapsApiEndpoints.getEagleTok)
 
-
 export async function getCyclomediaTidToken(imageId) {
   const failure = ''
   const searchParams = new URLSearchParams({
