@@ -4,7 +4,7 @@ describe('AIS autocomplete API integration', () => {
 
   it('returns address suggestions for a typed prefix', async () => {
     const query = '1234 mar';
-    const url = `https://haydr3k097.execute-api.us-east-1.amazonaws.com/queryAis/autocomplete?q=${encodeURIComponent(query)}&client_id=${import.meta.env.DEV ? import.meta.env.VITE_AIS_CLIENTID_ATLAS : ''}`
+    const url = `https://haydr3k097.execute-api.us-east-1.amazonaws.com/queryAis/autocomplete?q=${encodeURIComponent(query)}&simple=true&client_id=${import.meta.env.VITE_DEBUG ? import.meta.env.VITE_AIS_CLIENTID_OEMFLOOD : ''}`
 
     const response = await fetch(url);
     expect(response.ok).toBe(true);

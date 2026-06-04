@@ -1,53 +1,52 @@
-import { ref, toValue, watch } from 'vue';
+import { ref, toValue, watch } from 'vue'
 
 export function useSearchSuggestions(search) {
-  const searchSuggestions = ref([]);
-  const searchSuggestionsError = ref(null);
-  let skipNextFetch = false;
+  const searchSuggestions = ref([])
+  const searchSuggestionsError = ref(null)
+  let skipNextFetch = false
 
   async function getSearchSuggestions(stringValue) {
-    if (!stringValue || stringValue.length < 3) {
-      searchSuggestions.value = [];
-      return;
+    if (!stringValue || !/^(?:\d{1,5}(?:-\d{1,5})?[A-Za-z]{0,3} \w+)/.test(stringValue)) {
+      searchSuggestions.value = []
+      return
     }
-
     try {
       const response = await fetch(
-        `https://haydr3k097.execute-api.us-east-1.amazonaws.com/queryAis/autocomplete?q=${encodeURIComponent(stringValue)}&client_id=${import.meta.env.DEV ? import.meta.env.VITE_AIS_CLIENTID_ATLAS : ''}`
-      );
-      if (response.ok) {
-        const suggestions = await response.json()
-        searchSuggestions.value = suggestions
+        `https://haydr3k097.execute-api.us-east-1.amazonaws.com/queryAis/autocomplete?q=${encodeURIComponent(stringValue)}&simple=true&client_id=${import.meta.env.VITE_DEBUG ? import.meta.env.VITE_AIS_CLIENTID_OEMFLOOD : ''}`
+      )
+      if (!response.ok) {
+        searchSuggestionsError.value = { status: response.status, message: response.body }
         return
       }
+      searchSuggestions.value = await response.json()
     } catch (err) {
-      searchSuggestionsError.value = err;
+      searchSuggestionsError.value = err
     }
   }
 
   function dismissSuggestions() {
-    skipNextFetch = true;
-    searchSuggestions.value = [];
+    skipNextFetch = true
+    searchSuggestions.value = []
   }
 
   function hideSuggestions() {
-    searchSuggestions.value = [];
+    searchSuggestions.value = []
   }
 
   function refetchSuggestions() {
-    getSearchSuggestions(toValue(search));
+    getSearchSuggestions(toValue(search))
   }
 
   watch(
     () => toValue(search),
     (value) => {
       if (skipNextFetch) {
-        skipNextFetch = false;
-        return;
+        skipNextFetch = false
+        return
       }
-      getSearchSuggestions(value);
+      getSearchSuggestions(value)
     }
-  );
+  )
 
   return {
     searchSuggestions,
@@ -55,5 +54,5 @@ export function useSearchSuggestions(search) {
     dismissSuggestions,
     hideSuggestions,
     refetchSuggestions,
-  };
+  }
 }
