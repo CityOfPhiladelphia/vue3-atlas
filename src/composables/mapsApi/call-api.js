@@ -8,13 +8,13 @@ const mapsApiEndpoints = {
       ? import.meta.env.VITE_GETCYCLOCREDS_URL
       : "",
   getCycloRecs:
-    "https://haydr3k097.execute-api.us-east-1.amazonaws.com/getCycloRecs",
+    "https://0spy4bb9w1.execute-api.us-east-1.amazonaws.com/getCycloRecs",
   getCycloTid:
-    "https://haydr3k097.execute-api.us-east-1.amazonaws.com/getCycloTid",
+    "https://0spy4bb9w1.execute-api.us-east-1.amazonaws.com/getCycloTid",
   getEagleTok:
-    "https://haydr3k097.execute-api.us-east-1.amazonaws.com/getEagleTok",
+    "https://0spy4bb9w1.execute-api.us-east-1.amazonaws.com/getEagleTok",
   queryAisAddress:
-    "https://haydr3k097.execute-api.us-east-1.amazonaws.com/queryAisAddress",
+    "https://0spy4bb9w1.execute-api.us-east-1.amazonaws.com/queryAisAddress",
 };
 
 async function getTokenFromMapsProxy(url, useDevAuth = false) {
@@ -74,7 +74,7 @@ export async function getCyclomediaCreds() {
   });
   try {
     const response = await fetch(
-      `${mapsApiEndpoints.getCycloCreds}?${searchParams.toString()}`,
+      `${mapsApiEndpoints.getCycloCreds}?${searchParams.toString()}${import.meta.env.VITE_DEBUG ? `&developerid=${btoa(`${import.meta.env.VITE_DEV_NAME}:${import.meta.env.VITE_DEV_KEY}`)}` : ''}`,
     );
     if (!response.ok) {
       console.error(`${response.status}: ${response.body}`);
