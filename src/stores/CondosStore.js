@@ -32,7 +32,7 @@ export const useCondosStore = defineStore('CondosStore', {
           opa_only: true,
           page: page,
         });
-        const response = await fetch(`https://0spy4bb9w1.execute-api.us-east-1.amazonaws.com/queryAis/search/${encodeURIComponent(address)}?${params.toString()}`);
+        const response = await fetch(`https://haydr3k097.execute-api.us-east-1.amazonaws.com/queryAis/search/${encodeURIComponent(address)}?${params.toString()}`);
         if (import.meta.env.VITE_DEBUG == 'true') console.log('condos response:', response);
         if (response.ok) {
           const data = await response.json()

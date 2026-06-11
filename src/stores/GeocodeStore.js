@@ -11,7 +11,7 @@ export const useGeocodeStore = defineStore("GeocodeStore", {
     async checkAisData(parameter) {
       try {
         if (import.meta.env.VITE_DEBUG == 'true') console.log('checkAisData is running, parameter:', parameter);
-        const response = await fetch(`https://0spy4bb9w1.execute-api.us-east-1.amazonaws.com/queryAis/search/${encodeURIComponent(parameter)}?include_units=false${import.meta.env.VITE_DEBUG ? `&client_id=${import.meta.env.VITE_AIS_CLIENTID_ATLAS}` : ''}`)
+        const response = await fetch(`https://haydr3k097.execute-api.us-east-1.amazonaws.com/queryAis/search/${encodeURIComponent(parameter)}?include_units=false${import.meta.env.VITE_DEBUG ? `&client_id=${import.meta.env.VITE_AIS_CLIENTID_ATLAS}` : ''}`)
         if (response.ok) {
           if (import.meta.env.VITE_DEBUG == 'true') console.log('check AIS - await resolved and HTTP status is successful')
           this.aisDataChecked = await response.json()
@@ -26,7 +26,7 @@ export const useGeocodeStore = defineStore("GeocodeStore", {
     async fillAisData(address) {
       try {
         if (import.meta.env.VITE_DEBUG == 'true') console.log('Address - fillAisData is running, address:', address)
-        const response = await fetch(`https://0spy4bb9w1.execute-api.us-east-1.amazonaws.com/queryAis/search/${encodeURIComponent(address)}?include_units=false${import.meta.env.VITE_DEBUG ? `&client_id=${import.meta.env.VITE_AIS_CLIENTID_ATLAS}` : ''}`)
+        const response = await fetch(`https://haydr3k097.execute-api.us-east-1.amazonaws.com/queryAis/search/${encodeURIComponent(address)}?include_units=false${import.meta.env.VITE_DEBUG ? `&client_id=${import.meta.env.VITE_AIS_CLIENTID_ATLAS}` : ''}`)
         if (response.ok) {
           if (import.meta.env.VITE_DEBUG == 'true') console.log('Address - await resolved and HTTP status is successful')
           this.aisData = await response.json()

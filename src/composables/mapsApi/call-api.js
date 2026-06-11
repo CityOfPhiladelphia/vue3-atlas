@@ -8,13 +8,13 @@ const mapsApiEndpoints = {
       ? import.meta.env.VITE_GETCYCLOCREDS_URL
       : "",
   getCycloRecs:
-    "https://0spy4bb9w1.execute-api.us-east-1.amazonaws.com/getCycloRecs",
+    "https://haydr3k097.execute-api.us-east-1.amazonaws.com/getCycloRecs",
   getCycloTid:
-    "https://0spy4bb9w1.execute-api.us-east-1.amazonaws.com/getCycloTid",
+    "https://haydr3k097.execute-api.us-east-1.amazonaws.com/getCycloTid",
   getEagleTok:
-    "https://0spy4bb9w1.execute-api.us-east-1.amazonaws.com/getEagleTok",
+    "https://haydr3k097.execute-api.us-east-1.amazonaws.com/getEagleTok",
   queryAisAddress:
-    "https://0spy4bb9w1.execute-api.us-east-1.amazonaws.com/queryAisAddress",
+    "https://haydr3k097.execute-api.us-east-1.amazonaws.com/queryAisAddress",
 };
 
 async function getTokenFromMapsProxy(url, useDevAuth = false) {
