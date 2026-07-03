@@ -182,4 +182,13 @@ only screen and (max-width: 768px),
   overflow-y: auto;
 }
 
+@media
+only screen and (max-width: 768px),
+(min-device-width: 768px) and (max-device-width: 1024px)  {
+
+  .imagery-dropdown .dropdown-menu .dropdown-content {
+    height: 150px;
+  }
+}
+
 </style>
