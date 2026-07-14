@@ -192,30 +192,38 @@ onMounted(() => {
     </h2>
   </div>
 
-  <vue-good-table
-    id="nearbyFireStations"
-    :columns="nearbyFireStationsTableData.columns"
-    :rows="nearbyFireStationsTableData.rows"
-    :row-style-class="row => hoveredStateId === row.id ? 'active-hover ' + row.id : 'inactive ' + row.id"
-    style-class="table nearby-table"
-    :sort-options="{ initialSortBy: {field: 'properties.distance_mi', type: 'asc'}}"
-    @row-mouseenter="handleRowMouseover($event, 'id')"
-    @row-mouseleave="handleRowMouseleave"
-    @row-click="handleRowClick($event, 'id', 'nearbyFireStations')"
-  >
-    <template #emptystate>
-      <div v-if="loadingData">
-        Loading nearby fire stations... <font-awesome-icon
-          icon="fa-solid fa-spinner"
-          spin
-        />
-      </div>
-      <div v-else-if="CityServicesStore.dataError">
-        Data loading error - try refreshing the page
-      </div>
-      <div v-else>
-        No nearby fire stations found
-      </div>
-    </template>
-  </vue-good-table>
+  <div class="horizontal-table">
+    <vue-good-table
+      id="nearbyFireStations"
+      :columns="nearbyFireStationsTableData.columns"
+      :rows="nearbyFireStationsTableData.rows"
+      :row-style-class="row => hoveredStateId === row.id ? 'active-hover ' + row.id : 'inactive ' + row.id"
+      style-class="table nearby-table"
+      :sort-options="{ initialSortBy: {field: 'properties.distance_mi', type: 'asc'}}"
+      @row-mouseenter="handleRowMouseover($event, 'id')"
+      @row-mouseleave="handleRowMouseleave"
+      @row-click="handleRowClick($event, 'id', 'nearbyFireStations')"
+    >
+      <template #emptystate>
+        <div v-if="loadingData">
+          Loading nearby fire stations... <font-awesome-icon
+            icon="fa-solid fa-spinner"
+            spin
+          />
+        </div>
+        <div v-else-if="CityServicesStore.dataError">
+          Data loading error - try refreshing the page
+        </div>
+        <div v-else>
+          No nearby fire stations found
+        </div>
+      </template>
+    </vue-good-table>
+  </div>
+  <div class="table-link">
+    <a
+      target="_blank"
+      href="https://www.phila.gov/services/safety-emergency-preparedness/fire-safety/find-a-fire-station/"
+    >See citywide fire stations <font-awesome-icon icon="fa-solid fa-external-link" /></a>
+  </div>
 </template>
