@@ -6,7 +6,7 @@ name: dev Push to S3 dev bucket
 on:
   push:
     branches:
-      - feature/zoning-overlays
+      - fix/atlas-autocomplete-proxy
 jobs:
   build:
 

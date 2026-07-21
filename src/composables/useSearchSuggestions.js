@@ -1,5 +1,8 @@
 import { ref, toValue, watch } from 'vue';
 
+const AIS_AUTOCOMPLETE_URL =
+  'https://haydr3k097.execute-api.us-east-1.amazonaws.com/queryAis/autocomplete';
+
 export function useSearchSuggestions(search) {
   const searchSuggestions = ref([]);
   const searchSuggestionsError = ref(null);
@@ -11,18 +14,24 @@ export function useSearchSuggestions(search) {
       return;
     }
 
+    // the proxy identifies callers by origin, which localhost is not registered as
+    const clientId =
+      import.meta.env.VITE_DEBUG == 'true'
+        ? `&client_id=${import.meta.env.VITE_AIS_CLIENTID_ATLAS}`
+        : '';
+
     try {
       const response = await fetch(
-        `https://ais-autocomplete.citygeo.phila.city/autocomplete?q=${stringValue.replace(/ /, '+')}`
+        `${AIS_AUTOCOMPLETE_URL}?q=${encodeURIComponent(stringValue)}&simple=true${clientId}`
       );
-      const suggestions = await response.json();
-      const suggestedAddresses = suggestions.count
-        ? Array.from(
-            suggestions.results.addresses,
-            (suggestion) => suggestion.address
-          )
-        : [];
-      searchSuggestions.value = suggestedAddresses;
+      if (!response.ok) {
+        searchSuggestionsError.value = {
+          status: response.status,
+          message: response.statusText,
+        };
+        return;
+      }
+      searchSuggestions.value = await response.json();
     } catch (err) {
       searchSuggestionsError.value = err;
     }
