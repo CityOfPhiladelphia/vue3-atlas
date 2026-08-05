@@ -38,6 +38,8 @@ export const useLiStore = defineStore('LiStore', {
       loadingLiBusinessLicenses: true,
       liAppeals: {},
       loadingLiAppeals: false,
+      leadCertification: {},
+      loadingLeadCertification: false,
       loadingLiData: true,
     };
   },
@@ -54,6 +56,7 @@ export const useLiStore = defineStore('LiStore', {
       this.fillLiViolations();
       this.fillLiBusinessLicenses();
       this.fillLiAppeals();
+      this.fillLeadCertification();
     },
     async clearAllLiData() {
       this.loadingLiData = true;
@@ -76,6 +79,23 @@ export const useLiStore = defineStore('LiStore', {
       this.loadingLiBusinessLicenses = true;
       this.liAppeals = {};
       this.loadingLiAppeals = true;
+      this.leadCertification = {};
+      this.loadingLeadCertification = true;
+    },
+    async fillLeadCertification() {
+      try {
+        const GeocodeStore = useGeocodeStore();
+        const feature = GeocodeStore.aisData.features[0];
+        const opa_account_num = feature.properties.opa_account_num;
+        const baseUrl = `https://phl.carto.com/api/v2/sql?q=`;
+        const url = baseUrl + `SELECT * FROM lhhp_lead_certifications WHERE opa_account IN ('${opa_account_num}')`;
+        const response = await axios.get(url);
+        this.leadCertification = await response.data;
+        this.loadingLeadCertification = false;
+      } catch {
+        if (import.meta.env.VITE_DEBUG == 'true') console.error('leadCertification - await never resolved, failed to fetch address data')
+        this.loadingLeadCertification = false;
+      }
     },
     async fillLiBuildingFootprints() {
       // if (import.meta.env.VITE_DEBUG == 'true') console.log('fillLiBuildingFootprints is running');
