@@ -6,7 +6,7 @@ name: dev Push to S3 dev bucket
 on:
   push:
     branches:
-      - feat/lead-cert-2026
+      - feature/lead-cert-2026
 jobs:
   build:
 
