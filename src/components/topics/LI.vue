@@ -2,6 +2,8 @@
 import { computed, watch, onMounted } from 'vue';
 import { polygon, featureCollection } from '@turf/helpers';
 
+import { format } from 'date-fns';
+
 import CustomPaginationLabels from '@/components/pagination/CustomPaginationLabels.vue';
 import useTables from '@/composables/useTables';
 const { paginationOptions } = useTables();
@@ -198,6 +200,47 @@ const buildingCertsTableData = computed(() => ({
 //   ],
 //   rows: selectedBuildingCerts.value || [],
 // })
+  
+const leadCertifications = computed(() => LiStore.leadCertifications.rows ? [ ...LiStore.leadCertifications.rows ] : null );
+const leadCertificationsLength = computed(() => leadCertifications.value && leadCertifications.value.length ? leadCertifications.value.length : 0);
+const selectedLeadCertification = computed(() => LiStore.selectedLeadCertification);
+
+watch (leadCertifications,
+  async (newLeadCertifications) => {
+    if (import.meta.env.VITE_DEBUG == 'true') console.log('watch newLeadCertifications:', newLeadCertifications);
+    if (newLeadCertifications && newLeadCertifications.length > 0) {
+      LiStore.selectedLeadCertification = newLeadCertifications[0];
+    } else {
+      LiStore.selectedLeadCertification = null;
+    }
+  }
+)
+
+// const setLeadCertification = async (leadCertification) => {
+//   LiStore.selectedLeadCertification = leadCertification;
+// }
+
+const leadCertsTableData = computed(() => {
+  const selectedLeadCertification = LiStore.selectedLeadCertification;
+  return [
+    {
+      label: 'OPA Account',
+      value: selectedLeadCertification.opa_account || 'N/A',
+    },
+    {
+      label: 'Certification Status',
+      value: selectedLeadCertification.lhhp_certification_status,
+    },
+    {
+      label: 'Certification Date',
+      value: selectedLeadCertification.lhhp_cert_date ? format(selectedLeadCertification.lhhp_cert_date, 'MM/dd/yyyy') : 'N/A',
+    },
+    {
+      label: 'License',
+      value: selectedLeadCertification.li_llo_license || 'N/A',
+    }
+  ]
+});
 
 const permitsTableData = computed(() => {
   return {
@@ -482,6 +525,60 @@ const liAppealsTableData = computed(() => {
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="data-section">
+      <h2 class="subtitle mb-3 is-5">
+        Lead Certification
+        <font-awesome-icon
+          v-if="LiStore.loadingLeadCertifications"
+          icon="fa-solid fa-spinner"
+          spin
+        />
+      </h2>
+
+      <div class="topic-info">
+        City law requires property owners to test and certify any rental unit or family
+        childcare facility as lead-safe or lead-free. Lead-safe certifications expire
+        after 4 years while lead-free certifications never expire. Check the status of
+        this property below.
+        Source: <a target="_blank" href="https://www.phila.gov/programs/lead-and-healthy-homes-program/">
+        Lead and Healthy Homes Program</a>, Department of Public Health
+      </div>
+      <div class="topic-info">
+        Property owners can submit inspection results, register as exempt, or learn about how to comply
+        with these requirements at <a target="_blank" href="https://leadcertification.phila.gov/">leadcertification.phila.gov</a>.
+      </div>
+
+      <div
+        v-if="LiStore.leadCertifications.rows && LiStore.leadCertifications.rows.length"
+        id="lead-certs-div"
+        class="columns add-borders p-2"
+      >
+
+        <div class="column is-12">
+      
+          <div class="columns is-multiline is-mobile">
+            <button
+              v-for="cert in LiStore.leadCertifications.rows"
+              :key="cert.objectid"
+              class="li-building-select column is-2-desktop is-3-mobile has-text-centered add-borders pl-1 pr-1"
+              :class="{ 'is-selected': cert.objectid === selectedLeadCertification.objectid }"
+            >
+            <!-- @click="setLeadCertification(cert)" -->
+              {{ cert.lhhp_property_type || 'N/A' }}
+            </button>
+          </div>
+
+          <!-- Li Building info-->
+          <vertical-table
+            table-id="leadCertsTable"
+            :data="leadCertsTableData"
+          />
+
+        </div>
+      </div>
+
     </div>
 
     <!-- Li Permits Table -->
@@ -808,6 +905,11 @@ const liAppealsTableData = computed(() => {
 }
 
 #li-building-div {
+  padding: 0px !important;
+  margin-bottom: 1.5rem;
+}
+
+#lead-certs-div {
   padding: 0px !important;
   margin-bottom: 1.5rem;
 }

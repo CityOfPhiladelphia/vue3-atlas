@@ -38,8 +38,9 @@ export const useLiStore = defineStore('LiStore', {
       loadingLiBusinessLicenses: true,
       liAppeals: {},
       loadingLiAppeals: false,
-      leadCertification: {},
-      loadingLeadCertification: false,
+      selectedLeadCertification: null,
+      leadCertifications: {},
+      loadingLeadCertifications: false,
       loadingLiData: true,
     };
   },
@@ -56,7 +57,7 @@ export const useLiStore = defineStore('LiStore', {
       this.fillLiViolations();
       this.fillLiBusinessLicenses();
       this.fillLiAppeals();
-      this.fillLeadCertification();
+      this.fillLeadCertifications();
     },
     async clearAllLiData() {
       this.loadingLiData = true;
@@ -79,10 +80,11 @@ export const useLiStore = defineStore('LiStore', {
       this.loadingLiBusinessLicenses = true;
       this.liAppeals = {};
       this.loadingLiAppeals = true;
-      this.leadCertification = {};
-      this.loadingLeadCertification = true;
+      this.selectedLeadCertification = null;
+      this.leadCertifications = {};
+      this.loadingLeadCertifications = true;
     },
-    async fillLeadCertification() {
+    async fillLeadCertifications() {
       try {
         const GeocodeStore = useGeocodeStore();
         const feature = GeocodeStore.aisData.features[0];
@@ -90,11 +92,15 @@ export const useLiStore = defineStore('LiStore', {
         const baseUrl = `https://phl.carto.com/api/v2/sql?q=`;
         const url = baseUrl + `SELECT * FROM lhhp_lead_certifications WHERE opa_account IN ('${opa_account_num}')`;
         const response = await axios.get(url);
-        this.leadCertification = await response.data;
-        this.loadingLeadCertification = false;
+        const unsortedData = await response.data;
+        const sortedRows = unsortedData.rows.sort((a, b) => {
+          return b.lhhp_property_type.localeCompare(a.lhhp_property_type);
+        });
+        this.leadCertifications = { rows: sortedRows };
+        this.loadingLeadCertifications = false;
       } catch {
-        if (import.meta.env.VITE_DEBUG == 'true') console.error('leadCertification - await never resolved, failed to fetch address data')
-        this.loadingLeadCertification = false;
+        if (import.meta.env.VITE_DEBUG == 'true') console.error('leadCertifications - await never resolved, failed to fetch address data')
+        this.loadingLeadCertifications = false;
       }
     },
     async fillLiBuildingFootprints() {
