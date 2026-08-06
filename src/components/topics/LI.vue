@@ -216,12 +216,36 @@ watch (leadCertifications,
   }
 )
 
-// const setLeadCertification = async (leadCertification) => {
-//   LiStore.selectedLeadCertification = leadCertification;
-// }
+const setLeadCertification = async (leadCertification) => {
+  LiStore.selectedLeadCertification = leadCertification;
+}
 
 const leadCertsTableData = computed(() => {
   const selectedLeadCertification = LiStore.selectedLeadCertification;
+
+  let certificationStatus = selectedLeadCertification.lhhp_certification_status
+  if (selectedLeadCertification.lhhp_status_type) {
+    certificationStatus += ' (' + selectedLeadCertification.lhhp_status_type + ' - ' + selectedLeadCertification.lhhp_certified_units + ')';
+  }
+  if (selectedLeadCertification.lhhp_status_details) {
+    certificationStatus += '<br>' + selectedLeadCertification.lhhp_status_details;
+  }
+
+  let license = '';
+  if (selectedLeadCertification.li_rl_status && selectedLeadCertification.li_rl_status !== 'None') {
+    license += 'Rental license - ' + selectedLeadCertification.li_rl_status;
+    if (selectedLeadCertification.li_rl_expiration_date) {
+      license += ' (expires ' + format(selectedLeadCertification.li_rl_expiration_date, 'MM/dd/yyyy') + ')';
+    }
+  }
+  if (selectedLeadCertification.li_cc_status && selectedLeadCertification.li_cc_status !== 'None') {
+    if (license) license += '<br>';
+    license += 'City childcare license - ' + selectedLeadCertification.li_cc_status;
+    if (selectedLeadCertification.li_cc_expiration_date) {
+      license += ' (expires ' + format(selectedLeadCertification.li_cc_expiration_date, 'MM/dd/yyyy') + ')';
+    }
+  }
+
   return [
     {
       label: 'OPA Account',
@@ -229,7 +253,7 @@ const leadCertsTableData = computed(() => {
     },
     {
       label: 'Certification Status',
-      value: selectedLeadCertification.lhhp_certification_status,
+      value: certificationStatus || 'N/A',
     },
     {
       label: 'Certification Date',
@@ -237,7 +261,7 @@ const leadCertsTableData = computed(() => {
     },
     {
       label: 'License',
-      value: selectedLeadCertification.li_llo_license || 'N/A',
+      value: license || 'N/A',
     }
   ]
 });
@@ -553,19 +577,23 @@ const liAppealsTableData = computed(() => {
       <div
         v-if="LiStore.leadCertifications.rows && LiStore.leadCertifications.rows.length"
         id="lead-certs-div"
-        class="columns add-borders p-2"
+        class="columns p-2"
+        :class="LiStore.leadCertifications.rows[0].lhhp_property_type ? 'add-borders' : ''"
       >
 
         <div class="column is-12">
       
-          <div class="columns is-multiline is-mobile">
+          <div
+            v-if="LiStore.leadCertifications.rows[0].lhhp_property_type"
+            class="columns is-multiline is-mobile"
+          >
             <button
               v-for="cert in LiStore.leadCertifications.rows"
               :key="cert.objectid"
               class="li-building-select column is-2-desktop is-3-mobile has-text-centered add-borders pl-1 pr-1"
               :class="{ 'is-selected': cert.objectid === selectedLeadCertification.objectid }"
+              @click="setLeadCertification(cert)"
             >
-            <!-- @click="setLeadCertification(cert)" -->
               {{ cert.lhhp_property_type || 'N/A' }}
             </button>
           </div>
