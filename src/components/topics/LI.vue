@@ -245,12 +245,14 @@ const leadCertsTableData = computed(() => {
 
   if (selectedLeadCertification.li_cc_status && selectedLeadCertification.li_cc_status !== 'None') {
     if (license) license += '<br>';
-    license += `City childcare license - ${selectedLeadCertification.li_cc_status}`;
+    license += `City childcare license - <a target="_blank" href="https://li.phila.gov/property-history/search/business-license-detail?address=${selectedLeadCertification.address}">${selectedLeadCertification.li_cc_status} <i class="fa-solid fa-external-link"></i></a>`;
     if (selectedLeadCertification.li_cc_expiration_date) {
       license += ` (expires ${format(selectedLeadCertification.li_cc_expiration_date, 'MM/dd/yyyy')})`;
-    } else {
-      license += ` (Check <a target="_blank" href="https://www.compass.dhs.pa.gov/providersearch/#/childcareprovidersearch">state childcare licenses <i class="fa-solid fa-external-link"></i></a>)`;
     }
+  } else if (selectedLeadCertification.li_cc_status === 'None') {
+    if (license) license += '<br>';
+    license += `City childcare license - ${selectedLeadCertification.li_cc_status}  (Check <a target="_blank" href="https://www.compass.dhs.pa.gov/providersearch/#/childcareprovidersearch">state childcare licenses <i class="fa-solid fa-external-link"></i></a>)`;
+
   }
 
   return [
