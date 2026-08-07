@@ -16,6 +16,8 @@ import { useMapStore } from '@/stores/MapStore';
 const MapStore = useMapStore();
 import { useCondosStore } from '@/stores/CondosStore';
 const CondosStore = useCondosStore();
+import { useGeocodeStore } from '@/stores/GeocodeStore';
+const GeocodeStore = useGeocodeStore();
 
 import VerticalTable from '../VerticalTable.vue';
 
@@ -26,6 +28,12 @@ onMounted(async () => {
   if (LiStore.liBuildingFootprints.features) {
     await setLiBuildingFootprints(LiStore.liBuildingFootprints);
   }
+});
+
+const hasNoOpaAccount = computed(() => {
+  if (import.meta.env.VITE_DEBUG == 'true') console.log('hasNoOpaAccount evaluating, aisData:', GeocodeStore.aisData, 'features:', GeocodeStore.aisData.features, 'opa_account_num:', GeocodeStore.aisData.features && JSON.stringify(GeocodeStore.aisData.features[0].properties.opa_account_num));
+  if (!GeocodeStore.aisData.features) return false;
+  return !GeocodeStore.aisData.features[0].properties.opa_account_num;
 });
 
 const shouldShowCondosMessage = computed(() => {
@@ -247,6 +255,8 @@ const leadCertsTableData = computed(() => {
     if (selectedLeadCertification.li_rl_expiration_date) {
       license += ` (${expirationText(selectedLeadCertification.li_rl_expiration_date)})`;
     }
+  } else if (selectedLeadCertification.li_rl_status === 'None') {
+    license += `Rental license - ${selectedLeadCertification.li_rl_status}`
   }
 
   if (selectedLeadCertification.active_rental_license_count > 1) {
@@ -261,7 +271,8 @@ const leadCertsTableData = computed(() => {
     }
   } else if (selectedLeadCertification.li_cc_status === 'None') {
     if (license) license += '<br>';
-    license += `Child Care Facility license - ${selectedLeadCertification.li_cc_status}  (Check <a target="_blank" href="https://www.compass.dhs.pa.gov/providersearch/#/childcareprovidersearch">state childcare licenses <i class="fa-solid fa-external-link"></i></a>)`;
+    license += `Child Care Facility license - ${selectedLeadCertification.li_cc_status}`
+    license += `<br>Check <a target="_blank" href="https://www.compass.dhs.pa.gov/providersearch/#/childcareprovidersearch">state childcare licenses <i class="fa-solid fa-external-link"></i></a>`;
 
   }
 
@@ -901,6 +912,14 @@ const liAppealsTableData = computed(() => {
         with these requirements at <a target="_blank" href="https://leadcertification.phila.gov/">leadcertification.phila.gov</a>.
       </div>
 
+
+      <div
+        v-if="hasNoOpaAccount"
+        class="no-opa-info"
+      >
+        No OPA account found for this address.  Try searching for a specific address or click on the map.
+      </div>
+      
       <div
         v-if="shouldShowCondosMessage"
         class="condo-info"
@@ -951,6 +970,12 @@ const liAppealsTableData = computed(() => {
 <style>
 
 .condo-info {
+  background-color: #f0f0f0;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.no-opa-info {
   background-color: #f0f0f0;
   padding: 1rem;
   margin-bottom: 1.5rem;
