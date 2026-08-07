@@ -31,7 +31,6 @@ onMounted(async () => {
 });
 
 const hasNoOpaAccount = computed(() => {
-  if (import.meta.env.VITE_DEBUG == 'true') console.log('hasNoOpaAccount evaluating, aisData:', GeocodeStore.aisData, 'features:', GeocodeStore.aisData.features, 'opa_account_num:', GeocodeStore.aisData.features && JSON.stringify(GeocodeStore.aisData.features[0].properties.opa_account_num));
   if (!GeocodeStore.aisData.features) return false;
   return !GeocodeStore.aisData.features[0].properties.opa_account_num;
 });
@@ -914,13 +913,6 @@ const liAppealsTableData = computed(() => {
 
 
       <div
-        v-if="hasNoOpaAccount"
-        class="no-opa-info"
-      >
-        No OPA account found for this address.  Try searching for a specific address or click on the map.
-      </div>
-      
-      <div
         v-if="shouldShowCondosMessage"
         class="condo-info"
       >
@@ -928,6 +920,13 @@ const liAppealsTableData = computed(() => {
           There {{ CondosStore.condosData.total_size > 1 ? 'are':'is' }} {{ CondosStore.condosData.total_size }} condominium {{ CondosStore.condosData.total_size > 1 ? 'units':'unit' }} at this address.
         </h2>
         <p>You can use the Condominiums tab above to see information for an individual unit.</p>
+      </div>
+
+      <div
+        v-else-if="hasNoOpaAccount"
+        class="no-opa-info"
+      >
+        No OPA account found for this address.  Try searching for a specific address or click on the map.
       </div>
 
       <div
