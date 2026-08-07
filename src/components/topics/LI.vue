@@ -2,7 +2,7 @@
 import { computed, watch, onMounted } from 'vue';
 import { polygon, featureCollection } from '@turf/helpers';
 
-import { format } from 'date-fns';
+import { format, isPast } from 'date-fns';
 
 import CustomPaginationLabels from '@/components/pagination/CustomPaginationLabels.vue';
 import useTables from '@/composables/useTables';
@@ -14,6 +14,8 @@ import { useLiStore } from '@/stores/LiStore';
 const LiStore = useLiStore();
 import { useMapStore } from '@/stores/MapStore';
 const MapStore = useMapStore();
+import { useCondosStore } from '@/stores/CondosStore';
+const CondosStore = useCondosStore();
 
 import VerticalTable from '../VerticalTable.vue';
 
@@ -24,6 +26,12 @@ onMounted(async () => {
   if (LiStore.liBuildingFootprints.features) {
     await setLiBuildingFootprints(LiStore.liBuildingFootprints);
   }
+});
+
+const shouldShowCondosMessage = computed(() => {
+  if (!CondosStore.condosData.pages.page_1.features) return false;
+  if (CondosStore.condosData.pages.page_1.features.length == 1 && CondosStore.condosData.pages.page_1.features[0].match_type == 'has_base_no_suffix_unit_child') return false;
+  return CondosStore.condosData.pages.page_1.features.length >= 1;
 });
 
 // BUILDING FOOTPRINTS
@@ -220,6 +228,8 @@ const setLeadCertification = async (leadCertification) => {
   LiStore.selectedLeadCertification = leadCertification;
 }
 
+const expirationText = (value) => `${isPast(value) ? 'expired' : 'expires'} ${format(value, 'MM/dd/yyyy')}`;
+
 const leadCertsTableData = computed(() => {
   const selectedLeadCertification = LiStore.selectedLeadCertification;
 
@@ -235,7 +245,7 @@ const leadCertsTableData = computed(() => {
   if (selectedLeadCertification.li_rl_status && selectedLeadCertification.li_rl_status !== 'None') {
     license += `Rental license - <a target="_blank" href="https://li.phila.gov/property-history/search/business-license-detail?address=${selectedLeadCertification.address}">${selectedLeadCertification.li_rl_status} <i class="fa-solid fa-external-link"></i></a>`;
     if (selectedLeadCertification.li_rl_expiration_date) {
-      license += ' (expires ' + format(selectedLeadCertification.li_rl_expiration_date, 'MM/dd/yyyy') + ')';
+      license += ` (${expirationText(selectedLeadCertification.li_rl_expiration_date)})`;
     }
   }
 
@@ -245,13 +255,13 @@ const leadCertsTableData = computed(() => {
 
   if (selectedLeadCertification.li_cc_status && selectedLeadCertification.li_cc_status !== 'None') {
     if (license) license += '<br>';
-    license += `City childcare license - <a target="_blank" href="https://li.phila.gov/property-history/search/business-license-detail?address=${selectedLeadCertification.address}">${selectedLeadCertification.li_cc_status} <i class="fa-solid fa-external-link"></i></a>`;
+    license += `Child Care Facility license - <a target="_blank" href="https://li.phila.gov/property-history/search/business-license-detail?address=${selectedLeadCertification.address}">${selectedLeadCertification.li_cc_status} <i class="fa-solid fa-external-link"></i></a>`;
     if (selectedLeadCertification.li_cc_expiration_date) {
-      license += ` (expires ${format(selectedLeadCertification.li_cc_expiration_date, 'MM/dd/yyyy')})`;
+      license += ` (${expirationText(selectedLeadCertification.li_cc_expiration_date)})`;
     }
   } else if (selectedLeadCertification.li_cc_status === 'None') {
     if (license) license += '<br>';
-    license += `City childcare license - ${selectedLeadCertification.li_cc_status}  (Check <a target="_blank" href="https://www.compass.dhs.pa.gov/providersearch/#/childcareprovidersearch">state childcare licenses <i class="fa-solid fa-external-link"></i></a>)`;
+    license += `Child Care Facility license - ${selectedLeadCertification.li_cc_status}  (Check <a target="_blank" href="https://www.compass.dhs.pa.gov/providersearch/#/childcareprovidersearch">state childcare licenses <i class="fa-solid fa-external-link"></i></a>)`;
 
   }
 
@@ -892,6 +902,16 @@ const liAppealsTableData = computed(() => {
       </div>
 
       <div
+        v-if="shouldShowCondosMessage"
+        class="condo-info"
+      >
+        <h2 class="subtitle mt-0 mb-3 is-5">
+          There {{ CondosStore.condosData.total_size > 1 ? 'are':'is' }} {{ CondosStore.condosData.total_size }} condominium {{ CondosStore.condosData.total_size > 1 ? 'units':'unit' }} at this address.
+        </h2>
+        <p>You can use the Condominiums tab above to see information for an individual unit.</p>
+      </div>
+
+      <div
         v-if="LiStore.leadCertifications.rows && LiStore.leadCertifications.rows.length"
         id="lead-certs-div"
         class="columns p-2"
@@ -923,12 +943,18 @@ const liAppealsTableData = computed(() => {
 
         </div>
       </div>
-
     </div>
+
   </section>
 </template>
 
 <style>
+
+.condo-info {
+  background-color: #f0f0f0;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
 
 .summary {
   font-weight: bold;
