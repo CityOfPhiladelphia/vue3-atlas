@@ -233,7 +233,7 @@ const leadCertsTableData = computed(() => {
 
   let license = '';
   if (selectedLeadCertification.li_rl_status && selectedLeadCertification.li_rl_status !== 'None') {
-    license += `Rental license - <a target="_blank" href="https://li.phila.gov/property-history/search?address=${selectedLeadCertification.address}">${selectedLeadCertification.li_rl_status} <i class="fa-solid fa-external-link"></i></a>`;
+    license += `Rental license - <a target="_blank" href="https://li.phila.gov/property-history/search/business-license-detail?address=${selectedLeadCertification.address}">${selectedLeadCertification.li_rl_status} <i class="fa-solid fa-external-link"></i></a>`;
     if (selectedLeadCertification.li_rl_expiration_date) {
       license += ' (expires ' + format(selectedLeadCertification.li_rl_expiration_date, 'MM/dd/yyyy') + ')';
     }
