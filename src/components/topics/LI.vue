@@ -564,64 +564,6 @@ const liAppealsTableData = computed(() => {
       </div>
     </div>
 
-    <div class="data-section">
-      <h2 class="subtitle mb-3 is-5">
-        Lead Certification
-        <font-awesome-icon
-          v-if="LiStore.loadingLeadCertifications"
-          icon="fa-solid fa-spinner"
-          spin
-        />
-      </h2>
-
-      <div class="topic-info">
-        City law requires property owners to test and certify any rental unit or family
-        childcare facility as lead-safe or lead-free. Lead-safe certifications expire
-        after 4 years while lead-free certifications never expire. Check the status of
-        this property below.
-        Source: <a target="_blank" href="https://www.phila.gov/programs/lead-and-healthy-homes-program/">
-        Lead and Healthy Homes Program</a>, Department of Public Health
-      </div>
-      <div class="topic-info">
-        Property owners can submit inspection results, register as exempt, or learn about how to comply
-        with these requirements at <a target="_blank" href="https://leadcertification.phila.gov/">leadcertification.phila.gov</a>.
-      </div>
-
-      <div
-        v-if="LiStore.leadCertifications.rows && LiStore.leadCertifications.rows.length"
-        id="lead-certs-div"
-        class="columns p-2"
-        :class="LiStore.leadCertifications.rows[0].lhhp_property_type ? 'add-borders' : ''"
-      >
-
-        <div class="column is-12">
-      
-          <div
-            v-if="LiStore.leadCertifications.rows[0].lhhp_property_type"
-            class="columns is-multiline is-mobile"
-          >
-            <button
-              v-for="cert in LiStore.leadCertifications.rows"
-              :key="cert.objectid"
-              class="li-building-select column is-2-desktop is-3-mobile has-text-centered add-borders pl-1 pr-1"
-              :class="{ 'is-selected': cert.objectid === selectedLeadCertification.objectid }"
-              @click="setLeadCertification(cert)"
-            >
-              {{ cert.lhhp_property_type || 'N/A' }}
-            </button>
-          </div>
-
-          <!-- Li Building info-->
-          <vertical-table
-            table-id="leadCertsTable"
-            :data="leadCertsTableData"
-          />
-
-        </div>
-      </div>
-
-    </div>
-
     <!-- Li Permits Table -->
     <div class="data-section">
       <h2 class="subtitle mb-3 is-5 table-title">
@@ -924,6 +866,64 @@ const liAppealsTableData = computed(() => {
         target="_blank"
         :href="`https://li.phila.gov/Property-History/search?address=${encodeURIComponent(MainStore.currentAddress)}`"
       >See all business licenses at L&I Property History <font-awesome-icon icon="fa-solid fa-external-link" /></a>
+    </div>
+
+    <div class="data-section">
+      <h2 class="subtitle mb-3 is-5">
+        Lead Certification
+        <font-awesome-icon
+          v-if="LiStore.loadingLeadCertifications"
+          icon="fa-solid fa-spinner"
+          spin
+        />
+      </h2>
+
+      <div class="topic-info">
+        City law requires property owners to test and certify any rental unit or family
+        childcare facility as lead-safe or lead-free. Lead-safe certifications expire
+        after 4 years while lead-free certifications never expire. Check the status of
+        this property below.
+        Source: <a target="_blank" href="https://www.phila.gov/programs/lead-and-healthy-homes-program/">
+        Lead and Healthy Homes Program</a>, Department of Public Health
+      </div>
+      <div class="topic-info">
+        Property owners can submit inspection results, register as exempt, or learn about how to comply
+        with these requirements at <a target="_blank" href="https://leadcertification.phila.gov/">leadcertification.phila.gov</a>.
+      </div>
+
+      <div
+        v-if="LiStore.leadCertifications.rows && LiStore.leadCertifications.rows.length"
+        id="lead-certs-div"
+        class="columns p-2"
+        :class="LiStore.leadCertifications.rows[0].lhhp_property_type ? 'add-borders' : ''"
+      >
+
+        <div class="column is-12">
+      
+          <div
+            v-if="LiStore.leadCertifications.rows[0].lhhp_property_type"
+            class="columns is-multiline is-mobile"
+          >
+            <button
+              v-for="cert in LiStore.leadCertifications.rows"
+              :key="cert.objectid"
+              class="li-building-select column is-2-desktop is-3-mobile has-text-centered add-borders pl-1 pr-1"
+              :class="{ 'is-selected': cert.objectid === selectedLeadCertification.objectid }"
+              @click="setLeadCertification(cert)"
+            >
+              {{ cert.lhhp_property_type || 'N/A' }}
+            </button>
+          </div>
+
+          <!-- Li Building info-->
+          <vertical-table
+            table-id="leadCertsTable"
+            :data="leadCertsTableData"
+          />
+
+        </div>
+      </div>
+
     </div>
   </section>
 </template>
