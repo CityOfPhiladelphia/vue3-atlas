@@ -225,7 +225,7 @@ const leadCertsTableData = computed(() => {
 
   let certificationStatus = `<b>${selectedLeadCertification.lhhp_certification_status}</b>`;
   if (selectedLeadCertification.lhhp_status_type) {
-    certificationStatus += ` (${selectedLeadCertification.lhhp_status_type} - ${selectedLeadCertification.lhhp_certified_units} units)`;
+    certificationStatus += ` (${selectedLeadCertification.lhhp_status_type} - ${selectedLeadCertification.lhhp_certified_units} ${selectedLeadCertification.lhhp_certified_units > 1 ? 'units' : 'unit'})`;
   }
   if (selectedLeadCertification.lhhp_status_details) {
     certificationStatus += `<br>${selectedLeadCertification.lhhp_status_details}`;
