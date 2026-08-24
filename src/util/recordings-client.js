@@ -1,4 +1,6 @@
 import { getCyclomediaRecordings } from '@/util/call-api';
+import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
+import cityLimits from '@/assets/city-limits-buffered.json';
 
 class RecordingsClient {
   constructor(baseUrl, username, password, srid = 3857, proxy) {
@@ -36,7 +38,9 @@ class RecordingsClient {
           lng,
           lat,
         };
-      });
+      // the account is licensed to see recordings beyond the city border, but atlas only shows Philadelphia;
+      // cityLimits is buffered 100m so recordings on boundary streets are kept
+      }).filter(({ lng, lat }) => this.srid !== 4326 || booleanPointInPolygon([lng, lat], cityLimits));
 
       callback(recordings);
     } catch (error) {
