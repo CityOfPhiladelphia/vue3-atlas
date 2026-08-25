@@ -6,7 +6,7 @@ name: dev Push to S3 dev2 bucket
 on:
   push:
     branches:
-      - fix/autocomplete-on-phone
+      - wip/cyclomedia-philly-filter
 jobs:
   build:
 
