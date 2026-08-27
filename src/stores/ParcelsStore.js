@@ -113,12 +113,13 @@ export const useParcelsStore = defineStore('ParcelsStore', {
         'spatialRel': 'esriSpatialRelWithin',
       };
       const MainStore = useMainStore();
-      // try {
+      try {
         const response = await axios(`https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/${ESRILayer}/FeatureServer/0/query`, { params });
         if (response.status !== 200) {
           if (import.meta.env.VITE_DEBUG == 'true') console.warn('checkParcelDataByLngLat - await resolved but HTTP status was not successful')
         }
-        if (response.data.features.length > 0) {
+        // a failed query can return 200 with an { error } body and no features
+        if (response.data.features && response.data.features.length > 0) {
           let data = await response.data;
           let processedData;
 
@@ -133,10 +134,10 @@ export const useParcelsStore = defineStore('ParcelsStore', {
           if (import.meta.env.VITE_DEBUG == 'true') console.log('in else, parcelLayer:', parcelLayer, '$config.parcelLayerForTopic[MainStore.currentTopic]:', $config.parcelLayerForTopic[MainStore.currentTopic]);
           this[`${parcelLayer}Checked`] = {};
         }
-      // } catch {
-      //   if (import.meta.env.VITE_DEBUG == 'true') console.error(`checkParcelDataByLngLat await never resolved, failed to fetch ${parcelLayer} parcel data by lng/lat`)
-      //   this[`${parcelLayer}Checked`] = {};
-      // }
+      } catch {
+        if (import.meta.env.VITE_DEBUG == 'true') console.error(`checkParcelDataByLngLat await never resolved, failed to fetch ${parcelLayer} parcel data by lng/lat`)
+        this[`${parcelLayer}Checked`] = {};
+      }
     },
   },
 })
