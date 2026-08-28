@@ -129,6 +129,11 @@ const liAppealsCompareFn = (a, b) => new Date(b.createddate) - new Date(a.create
 const liAppeals = computed(() => LiStore.liAppeals.rows ? [ ...LiStore.liAppeals.rows ].sort(liAppealsCompareFn) : null );
 const liAppealsLength = computed(() => liAppeals.value && liAppeals.value.length ? liAppeals.value.length : 0);
 
+// LEAD UNIT INSPECTIONS
+const leadUnitInspectionsCompareFn = (a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }) || new Date(b.inspectiondate) - new Date(a.inspectiondate);
+const leadUnitInspections = computed(() => LiStore.leadUnitInspections.rows ? [ ...LiStore.leadUnitInspections.rows ].sort(leadUnitInspectionsCompareFn) : null );
+const leadUnitInspectionsLength = computed(() => leadUnitInspections.value && leadUnitInspections.value.length ? leadUnitInspections.value.length : 0);
+
 // TABLES
 
 const buildingData = computed(() => {
@@ -471,6 +476,46 @@ const liAppealsTableData = computed(() => {
       }
     ],
     rows: liAppeals.value || [],
+  }
+});
+
+const leadUnitInspectionsTableData = computed(() => {
+  return {
+    columns: [
+      {
+        label: 'Unit name',
+        field: 'name',
+        // html: true,
+      },
+      {
+        label: 'Status',
+        field: 'inspectionstatus',
+        // html: true,
+      },
+      {
+        label: 'Inspection date',
+        field: 'inspectiondate',
+        type: 'date',
+        dateInputFormat: "yyyy-MM-dd'T'HH:mm:ssX",
+        dateOutputFormat: 'MM/dd/yyyy',
+      },
+      {
+        label: 'Exp. date',
+        field: 'submissiondate',
+        type: 'date',
+        dateInputFormat: "yyyy-MM-dd'T'HH:mm:ssX",
+        dateOutputFormat: 'MM/dd/yyyy',
+      },
+      {
+        label: 'Inspection type',
+        field: 'inspectiontype',
+      },
+      {
+        label: 'Report',
+        field: 'companyname',
+      }
+    ],
+    rows: leadUnitInspections.value || [],
   }
 });
 
@@ -955,7 +1000,41 @@ const liAppealsTableData = computed(() => {
             :data="leadCertsTableData"
           />
 
+          
         </div>
+      </div>
+      <div
+        v-if="leadUnitInspectionsTableData"
+        class="horizontal-table mt-2"
+      >
+        <vue-good-table
+          id="lead-unit-inspections"
+          :columns="leadUnitInspectionsTableData.columns"
+          :rows="leadUnitInspectionsTableData.rows"
+          :pagination-options="paginationOptions(leadUnitInspectionsTableData.rows.length)"
+          style-class="table"
+        >
+          <template #emptystate>
+            <div v-if="LiStore.loadingLeadUnitInspections">
+              Loading lead unit inspections... <font-awesome-icon
+                icon="fa-solid fa-spinner"
+                spin
+              />
+            </div>
+            <div v-else>
+              No lead unit inspections found
+            </div>
+          </template>
+          <template #pagination-top="props">
+            <custom-pagination-labels
+              :mode="'pages'"
+              :total="props.total"
+              :per-page="5"
+              @page-changed="props.pageChanged"
+              @per-page-changed="props.perPageChanged"
+            />
+          </template>
+        </vue-good-table>
       </div>
     </div>
 

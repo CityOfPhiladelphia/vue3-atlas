@@ -41,6 +41,8 @@ export const useLiStore = defineStore('LiStore', {
       selectedLeadCertification: null,
       leadCertifications: {},
       loadingLeadCertifications: false,
+      leadUnitInspections: {},
+      loadingLeadUnitInspections: false,
       loadingLiData: true,
     };
   },
@@ -58,6 +60,7 @@ export const useLiStore = defineStore('LiStore', {
       this.fillLiBusinessLicenses();
       this.fillLiAppeals();
       this.fillLeadCertifications();
+      this.fillLeadUnitInspections();
     },
     async clearAllLiData() {
       this.loadingLiData = true;
@@ -83,6 +86,8 @@ export const useLiStore = defineStore('LiStore', {
       this.selectedLeadCertification = null;
       this.leadCertifications = {};
       this.loadingLeadCertifications = true;
+      this.leadUnitInspections = {};
+      this.loadingLeadUnitInspections = true;
     },
     async fillLeadCertifications() {
       try {
@@ -101,6 +106,22 @@ export const useLiStore = defineStore('LiStore', {
       } catch {
         if (import.meta.env.VITE_DEBUG == 'true') console.error('leadCertifications - await never resolved, failed to fetch address data')
         this.loadingLeadCertifications = false;
+      }
+    },
+    async fillLeadUnitInspections() {
+      try {
+        const GeocodeStore = useGeocodeStore();
+        const feature = GeocodeStore.aisData.features[0];
+        const opa_account_num = feature.properties.opa_account_num;
+        const baseUrl = `https://phl.carto.com/api/v2/sql?q=`;
+        const url = baseUrl + `SELECT * FROM lhhp_lead_unit_inspections WHERE opaaccountnumber IN ('${opa_account_num}')`;
+        const response = await axios.get(url);
+        const data = await response.data;
+        this.leadUnitInspections = { rows: data.rows };
+        this.loadingLeadUnitInspections = false;
+      } catch {
+        if (import.meta.env.VITE_DEBUG == 'true') console.error('leadUnitInspections - await never resolved, failed to fetch address data')
+        this.loadingLeadUnitInspections = false;
       }
     },
     async fillLiBuildingFootprints() {
