@@ -2,7 +2,7 @@
 import { computed, watch, onMounted } from 'vue';
 import { polygon, featureCollection } from '@turf/helpers';
 
-import { format, isPast } from 'date-fns';
+import { addYears, format, isPast } from 'date-fns';
 
 import CustomPaginationLabels from '@/components/pagination/CustomPaginationLabels.vue';
 import useTables from '@/composables/useTables';
@@ -130,8 +130,15 @@ const liAppeals = computed(() => LiStore.liAppeals.rows ? [ ...LiStore.liAppeals
 const liAppealsLength = computed(() => liAppeals.value && liAppeals.value.length ? liAppeals.value.length : 0);
 
 // LEAD UNIT INSPECTIONS
-const leadUnitInspectionsCompareFn = (a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }) || new Date(b.inspectiondate) - new Date(a.inspectiondate);
-const leadUnitInspections = computed(() => LiStore.leadUnitInspections.rows ? [ ...LiStore.leadUnitInspections.rows ].sort(leadUnitInspectionsCompareFn) : null );
+const leadUnitInspectionsCompareFn = (a, b) => new Date(b.inspectiondate) - new Date(a.inspectiondate) || a.name.localeCompare(b.name, undefined, { numeric: true });
+const leadUnitInspections = computed(() => {
+  if (!LiStore.leadUnitInspections.rows) return null;
+  return [ ...LiStore.leadUnitInspections.rows ].sort(leadUnitInspectionsCompareFn).map(item => {
+    // calculated until lhhp_lead_unit_inspections provides an expiration date field
+    item.expirationdate = item.inspectiondate ? format(addYears(item.inspectiondate, 4), 'MM/dd/yyyy') : null;
+    return item;
+  });
+});
 const leadUnitInspectionsLength = computed(() => leadUnitInspections.value && leadUnitInspections.value.length ? leadUnitInspections.value.length : 0);
 
 // TABLES
@@ -490,7 +497,6 @@ const leadUnitInspectionsTableData = computed(() => {
       {
         label: 'Status',
         field: 'inspectionstatus',
-        // html: true,
       },
       {
         label: 'Inspection date',
@@ -501,18 +507,14 @@ const leadUnitInspectionsTableData = computed(() => {
       },
       {
         label: 'Exp. date',
-        field: 'submissiondate',
+        field: 'expirationdate',
         type: 'date',
-        dateInputFormat: "yyyy-MM-dd'T'HH:mm:ssX",
+        dateInputFormat: 'MM/dd/yyyy',
         dateOutputFormat: 'MM/dd/yyyy',
       },
       {
         label: 'Inspection type',
         field: 'inspectiontype',
-      },
-      {
-        label: 'Report',
-        field: 'companyname',
       }
     ],
     rows: leadUnitInspections.value || [],
