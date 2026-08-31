@@ -1,5 +1,5 @@
 <script setup>
-import { computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { polygon, featureCollection } from '@turf/helpers';
 
 import { addYears, format, isPast } from 'date-fns';
@@ -20,6 +20,7 @@ import { useGeocodeStore } from '@/stores/GeocodeStore';
 const GeocodeStore = useGeocodeStore();
 
 import VerticalTable from '../VerticalTable.vue';
+import TextFilter from '@/components/TextFilter.vue';
 
 import useTransforms from '@/composables/useTransforms';
 const { prettyNumber } = useTransforms();
@@ -130,10 +131,13 @@ const liAppeals = computed(() => LiStore.liAppeals.rows ? [ ...LiStore.liAppeals
 const liAppealsLength = computed(() => liAppeals.value && liAppeals.value.length ? liAppeals.value.length : 0);
 
 // LEAD UNIT INSPECTIONS
+const leadUnitInspectionsSearch = ref('');
+const leadUnitInspectionsSearchFields = ['name', 'inspectionstatus', 'inspectiontype'];
+const leadUnitInspectionsFilterFn = (item) => leadUnitInspectionsSearchFields.some(field => item[field] != null && item[field].toLowerCase().includes(leadUnitInspectionsSearch.value.toLowerCase()));
 const leadUnitInspectionsCompareFn = (a, b) => new Date(b.inspectiondate) - new Date(a.inspectiondate) || a.name.localeCompare(b.name, undefined, { numeric: true });
 const leadUnitInspections = computed(() => {
   if (!LiStore.leadUnitInspections.rows) return null;
-  return [ ...LiStore.leadUnitInspections.rows ].sort(leadUnitInspectionsCompareFn).map(item => {
+  return LiStore.leadUnitInspections.rows.filter(leadUnitInspectionsFilterFn).sort(leadUnitInspectionsCompareFn).map(item => {
     // calculated until lhhp_lead_unit_inspections provides an expiration date field
     item.expirationdate = item.inspectiondate ? format(addYears(item.inspectiondate, 4), 'MM/dd/yyyy') : null;
     return item;
@@ -1005,6 +1009,21 @@ const leadUnitInspectionsTableData = computed(() => {
           
         </div>
       </div>
+      <h2 class="subtitle mb-3 is-5">
+        Lead Unit Inspections
+        <font-awesome-icon
+          v-if="LiStore.loadingLeadUnitInspections"
+          icon="fa-solid fa-spinner"
+          spin
+        />
+        <span v-else>({{ leadUnitInspectionsLength }})</span>
+      </h2>
+      <TextFilter
+        v-model="leadUnitInspectionsSearch"
+        class="lead-unit-inspections-filter"
+        :search-label="'Search Lead Unit Inspections'"
+        :placeholder="'Search Lead Unit Inspections'"
+      />
       <div
         v-if="leadUnitInspectionsTableData"
         class="horizontal-table mt-2"
@@ -1044,6 +1063,10 @@ const leadUnitInspectionsTableData = computed(() => {
 </template>
 
 <style>
+
+.lead-unit-inspections-filter {
+  margin-left: -4px !important;
+}
 
 .condo-info {
   background-color: #f0f0f0;
