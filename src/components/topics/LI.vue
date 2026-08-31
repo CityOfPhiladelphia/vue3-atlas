@@ -257,8 +257,12 @@ const leadCertsTableData = computed(() => {
   const selectedLeadCertification = LiStore.selectedLeadCertification;
 
   let certificationStatus = `<b>${selectedLeadCertification.lhhp_certification_status}</b>`;
-  if (selectedLeadCertification.lhhp_status_type) {
-    certificationStatus += ` (${selectedLeadCertification.lhhp_status_type} - ${selectedLeadCertification.lhhp_certified_units} ${selectedLeadCertification.lhhp_certified_units > 1 ? 'units' : 'unit'})`;
+  if (selectedLeadCertification.lhhp_status_type && selectedLeadCertification.lhhp_status_type !== 'None') {
+    if (selectedLeadCertification.lhhp_property_type === 'Daycare' || selectedLeadCertification.lhhp_certified_units == null) {
+      certificationStatus += ` (${selectedLeadCertification.lhhp_status_type})`;
+    } else {
+      certificationStatus += ` (${selectedLeadCertification.lhhp_status_type} - ${selectedLeadCertification.lhhp_certified_units} ${selectedLeadCertification.lhhp_certified_units > 1 ? 'units' : 'unit'})`;
+    }
   }
   if (selectedLeadCertification.lhhp_status_details) {
     certificationStatus += `<br>${selectedLeadCertification.lhhp_status_details}`;
@@ -278,12 +282,15 @@ const leadCertsTableData = computed(() => {
     license += `<br><a target="_blank" href="https://li.phila.gov/property-history/search?address=${selectedLeadCertification.address}">View ${selectedLeadCertification.active_rental_license_count} active rental licenses <i class="fa-solid fa-external-link"></i></a>`;
   }
 
-  if (selectedLeadCertification.li_cc_status) {
+  if (selectedLeadCertification.li_cc_status && selectedLeadCertification.li_cc_status !== 'None') {
     if (license) license += '<br>';
-    license += `Child Care Facility license - <a target="_blank" href="https://li.phila.gov/property-history/search/business-license-detail?address=${selectedLeadCertification.address}">${selectedLeadCertification.li_cc_status} <i class="fa-solid fa-external-link"></i></a>`;
+    license += `City Child Care Facility License - <a target="_blank" href="https://li.phila.gov/property-history/search/business-license-detail?address=${selectedLeadCertification.address}">${selectedLeadCertification.li_cc_status} <i class="fa-solid fa-external-link"></i></a>`;
     if (selectedLeadCertification.li_cc_expiration_date) {
       license += ` (${expirationText(selectedLeadCertification.li_cc_expiration_date)})`;
     }
+  } else if (selectedLeadCertification.li_cc_status === 'None') {
+    if (license) license += '<br>';
+    license += `City Child Care Facility License - ${selectedLeadCertification.li_cc_status}`;
   }
   license += `<br>Check <a target="_blank" href="https://www.compass.dhs.pa.gov/providersearch/#/childcareprovidersearch">state childcare licenses <i class="fa-solid fa-external-link"></i></a>`;
 
