@@ -1010,7 +1010,7 @@ const leadUnitInspectionsTableData = computed(() => {
         </div>
       </div>
       <h2 class="subtitle mb-3 is-5">
-        Lead Unit Inspections
+        Lead Certification Inspections
         <font-awesome-icon
           v-if="LiStore.loadingLeadUnitInspections"
           icon="fa-solid fa-spinner"
@@ -1021,8 +1021,8 @@ const leadUnitInspectionsTableData = computed(() => {
       <TextFilter
         v-model="leadUnitInspectionsSearch"
         class="lead-unit-inspections-filter"
-        :search-label="'Search Lead Unit Inspections'"
-        :placeholder="'Search Lead Unit Inspections'"
+        :search-label="'Search Lead Certification Inspections'"
+        :placeholder="'Search Lead Certification Inspections'"
       />
       <div
         v-if="leadUnitInspectionsTableData"
@@ -1037,13 +1037,13 @@ const leadUnitInspectionsTableData = computed(() => {
         >
           <template #emptystate>
             <div v-if="LiStore.loadingLeadUnitInspections">
-              Loading lead unit inspections... <font-awesome-icon
+              Loading lead certification inspections... <font-awesome-icon
                 icon="fa-solid fa-spinner"
                 spin
               />
             </div>
             <div v-else>
-              No lead unit inspections found
+              No lead certification inspections found
             </div>
           </template>
           <template #pagination-top="props">
