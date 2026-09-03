@@ -4,7 +4,25 @@ import { useMainStore } from '@/stores/MainStore.js'
 import axios from 'axios';
 import useParcels from '@/composables/useParcels';
 import $config from '@/config';
+import { API_SOURCES } from '@/config/apiSources.js';
 const { processParcels } = useParcels();
+
+// fetches parcels from carto as GeoJSON, normalized to match the ArcGIS response shape:
+// carto features carry no top-level id (consumers match feature.id against selectedParcelId),
+// and carto wraps single polygons in MultiPolygon
+async function fetchCartoParcels(sql) {
+  const response = await axios('https://phl.carto.com/api/v2/sql', { params: { q: sql, format: 'GeoJSON' } });
+  if (response.status !== 200 || !response.data.features) {
+    return null;
+  }
+  for (const feature of response.data.features) {
+    feature.id = feature.properties.objectid;
+    if (feature.geometry && feature.geometry.type === 'MultiPolygon' && feature.geometry.coordinates.length === 1) {
+      feature.geometry = { type: 'Polygon', coordinates: feature.geometry.coordinates[0] };
+    }
+  }
+  return response.data;
+}
 
 export const useParcelsStore = defineStore('ParcelsStore', {
   state: () => {
@@ -29,11 +47,20 @@ export const useParcelsStore = defineStore('ParcelsStore', {
         return;
       }
       try {
-        const response = await fetch(`https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/PWD_PARCELS/FeatureServer/0/query?where=parcelid=%27${pwdParcelNumber}%27&outSR=4326&f=geojson&outFields=*&returnGeometry=true`);
-        if (response.ok) {
-          this.pwd = await response.json()
+        if (API_SOURCES.pwdParcels === 'arcgis') {
+          const response = await fetch(`https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/PWD_PARCELS/FeatureServer/0/query?where=parcelid=%27${pwdParcelNumber}%27&outSR=4326&f=geojson&outFields=*&returnGeometry=true`);
+          if (response.ok) {
+            this.pwd = await response.json()
+          } else {
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillPwdParcelData - await resolved but HTTP status was not successful');
+          }
         } else {
-          if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillPwdParcelData - await resolved but HTTP status was not successful');
+          const data = await fetchCartoParcels(`select * from pwd_parcels where parcelid = '${pwdParcelNumber}'`);
+          if (data) {
+            this.pwd = data;
+          } else {
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillPwdParcelData - carto query did not return features');
+          }
         }
       } catch {
         if (import.meta.env.VITE_DEBUG == 'true') console.error('fillPwdParcelData - await never resolved, failed to fetch parcel data');
@@ -54,7 +81,7 @@ export const useParcelsStore = defineStore('ParcelsStore', {
       }
 
       const url = 'https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/DOR_Parcel/FeatureServer/0/query';
-      let parcelQuery;
+      let whereClause;
 
       if (dorParcelId.includes('|')) {
         const idSplit = dorParcelId.split('|');
@@ -67,12 +94,12 @@ export const useParcelsStore = defineStore('ParcelsStore', {
           }
         }
 
-        parcelQuery = url + '?where=' + queryString;
+        whereClause = queryString;
 
       } else if (Array.isArray(dorParcelId)) {
-        parcelQuery = url + '?where=mapreg IN (' + dorParcelId + ')';
+        whereClause = 'mapreg IN (' + dorParcelId + ')';
       } else {
-        parcelQuery = url + "?where=mapreg='" + dorParcelId + "'";
+        whereClause = "mapreg='" + dorParcelId + "'";
       }
 
       let params = {
@@ -83,17 +110,26 @@ export const useParcelsStore = defineStore('ParcelsStore', {
       };
 
       try {
-        const response = await axios(parcelQuery, { params });
-        if (response.status === 200) {
+        let originalJson;
+        if (API_SOURCES.dorParcels === 'arcgis') {
+          const response = await axios(url + '?where=' + whereClause, { params });
+          if (response.status !== 200) {
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillDorParcelData - await resolved but HTTP status was not successful');
+            return;
+          }
           if (import.meta.env.VITE_DEBUG == 'true') console.log('response', response);
-          const originalJson = await response.data;
-          const processedData = await processParcels(originalJson);
-          const MainStore = useMainStore();
-          MainStore.selectedParcelId = processedData.features[0].properties.objectid;
-          this.dor = processedData;
+          originalJson = response.data;
         } else {
-          if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillDorParcelData - await resolved but HTTP status was not successful');
+          originalJson = await fetchCartoParcels(`select * from dor_parcel where ${whereClause}`);
+          if (!originalJson) {
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillDorParcelData - carto query did not return features');
+            return;
+          }
         }
+        const processedData = await processParcels(originalJson);
+        const MainStore = useMainStore();
+        MainStore.selectedParcelId = processedData.features[0].properties.objectid;
+        this.dor = processedData;
       } catch {
         if (import.meta.env.VITE_DEBUG == 'true') console.error('fillDorParcelData - await never resolved, failed to fetch parcel data');
       }
@@ -114,13 +150,20 @@ export const useParcelsStore = defineStore('ParcelsStore', {
       };
       const MainStore = useMainStore();
       try {
-        const response = await axios(`https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/${ESRILayer}/FeatureServer/0/query`, { params });
-        if (response.status !== 200) {
-          if (import.meta.env.VITE_DEBUG == 'true') console.warn('checkParcelDataByLngLat - await resolved but HTTP status was not successful')
+        let responseData;
+        if (API_SOURCES[parcelLayer === 'pwd' ? 'pwdParcels' : 'dorParcels'] === 'arcgis') {
+          const response = await axios(`https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/${ESRILayer}/FeatureServer/0/query`, { params });
+          if (response.status !== 200) {
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('checkParcelDataByLngLat - await resolved but HTTP status was not successful')
+          }
+          responseData = response.data;
+        } else {
+          const cartoTable = parcelLayer === 'pwd' ? 'pwd_parcels' : 'dor_parcel';
+          responseData = await fetchCartoParcels(`select * from ${cartoTable} where ST_Contains(the_geom, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326))`) || {};
         }
         // a failed query can return 200 with an { error } body and no features
-        if (response.data.features && response.data.features.length > 0) {
-          let data = await response.data;
+        if (responseData.features && responseData.features.length > 0) {
+          let data = responseData;
           let processedData;
 
           if (parcelLayer === 'dor') {
