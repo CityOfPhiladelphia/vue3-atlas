@@ -143,7 +143,7 @@ export const useNearbyActivityStore = defineStore('NearbyActivityStore', {
         nearbyVacantIndicatorPoints: {
           title: 'Vacant Properties',
           id_field: 'id',
-          info_field: 'ADDRESS',
+          info_field: 'address',
         },
         nearbyConstructionPermits: {
           title: 'Construction Permits',
