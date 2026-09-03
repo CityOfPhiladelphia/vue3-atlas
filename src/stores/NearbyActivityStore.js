@@ -8,6 +8,11 @@ import { point, polygon, lineString } from '@turf/helpers';
 import distance from '@turf/distance';
 import explode from '@turf/explode';
 import nearest from '@turf/nearest-point';
+import { API_SOURCES } from '@/config/apiSources.js';
+import { fetchDatabridgeGeoJSON } from '@/util/databridge.js';
+
+// databridge has no select *: shape must be transformed to 4326 explicitly, so columns are listed
+const VACANT_POINTS_DATABRIDGE_COLS = 'objectid, land_rank, build_rank, vacant_rank, date_update, councildistrict, zoningbasedistrict, zipcode, vacant_flag, address, owner1, owner2, bldg_desc, opa_id, lniaddresskey';
 
 const evaluateParams = (feature, dataSource) => {
   const params = {};
@@ -323,41 +328,49 @@ export const useNearbyActivityStore = defineStore('NearbyActivityStore', {
           'geometry': JSON.stringify({ "rings": buffer, "spatialReference": { "wkid": 4326 }}),
         };
 
-        const response = await axios.get(url, { params });
-        if (response.status === 200) {
-          const data = await response.data;
-
-          let features = (data || {}).features;
-          const feature = GeocodeStore.aisData.features[0];
-          const from = point(feature.geometry.coordinates);
-
-          features = features.map(feature => {
-            const featureCoords = feature.geometry.coordinates;
-            let dist;
-            if (Array.isArray(featureCoords[0])) {
-              let instance;
-              if (feature.geometry.type === 'LineString') {
-                instance = lineString([ featureCoords[0], featureCoords[1] ], { name: 'line 1' });
-              } else {
-                instance = polygon([ featureCoords[0] ]);
-              }
-              const vertices = explode(instance);
-              const closestVertex = nearest(from, vertices);
-              dist = distance(from, closestVertex, { units: 'miles' });
-            } else {
-              const to = point(featureCoords);
-              dist = distance(from, to, { units: 'miles' });
-            }
-            const distFeet = parseInt(dist * 5280);
-            feature.properties.distance_ft = distFeet + ' ft';
-            return feature;
-          });
-
-          this.nearbyVacantIndicatorPoints.rows = features;
-          this.setLoadingData(false);
+        let data;
+        if (API_SOURCES.vacantIndicatorPoints === 'databridge') {
+          // same 750ft-around-the-address semantics as the buffer-contains query above
+          // (this store's fillBufferForAddress call uses the 750ft default); shape is
+          // native EPSG:2272 whose units are feet, so ST_DWithin takes 750 directly
+          data = await fetchDatabridgeGeoJSON(`select ${VACANT_POINTS_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from vacant_indicators_points where ST_DWithin(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${coordinates[0]}, ${coordinates[1]}), 4326), 2272), 750)`);
         } else {
-          if (import.meta.env.VITE_DEBUG == 'true') console.warn('nearbyVacantIndicatorPoints - await resolved but HTTP status was not successful');
+          const response = await axios.get(url, { params });
+          if (response.status !== 200) {
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('nearbyVacantIndicatorPoints - await resolved but HTTP status was not successful');
+            return;
+          }
+          data = response.data;
         }
+
+        let features = (data || {}).features;
+        const feature = GeocodeStore.aisData.features[0];
+        const from = point(feature.geometry.coordinates);
+
+        features = features.map(feature => {
+          const featureCoords = feature.geometry.coordinates;
+          let dist;
+          if (Array.isArray(featureCoords[0])) {
+            let instance;
+            if (feature.geometry.type === 'LineString') {
+              instance = lineString([ featureCoords[0], featureCoords[1] ], { name: 'line 1' });
+            } else {
+              instance = polygon([ featureCoords[0] ]);
+            }
+            const vertices = explode(instance);
+            const closestVertex = nearest(from, vertices);
+            dist = distance(from, closestVertex, { units: 'miles' });
+          } else {
+            const to = point(featureCoords);
+            dist = distance(from, to, { units: 'miles' });
+          }
+          const distFeet = parseInt(dist * 5280);
+          feature.properties.distance_ft = distFeet + ' ft';
+          return feature;
+        });
+
+        this.nearbyVacantIndicatorPoints.rows = features;
+        this.setLoadingData(false);
       } catch {
         if (import.meta.env.VITE_DEBUG == 'true') console.error('nearbyVacantIndicatorPoints - await never resolved, failed to fetch address data');
       }

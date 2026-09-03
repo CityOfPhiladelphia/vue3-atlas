@@ -22,6 +22,9 @@ export const API_SOURCES = {
   dorCondos: 'carto',
   dorDocuments: 'carto',
 
+  // NearbyActivityStore
+  vacantIndicatorPoints: 'databridge',
+
   // CityServicesStore
   // controls BOTH schools call sites (fillAllSchools + fillNearbySchools) - they must
   // stay on the same source: the designated-school filter matches feature.id across them
