@@ -33,7 +33,12 @@ export const useOpaStore = defineStore('OpaStore', {
         const GeocodeStore = useGeocodeStore();
         const OpaNum = GeocodeStore.aisData.features[0].properties.opa_account_num;
         const sql = `select * from opa_properties_public where parcel_number = '${OpaNum}'`;
-        const response = await fetch(`https://0spy4bb9w1.execute-api.us-east-1.amazonaws.com/queryDatabridge/databridge?sql=${encodeURIComponent(sql)}`);
+        // the proxy identifies callers by origin, which localhost is not registered as
+        const clientId =
+          import.meta.env.VITE_DEBUG == 'true'
+            ? `&client_id=${import.meta.env.VITE_AIS_CLIENTID_ATLAS}`
+            : '';
+        const response = await fetch(`https://0spy4bb9w1.execute-api.us-east-1.amazonaws.com/queryDatabridge/databridge?sql=${encodeURIComponent(sql)}${clientId}`);
         if (response.ok) {
           const data = await response.json();
           // Transform databridge envelope (data.features[].properties) to match Carto format for compatibility with getters
