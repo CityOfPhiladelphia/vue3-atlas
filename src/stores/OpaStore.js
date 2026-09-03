@@ -23,7 +23,29 @@ export const useOpaStore = defineStore('OpaStore', {
       if (API_SOURCES.opaData === 'arcgis') {
         return this._fillOpaDataArcGIS();
       }
+      if (API_SOURCES.opaData === 'databridge') {
+        return this._fillOpaDataDatabridge();
+      }
       return this._fillOpaDataCarto();
+    },
+    async _fillOpaDataDatabridge() {
+      try {
+        const GeocodeStore = useGeocodeStore();
+        const OpaNum = GeocodeStore.aisData.features[0].properties.opa_account_num;
+        const sql = `select * from opa_properties_public where parcel_number = '${OpaNum}'`;
+        const response = await fetch(`https://0spy4bb9w1.execute-api.us-east-1.amazonaws.com/queryDatabridge/databridge?sql=${encodeURIComponent(sql)}`);
+        if (response.ok) {
+          const data = await response.json();
+          // Transform databridge envelope (data.features[].properties) to match Carto format for compatibility with getters
+          this.opaData = {
+            rows: data.data && data.data.features ? data.data.features.map(f => f.properties) : []
+          };
+        } else {
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('opaData - await resolved but HTTP status was not successful')
+        }
+      } catch {
+        if (import.meta.env.VITE_DEBUG == 'true') console.error('opaData - await never resolved, failed to fetch address data')
+      }
     },
     async _fillOpaDataArcGIS() {
       try {

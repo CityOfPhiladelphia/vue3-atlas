@@ -1,9 +1,10 @@
 // Configuration for switching between Carto and ArcGIS data sources
 // Change individual values to 'carto' or 'arcgis' as needed
+// opaData also supports 'databridge' (routes through the maps-api-proxy queryDatabridge lambda; sandbox only for now)
 
 export const API_SOURCES = {
   // OpaStore
-  opaData: 'carto',
+  opaData: 'databridge',
 
   // LiStore - migrated
   buildingCertSummary: 'carto',

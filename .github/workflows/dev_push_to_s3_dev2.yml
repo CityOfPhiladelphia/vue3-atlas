@@ -6,7 +6,7 @@ name: dev Push to S3 dev2 bucket
 on:
   push:
     branches:
-      - wip/cyclomedia-philly-filter
+      - wip/databridge-pilot
 jobs:
   build:
 
