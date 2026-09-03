@@ -11,7 +11,12 @@ import nearest from '@turf/nearest-point';
 import slugify from 'slugify';
 
 import useTransforms from '@/composables/useTransforms';
+import { API_SOURCES } from '@/config/apiSources.js';
+import { fetchDatabridgeGeoJSON } from '@/util/databridge.js';
 const { phoneNumber } = useTransforms();
+
+// databridge has no select *: shape must be transformed to 4326 explicitly, so columns are listed
+const SCHOOLS_DATABRIDGE_COLS = 'aun, school_num, enrollment, type, type_specific, location_id, school_name, school_name_label, street_address, zip_code, phone_number, grade_level, grade_org, objectid';
 
 export const useCityServicesStore = defineStore('CityServicesStore', {
   state: () => {
@@ -148,6 +153,18 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
     },
     async fillAllSchools() {
       try {
+        if (API_SOURCES.schools === 'databridge') {
+          const data = await fetchDatabridgeGeoJSON(`select ${SCHOOLS_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from schools`);
+          if (data) {
+            this.allSchools = data;
+            this.setLoadingData(false);
+          } else {
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('allSchools - databridge query did not return features');
+            this.setLoadingData(false);
+            this.setDataError(true);
+          }
+          return;
+        }
         const params = {
           where: '1=1',
           outFields: '*',
@@ -177,56 +194,65 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
         const GeocodeStore = useGeocodeStore();
         const MapStore = useMapStore();
         const buffer = MapStore.bufferForAddress;
-        const url = 'https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/Schools/FeatureServer/0/query?';
-        const params = {
-          'returnGeometry': true,
-          'where': "type_specific IN ('district', 'charter')",
-          'outSR': 4326,
-          'outFields': '*',
-          'inSr': 4326,
-          'geometryType': 'esriGeometryPolygon',
-          'spatialRel': 'esriSpatialRelContains',
-          'f': 'geojson',
-          'geometry': JSON.stringify({ "rings": buffer, "spatialReference": { "wkid": 4326 } }),
-        };
-        const response = await axios.get(url, { params });
-        if (response.status === 200) {
-          if (import.meta.env.VITE_DEBUG) console.log('this.elementarySchool:', this.elementarySchool, 'this.middleSchool:', this.middleSchool, 'this.highSchool:', this.highSchool);
-          const designatedSchools = [this.elementarySchool.id, this.middleSchool.id, this.highSchool.id];
-          const data = response.data;
-
-          let features = (data || {}).features;
-          const feature = GeocodeStore.aisData.features[0];
-          const from = point(feature.geometry.coordinates);
-
-          features = features.filter(feature => !designatedSchools.includes(feature.id)).map(feature => {
-            const featureCoords = feature.geometry.coordinates;
-            let dist;
-            if (Array.isArray(featureCoords[0])) {
-              let instance;
-              if (feature.geometry.type === 'LineString') {
-                instance = lineString([featureCoords[0], featureCoords[1]], { name: 'line 1' });
-              } else {
-                instance = polygon([featureCoords[0]]);
-              }
-              const vertices = explode(instance);
-              const closestVertex = nearest(from, vertices);
-              dist = distance(from, closestVertex, { units: 'miles' });
-            } else {
-              const to = point(featureCoords);
-              dist = distance(from, to, { units: 'miles' });
-            }
-            // const distFeet = parseInt(dist * 5280);
-            feature.properties.distance_mi = dist.toFixed(2) + ' mi';
-            feature.properties.schoolInfo = '<b>' + feature.properties.school_name_label + '</b><br>' + feature.properties.street_address + '<br>Philadelphia, PA ' + feature.properties.zip_code + '<br>' + feature.properties.phone_number;
-            return feature;
-          });
-
-          this.nearbySchools = features;
-          this.setLoadingData(false);
+        let data;
+        if (API_SOURCES.schools === 'databridge') {
+          // same semantics as the buffer-contains query below: the city-services buffer is
+          // 5820ft (see the fillBufferForAddress call in fetchData). shape is native
+          // EPSG:2272 whose units are feet, so ST_DWithin takes the distance directly
+          const coords = GeocodeStore.aisData.features[0].geometry.coordinates;
+          data = await fetchDatabridgeGeoJSON(`select ${SCHOOLS_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from schools where upper(type_specific) IN ('DISTRICT', 'CHARTER') and ST_DWithin(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${coords[0]}, ${coords[1]}), 4326), 2272), 5820)`);
         } else {
-          if (import.meta.env.VITE_DEBUG == 'true') console.warn('nearbySchools - await resolved but HTTP status was not successful');
+          const url = 'https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/Schools/FeatureServer/0/query?';
+          const params = {
+            'returnGeometry': true,
+            'where': "type_specific IN ('district', 'charter')",
+            'outSR': 4326,
+            'outFields': '*',
+            'inSr': 4326,
+            'geometryType': 'esriGeometryPolygon',
+            'spatialRel': 'esriSpatialRelContains',
+            'f': 'geojson',
+            'geometry': JSON.stringify({ "rings": buffer, "spatialReference": { "wkid": 4326 } }),
+          };
+          const response = await axios.get(url, { params });
+          if (response.status !== 200) {
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('nearbySchools - await resolved but HTTP status was not successful');
+            return;
+          }
+          data = response.data;
         }
+        if (import.meta.env.VITE_DEBUG) console.log('this.elementarySchool:', this.elementarySchool, 'this.middleSchool:', this.middleSchool, 'this.highSchool:', this.highSchool);
+        const designatedSchools = [this.elementarySchool.id, this.middleSchool.id, this.highSchool.id];
+
+        let features = (data || {}).features;
+        const feature = GeocodeStore.aisData.features[0];
+        const from = point(feature.geometry.coordinates);
+
+        features = features.filter(feature => !designatedSchools.includes(feature.id)).map(feature => {
+          const featureCoords = feature.geometry.coordinates;
+          let dist;
+          if (Array.isArray(featureCoords[0])) {
+            let instance;
+            if (feature.geometry.type === 'LineString') {
+              instance = lineString([featureCoords[0], featureCoords[1]], { name: 'line 1' });
+            } else {
+              instance = polygon([featureCoords[0]]);
+            }
+            const vertices = explode(instance);
+            const closestVertex = nearest(from, vertices);
+            dist = distance(from, closestVertex, { units: 'miles' });
+          } else {
+            const to = point(featureCoords);
+            dist = distance(from, to, { units: 'miles' });
+          }
+          // const distFeet = parseInt(dist * 5280);
+          feature.properties.distance_mi = dist.toFixed(2) + ' mi';
+          feature.properties.schoolInfo = '<b>' + feature.properties.school_name_label + '</b><br>' + feature.properties.street_address + '<br>Philadelphia, PA ' + feature.properties.zip_code + '<br>' + feature.properties.phone_number;
+          return feature;
+        });
+
+        this.nearbySchools = features;
+        this.setLoadingData(false);
       } catch {
         if (import.meta.env.VITE_DEBUG == 'true') console.error('nearbySchools - await never resolved, failed to fetch address data');
       }

@@ -22,6 +22,11 @@ export const API_SOURCES = {
   dorCondos: 'carto',
   dorDocuments: 'carto',
 
+  // CityServicesStore
+  // controls BOTH schools call sites (fillAllSchools + fillNearbySchools) - they must
+  // stay on the same source: the designated-school filter matches feature.id across them
+  schools: 'databridge',
+
   // ParcelsStore
   // The plain dor_parcel/pwd_parcels tables (carto and databridge) sit ~0.9m off
   // the Esri-served DOR basemap (no NAD83->WGS84 datum shift in the postgres->carto
