@@ -19,4 +19,5 @@ export const API_SOURCES = {
 
   // DorStore
   dorCondos: 'carto',
+  dorDocuments: 'carto',
 };

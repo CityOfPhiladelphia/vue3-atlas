@@ -379,22 +379,30 @@ export const useDorStore = defineStore("DorStore", {
             try {
               // if (import.meta.env.VITE_DEBUG == 'true') console.log('in loop in try, feature:', feature);
               let theWhere = where(feature);
-                
-              const params = {
-                where: theWhere,
-                // outFields: '*',
-                // outFields: "document_id, display_date, document_type, grantors, grantees, unit_num, matched_regmap, reg_map_id",
-                outFields: "document_id, display_date, document_type, grantors, grantees, unit_num",
-                returnDistinctValues: 'true',
-                returnGeometry: 'false',
-                f: 'json',
-                sqlFormat: 'standard',
-              }
 
-              // if (import.meta.env.VITE_DEBUG == 'true') console.log('params:', params);
-              const response = await axios(url, { params });
+              let response;
+              if (API_SOURCES.dorDocuments === 'arcgis') {
+                const params = {
+                  where: theWhere,
+                  // outFields: '*',
+                  // outFields: "document_id, display_date, document_type, grantors, grantees, unit_num, matched_regmap, reg_map_id",
+                  outFields: "document_id, display_date, document_type, grantors, grantees, unit_num",
+                  returnDistinctValues: 'true',
+                  returnGeometry: 'false',
+                  f: 'json',
+                  sqlFormat: 'standard',
+                }
+                // if (import.meta.env.VITE_DEBUG == 'true') console.log('params:', params);
+                response = await axios(url, { params });
+              } else {
+                const sql = 'select distinct document_id, display_date, document_type, grantors, grantees, unit_num from rtt_summary where ' + theWhere;
+                response = await axios('https://phl.carto.com/api/v2/sql', { params: { q: sql } });
+              }
               if (response.status === 200) {
-                const data = response.data;
+                // Carto returns rows; reshape to the ArcGIS features/attributes format the Deeds topic reads
+                const data = response.data.rows
+                  ? { features: response.data.rows.map((row) => ({ attributes: row })) }
+                  : response.data;
                 data.features.forEach((doc) => {
                   doc.attributes.date = date(doc.attributes.display_date);
                   doc.attributes.link = `<a target='_blank' href='https://epayss.phila-records.com/web/web/integration/document?DocumentNumberId=${doc.attributes.document_id}'>${doc.attributes.document_id}<i class='fa fa-external-link'></i></a>`;
