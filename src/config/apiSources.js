@@ -23,10 +23,12 @@ export const API_SOURCES = {
   dorDocuments: 'carto',
 
   // ParcelsStore
-  // NOTE: the carto branches WORK but carto's the_geom is ~0.9m off (NAD83->WGS84
-  // datum shift missing from the carto ETL; verified vertex-by-vertex 2026-09-03).
-  // Visibly wrong against the DOR basemap at parcel zoom. Use carto only as
-  // break-glass in an AGO outage; real fix is upstream in the carto ETL.
-  pwdParcels: 'arcgis',
-  dorParcels: 'arcgis',
+  // NOTE: the carto AND databridge branches WORK but their geometry is ~0.9m off
+  // the Esri-served DOR basemap (uniform 0.16m E / 0.89m S; the postgres->carto
+  // paths apply no NAD83->WGS84 datum shift while Esri does - verified
+  // vertex-by-vertex on dor_parcel and pwd_parcels, and databridge matches carto
+  // to the cm). DEMO: set to databridge on this branch so the offset is visible
+  // on dev2. For production use, keep arcgis until the convention is reconciled.
+  pwdParcels: 'databridge',
+  dorParcels: 'databridge',
 };

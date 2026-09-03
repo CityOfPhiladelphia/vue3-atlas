@@ -7,6 +7,35 @@ import $config from '@/config';
 import { API_SOURCES } from '@/config/apiSources.js';
 const { processParcels } = useParcels();
 
+const DATABRIDGE_URL = 'https://0spy4bb9w1.execute-api.us-east-1.amazonaws.com/queryDatabridge/databridge';
+// databridge has no select *: shape must be transformed to 4326 explicitly, so columns are listed
+const DOR_DATABRIDGE_COLS = 'recsub, basereg, mapreg, parcel, recmap, stcod, house, suf, unit, stex, stdir, stnam, stdessuf, condoflag, inactdate, orig_date, status, stdes, addr_std, pin, frac, unit_type, objectid';
+const PWD_DATABRIDGE_COLS = 'parcelid, address, owner1, owner2, brt_id, gross_area, objectid';
+
+// fetches parcels from databridge-api (via the maps-api-proxy lambda), reshaped to a GeoJSON
+// FeatureCollection matching the ArcGIS response: envelope is data.features[].properties with the
+// geometry as a geom property, feature.id stamped from objectid, single-poly MultiPolygons unwrapped
+async function fetchDatabridgeParcels(sql) {
+  const params = { sql };
+  // the proxy identifies callers by origin, which localhost is not registered as
+  if (import.meta.env.VITE_DEBUG == 'true') {
+    params.client_id = import.meta.env.VITE_AIS_CLIENTID_ATLAS;
+  }
+  const response = await axios(DATABRIDGE_URL, { params });
+  if (response.status !== 200 || !response.data.data || !response.data.data.features) {
+    return null;
+  }
+  const features = response.data.data.features.map((f) => {
+    const { geom, ...properties } = f.properties;
+    let geometry = geom;
+    if (geometry && geometry.type === 'MultiPolygon' && geometry.coordinates.length === 1) {
+      geometry = { type: 'Polygon', coordinates: geometry.coordinates[0] };
+    }
+    return { type: 'Feature', id: properties.objectid, properties: properties, geometry: geometry };
+  });
+  return { type: 'FeatureCollection', features: features };
+}
+
 // fetches parcels from carto as GeoJSON, normalized to match the ArcGIS response shape:
 // carto features carry no top-level id (consumers match feature.id against selectedParcelId),
 // and carto wraps single polygons in MultiPolygon
@@ -55,11 +84,13 @@ export const useParcelsStore = defineStore('ParcelsStore', {
             if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillPwdParcelData - await resolved but HTTP status was not successful');
           }
         } else {
-          const data = await fetchCartoParcels(`select * from pwd_parcels where parcelid = '${pwdParcelNumber}'`);
+          const data = API_SOURCES.pwdParcels === 'databridge'
+            ? await fetchDatabridgeParcels(`select ${PWD_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from pwd_parcels where parcelid = '${pwdParcelNumber}'`)
+            : await fetchCartoParcels(`select * from pwd_parcels where parcelid = '${pwdParcelNumber}'`);
           if (data) {
             this.pwd = data;
           } else {
-            if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillPwdParcelData - carto query did not return features');
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillPwdParcelData - query did not return features');
           }
         }
       } catch {
@@ -120,9 +151,11 @@ export const useParcelsStore = defineStore('ParcelsStore', {
           if (import.meta.env.VITE_DEBUG == 'true') console.log('response', response);
           originalJson = response.data;
         } else {
-          originalJson = await fetchCartoParcels(`select * from dor_parcel where ${whereClause}`);
+          originalJson = API_SOURCES.dorParcels === 'databridge'
+            ? await fetchDatabridgeParcels(`select ${DOR_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from dor_parcel where ${whereClause}`)
+            : await fetchCartoParcels(`select * from dor_parcel where ${whereClause}`);
           if (!originalJson) {
-            if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillDorParcelData - carto query did not return features');
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillDorParcelData - query did not return features');
             return;
           }
         }
@@ -157,6 +190,10 @@ export const useParcelsStore = defineStore('ParcelsStore', {
             if (import.meta.env.VITE_DEBUG == 'true') console.warn('checkParcelDataByLngLat - await resolved but HTTP status was not successful')
           }
           responseData = response.data;
+        } else if (API_SOURCES[parcelLayer === 'pwd' ? 'pwdParcels' : 'dorParcels'] === 'databridge') {
+          const table = parcelLayer === 'pwd' ? 'pwd_parcels' : 'dor_parcel';
+          const cols = parcelLayer === 'pwd' ? PWD_DATABRIDGE_COLS : DOR_DATABRIDGE_COLS;
+          responseData = await fetchDatabridgeParcels(`select ${cols}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from ${table} where ST_Contains(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326), 2272))`) || {};
         } else {
           const cartoTable = parcelLayer === 'pwd' ? 'pwd_parcels' : 'dor_parcel';
           responseData = await fetchCartoParcels(`select * from ${cartoTable} where ST_Contains(the_geom, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326))`) || {};
