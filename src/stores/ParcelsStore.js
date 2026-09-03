@@ -85,7 +85,7 @@ export const useParcelsStore = defineStore('ParcelsStore', {
           }
         } else {
           const data = API_SOURCES.pwdParcels === 'databridge'
-            ? await fetchDatabridgeParcels(`select ${PWD_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from pwd_parcels where parcelid = '${pwdParcelNumber}'`)
+            ? await fetchDatabridgeParcels(`select ${PWD_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from pwd_parcels_3857 where parcelid = '${pwdParcelNumber}'`)
             : await fetchCartoParcels(`select * from pwd_parcels where parcelid = '${pwdParcelNumber}'`);
           if (data) {
             this.pwd = data;
@@ -152,7 +152,7 @@ export const useParcelsStore = defineStore('ParcelsStore', {
           originalJson = response.data;
         } else {
           originalJson = API_SOURCES.dorParcels === 'databridge'
-            ? await fetchDatabridgeParcels(`select ${DOR_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from dor_parcel where ${whereClause}`)
+            ? await fetchDatabridgeParcels(`select ${DOR_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from dor_parcel_3857 where ${whereClause}`)
             : await fetchCartoParcels(`select * from dor_parcel where ${whereClause}`);
           if (!originalJson) {
             if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillDorParcelData - query did not return features');
@@ -191,9 +191,9 @@ export const useParcelsStore = defineStore('ParcelsStore', {
           }
           responseData = response.data;
         } else if (API_SOURCES[parcelLayer === 'pwd' ? 'pwdParcels' : 'dorParcels'] === 'databridge') {
-          const table = parcelLayer === 'pwd' ? 'pwd_parcels' : 'dor_parcel';
+          const table = parcelLayer === 'pwd' ? 'pwd_parcels_3857' : 'dor_parcel_3857';
           const cols = parcelLayer === 'pwd' ? PWD_DATABRIDGE_COLS : DOR_DATABRIDGE_COLS;
-          responseData = await fetchDatabridgeParcels(`select ${cols}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from ${table} where ST_Contains(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326), 2272))`) || {};
+          responseData = await fetchDatabridgeParcels(`select ${cols}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from ${table} where ST_Contains(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326), 3857))`) || {};
         } else {
           const cartoTable = parcelLayer === 'pwd' ? 'pwd_parcels' : 'dor_parcel';
           responseData = await fetchCartoParcels(`select * from ${cartoTable} where ST_Contains(the_geom, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326))`) || {};

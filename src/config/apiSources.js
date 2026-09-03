@@ -23,12 +23,12 @@ export const API_SOURCES = {
   dorDocuments: 'carto',
 
   // ParcelsStore
-  // NOTE: the carto AND databridge branches WORK but their geometry is ~0.9m off
-  // the Esri-served DOR basemap (uniform 0.16m E / 0.89m S; the postgres->carto
-  // paths apply no NAD83->WGS84 datum shift while Esri does - verified
-  // vertex-by-vertex on dor_parcel and pwd_parcels, and databridge matches carto
-  // to the cm). DEMO: set to databridge on this branch so the offset is visible
-  // on dev2. For production use, keep arcgis until the convention is reconciled.
+  // The plain dor_parcel/pwd_parcels tables (carto and databridge) sit ~0.9m off
+  // the Esri-served DOR basemap (no NAD83->WGS84 datum shift in the postgres->carto
+  // paths, while Esri applies one). The databridge branch queries the *_3857 tables
+  // instead, which carry the shift and land within ~0.2m of the AGO geometry -
+  // verified against mapreg 089N040106 / parcelid 79436. The carto branch still
+  // uses the offset tables: break-glass only.
   pwdParcels: 'databridge',
   dorParcels: 'databridge',
 };
