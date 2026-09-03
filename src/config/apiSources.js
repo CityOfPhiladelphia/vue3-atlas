@@ -3,20 +3,20 @@
 
 export const API_SOURCES = {
   // OpaStore
-  opaData: 'arcgis',
+  opaData: 'carto',
 
   // LiStore - migrated
-  buildingCertSummary: 'arcgis',
-  buildingCerts: 'arcgis',
-  violations: 'arcgis',
-  appeals: 'arcgis',
+  buildingCertSummary: 'carto',
+  buildingCerts: 'carto',
+  violations: 'carto',
+  appeals: 'carto',
 
   // LiStore - migrated
-  permits: 'arcgis',
-  inspections: 'arcgis',
-  businessLicenses: 'arcgis',
+  permits: 'carto',
+  inspections: 'carto',
+  businessLicenses: 'carto',
   // Note: zoningAppeals not migrated - no ArcGIS service available
 
   // DorStore
-  dorCondos: 'arcgis',
+  dorCondos: 'carto',
 };
