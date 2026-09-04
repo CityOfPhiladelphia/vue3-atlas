@@ -5,7 +5,12 @@ import { useParcelsStore } from './ParcelsStore';
 import { useGeocodeStore } from '@/stores/GeocodeStore.js'
 
 import useTransforms from '@/composables/useTransforms';
+import { API_SOURCES } from '@/config/apiSources.js';
+import { fetchDatabridgeGeoJSON } from '@/util/databridge.js';
 const { rcoPrimaryContact, phoneNumber, date } = useTransforms();
+
+// databridge has no select *: shape must be transformed to 4326 explicitly, so columns are listed
+const RCO_DATABRIDGE_COLS = 'organization_name, organization_address, meeting_location_address, org_type, primary_name, primary_phone, primary_email, primary_address, alternate_name, websites, effective_date, expirationyear, lni_id, objectid';
 
 import { format } from 'date-fns';
 
@@ -424,45 +429,57 @@ export const useZoningStore = defineStore('ZoningStore', {
       try {
         const GeocodeStore = useGeocodeStore();
         const feature = GeocodeStore.aisData.features[0];
-        let url = '//services.arcgis.com/fLeGjb7u4uXqeF9q/arcgis/rest/services/Zoning_RCO/FeatureServer/0/query';
 
-        let params = {
-          'returnGeometry': true,
-          'where': "1=1",
-          'outSR': 4326,
-          'outFields': '*',
-          'inSr': 4326,
-          'geometryType': 'esriGeometryPoint',
-          'spatialRel': 'esriSpatialRelWithin',
-          'f': 'geojson',
-          'geometry': JSON.stringify({ "x": feature.geometry.coordinates[0], "y": feature.geometry.coordinates[1], "spatialReference": { "wkid": 4326 }}),
-        };
-
-        const response = await axios.get(url, { params });
-        if (response.status === 200) {
-          let data = await response.data;
-
-          data.features.sort((a, b) => {
-            if (a.properties.organization_name < b.properties.organization_name) {
-              return -1;
-            }
-            if (a.properties.organization_name > b.properties.organization_name) {
-              return 1;
-            }
-            return 0;
-          });
-
-          data.features.forEach(item => {
-            item.properties.rco = `<b>${item.properties.organization_name}</b><br>${item.properties.organization_address }`;
-            item.properties.contact = `${rcoPrimaryContact(item.properties.primary_name)}<br>${phoneNumber(item.properties.primary_phone)}<br><a target='_blank' href='mailto:${item.properties.primary_email}'>${item.properties.primary_email}</a>`;
-            item.properties.website_link = item.properties.websites ? `<a target='_blank' href='${item.properties.websites}'>${item.properties.websites}</a>` : 'No website provided';
-          })
-          this.rcos = data;
-          this.loadingRcos = false;
+        let data;
+        if (API_SOURCES.rcos === 'databridge') {
+          const coords = feature.geometry.coordinates;
+          data = await fetchDatabridgeGeoJSON(`select ${RCO_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from zoning_rco where ST_Contains(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${coords[0]}, ${coords[1]}), 4326), 2272))`);
+          if (!data) {
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillRcos - databridge query did not return features');
+            this.loadingRcos = false;
+            return;
+          }
         } else {
-          this.loadingRcos = false;
-          if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillRcos - await resolved but HTTP status was not successful');
+          let url = '//services.arcgis.com/fLeGjb7u4uXqeF9q/arcgis/rest/services/Zoning_RCO/FeatureServer/0/query';
+
+          let params = {
+            'returnGeometry': true,
+            'where': "1=1",
+            'outSR': 4326,
+            'outFields': '*',
+            'inSr': 4326,
+            'geometryType': 'esriGeometryPoint',
+            'spatialRel': 'esriSpatialRelWithin',
+            'f': 'geojson',
+            'geometry': JSON.stringify({ "x": feature.geometry.coordinates[0], "y": feature.geometry.coordinates[1], "spatialReference": { "wkid": 4326 }}),
+          };
+
+          const response = await axios.get(url, { params });
+          if (response.status !== 200) {
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillRcos - await resolved but HTTP status was not successful');
+            this.loadingRcos = false;
+            return;
+          }
+          data = response.data;
         }
+
+        data.features.sort((a, b) => {
+            if (a.properties.organization_name < b.properties.organization_name) {
+            return -1;
+          }
+          if (a.properties.organization_name > b.properties.organization_name) {
+            return 1;
+          }
+          return 0;
+        });
+
+        data.features.forEach(item => {
+          item.properties.rco = `<b>${item.properties.organization_name}</b><br>${item.properties.organization_address }`;
+          item.properties.contact = `${rcoPrimaryContact(item.properties.primary_name)}<br>${phoneNumber(item.properties.primary_phone)}<br><a target='_blank' href='mailto:${item.properties.primary_email}'>${item.properties.primary_email}</a>`;
+          item.properties.website_link = item.properties.websites ? `<a target='_blank' href='${item.properties.websites}'>${item.properties.websites}</a>` : 'No website provided';
+        })
+        this.rcos = data;
+        this.loadingRcos = false;
       } catch {
         this.loadingRcos = false;
         if (import.meta.env.VITE_DEBUG == 'true') console.error('fillRcos - await never resolved, failed to fetch data');

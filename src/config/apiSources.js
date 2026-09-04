@@ -25,6 +25,9 @@ export const API_SOURCES = {
   // NearbyActivityStore
   vacantIndicatorPoints: 'databridge',
 
+  // ZoningStore
+  rcos: 'databridge',
+
   // CityServicesStore
   // controls BOTH schools call sites (fillAllSchools + fillNearbySchools) - they must
   // stay on the same source: the designated-school filter matches feature.id across them
