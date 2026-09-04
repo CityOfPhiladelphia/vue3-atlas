@@ -37,6 +37,7 @@ export const API_SOURCES = {
   schools: 'databridge',
   policeStations: 'databridge',
   fireStations: 'databridge',
+  schoolCatchments: 'databridge',
 
   // ParcelsStore
   // The plain dor_parcel/pwd_parcels tables (carto and databridge) sit ~0.9m off

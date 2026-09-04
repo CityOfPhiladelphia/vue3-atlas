@@ -19,6 +19,11 @@ const { phoneNumber } = useTransforms();
 const SCHOOLS_DATABRIDGE_COLS = 'aun, school_num, enrollment, type, type_specific, location_id, school_name, school_name_label, street_address, zip_code, phone_number, grade_level, grade_org, objectid';
 const POLICE_DATABRIDGE_COLS = 'dist_num, location, phone__, objectid';
 const FIRE_DATABRIDGE_COLS = 'firesta_, eng, lad, med, bc, location, active, objectid';
+const CATCHMENT_DATABRIDGE_COLS = {
+  es: 'objectid, ms_id, ms_name, hs_id, hs_name, gr_id_k, gr_id_01, gr_id_02, gr_id_03, gr_id_04, gr_id_05, gr_id_06, gr_id_07, gr_id_08, gr_id_09, gr_id_10, gr_id_11, gr_id_12, es_grade, ms_grade, hs_grade, es_id, es_name',
+  ms: 'objectid, ms_id, ms_name, ms_grade',
+  hs: 'objectid, hs_id, hs_name, hs_grade',
+};
 
 export const useCityServicesStore = defineStore('CityServicesStore', {
   state: () => {
@@ -85,6 +90,20 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
     },
     async fillAllCatchments() {
       try {
+        if (API_SOURCES.schoolCatchments === 'databridge') {
+          for (const level of ['es', 'ms', 'hs']) {
+            const data = await fetchDatabridgeGeoJSON(`select ${CATCHMENT_DATABRIDGE_COLS[level]}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from schooldist_catchments_${level}`);
+            if (data) {
+              this[`${level}Catchments`] = data;
+              this.setLoadingData(false);
+            } else {
+              if (import.meta.env.VITE_DEBUG == 'true') console.warn(`nearbyCatchments - databridge ${level} query did not return features`);
+              this.setLoadingData(false);
+              this.setDataError(true);
+            }
+          }
+          return;
+        }
         const params = {
           where: '1=1',
           outFields: '*',
