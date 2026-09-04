@@ -17,6 +17,7 @@ const { phoneNumber } = useTransforms();
 
 // databridge has no select *: shape must be transformed to 4326 explicitly, so columns are listed
 const SCHOOLS_DATABRIDGE_COLS = 'aun, school_num, enrollment, type, type_specific, location_id, school_name, school_name_label, street_address, zip_code, phone_number, grade_level, grade_org, objectid';
+const POLICE_DATABRIDGE_COLS = 'dist_num, location, phone__, objectid';
 
 export const useCityServicesStore = defineStore('CityServicesStore', {
   state: () => {
@@ -135,6 +136,18 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
         f: 'geojson',
       }
       try {
+        if (API_SOURCES.policeStations === 'databridge') {
+          const data = await fetchDatabridgeGeoJSON(`select ${POLICE_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from police_stations`);
+          if (data) {
+            this.allPoliceStations = data;
+            this.setLoadingData(false);
+          } else {
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('allPoliceStations - databridge query did not return features');
+            this.setLoadingData(false);
+            this.setDataError(true);
+          }
+          return;
+        }
         const response = await axios.get('https://services.arcgis.com/fLeGjb7u4uXqeF9q/arcgis/rest/services/Police_Stations/FeatureServer/0/query?', { params });
         if (response.status === 200) {
           const data = response.data;

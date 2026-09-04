@@ -36,6 +36,7 @@ export const API_SOURCES = {
   // controls BOTH schools call sites (fillAllSchools + fillNearbySchools) - they must
   // stay on the same source: the designated-school filter matches feature.id across them
   schools: 'databridge',
+  policeStations: 'databridge',
 
   // ParcelsStore
   // The plain dor_parcel/pwd_parcels tables (carto and databridge) sit ~0.9m off
