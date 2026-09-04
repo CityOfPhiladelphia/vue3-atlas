@@ -1,10 +1,14 @@
 import { defineStore } from 'pinia';
 import { useGeocodeStore } from '@/stores/GeocodeStore.js'
 import { API_SOURCES } from '@/config/apiSources.js';
+import { fetchDatabridgeGeoJSON } from '@/util/databridge.js';
 
 import useTransforms from '@/composables/useTransforms';
 const { date } = useTransforms();
 import axios from 'axios';
+
+// databridge has no select *: shape must be transformed to 4326 explicitly, so columns are listed
+const FOOTPRINTS_DATABRIDGE_COLS = 'bin, address, building_name, approx_hgt, max_hgt, base_elevation, square_ft, parcel_id_num, parcel_id_source, fcode, objectid';
 
 // Helper to convert ArcGIS epoch timestamps to ISO date strings for table components
 // Format: yyyy-MM-dd'T'HH:mm:ssZ (matches table dateInputFormat)
@@ -100,6 +104,22 @@ export const useLiStore = defineStore('LiStore', {
           where = "parcel_id_num = '" + data + "'";
         }
         // if (import.meta.env.VITE_DEBUG == 'true') console.log('where:', where);
+        if (API_SOURCES.liBuildingFootprints === 'databridge') {
+          const result = await fetchDatabridgeGeoJSON(`select ${FOOTPRINTS_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from li_building_footprints where ${where}`);
+          if (result) {
+            // reshape to the ArcGIS pjson format LI.vue reads: attributes + geometry.rings
+            this.liBuildingFootprints = {
+              features: result.features.map((f) => ({
+                attributes: f.properties,
+                geometry: { rings: f.geometry ? (f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates.flat() : f.geometry.coordinates) : [] },
+              })),
+            };
+          } else {
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('liBuildingFootprints - databridge query did not return features')
+          }
+          this.loadingLiBuildingFootprints = false;
+          return;
+        }
         const params = {
           where: where,
           outFields: '*',

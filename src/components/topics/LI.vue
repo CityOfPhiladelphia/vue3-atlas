@@ -135,7 +135,9 @@ const buildingData = computed(() => {
     },
     {
       label: 'Building Footprint (approx)',
-      value: prettyNumber(Math.round(selectedLiBuilding.attributes.Shape__Area * 6.3225)) + ' sq ft' || 'N/A',
+      // databridge provides true square feet (square_ft); the ArcGIS layer only has
+      // Shape__Area in web-mercator units, x 6.3225 approximates sq ft at Philly's latitude
+      value: prettyNumber(Math.round(selectedLiBuilding.attributes.square_ft ?? selectedLiBuilding.attributes.Shape__Area * 6.3225)) + ' sq ft' || 'N/A',
     },
   ];
 });
