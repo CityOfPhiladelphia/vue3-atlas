@@ -24,6 +24,7 @@ export const API_SOURCES = {
   // DorStore
   dorCondos: 'carto',
   dorDocuments: 'carto',
+  regmaps: 'databridge',
 
   // NearbyActivityStore
   vacantIndicatorPoints: 'databridge',

@@ -2,6 +2,11 @@ import { defineStore } from 'pinia';
 import { useParcelsStore } from './ParcelsStore';
 import { useGeocodeStore } from './GeocodeStore';
 import { API_SOURCES } from '@/config/apiSources.js';
+import { fetchDatabridgeGeoJSON } from '@/util/databridge.js';
+
+// databridge has no select *: shape must be transformed to 4326 explicitly, so columns are listed
+// RECMAP aliased uppercase because Deeds.vue reads properties.RECMAP (the AGO field's real casing)
+const REGMAPS_DATABRIDGE_COLS = 'recmap as "RECMAP", recsub, scale, objectid';
 
 import bboxPolygon from '@turf/bbox-polygon';
 import axios from 'axios';
@@ -265,6 +270,16 @@ export const useDorStore = defineStore("DorStore", {
           };
 
           try {
+            if (API_SOURCES.regmaps === 'databridge') {
+              const data = await fetchDatabridgeGeoJSON(`select ${REGMAPS_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from mastermapindex where ST_Intersects(shape, ST_Transform(ST_MakeEnvelope(${bounds.coordinates[0][0][0]}, ${bounds.coordinates[0][0][1]}, ${bounds.coordinates[0][2][0]}, ${bounds.coordinates[0][2][1]}, 4326), 2272))`);
+              if (data) {
+                // consumers read regmaps.data.features, mirroring the axios response wrapper
+                this.regmaps = { data: data };
+              } else {
+                if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillRegmaps - databridge query did not return features');
+              }
+              return resolve();
+            }
             const response = await axios.get(url, { params })
             if (response.status === 200) {
               this.regmaps = response;
