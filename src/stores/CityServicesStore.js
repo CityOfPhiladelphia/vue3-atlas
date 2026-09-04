@@ -18,6 +18,7 @@ const { phoneNumber } = useTransforms();
 // databridge has no select *: shape must be transformed to 4326 explicitly, so columns are listed
 const SCHOOLS_DATABRIDGE_COLS = 'aun, school_num, enrollment, type, type_specific, location_id, school_name, school_name_label, street_address, zip_code, phone_number, grade_level, grade_org, objectid';
 const POLICE_DATABRIDGE_COLS = 'dist_num, location, phone__, objectid';
+const FIRE_DATABRIDGE_COLS = 'firesta_, eng, lad, med, bc, location, active, objectid';
 
 export const useCityServicesStore = defineStore('CityServicesStore', {
   state: () => {
@@ -277,23 +278,34 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
         const GeocodeStore = useGeocodeStore();
         const MapStore = useMapStore();
         const buffer = MapStore.bufferForAddress;
-        const url = 'https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/Fire_Dept_Facilities/FeatureServer/0/query?';
-        const params = {
-          'returnGeometry': true,
-          'where': 'FIRESTA_ IS NOT NULL',
-          'outSR': 4326,
-          'outFields': '*',
-          'inSr': 4326,
-          'geometryType': 'esriGeometryPolygon',
-          'spatialRel': 'esriSpatialRelContains',
-          'f': 'geojson',
-          'geometry': JSON.stringify({ "rings": buffer, "spatialReference": { "wkid": 4326 } }),
-        };
+        let data;
+        if (API_SOURCES.fireStations === 'databridge') {
+          // same 5820ft city-services buffer semantics as the buffer-contains query below;
+          // shape is native EPSG:2272 whose units are feet
+          const coords = GeocodeStore.aisData.features[0].geometry.coordinates;
+          data = await fetchDatabridgeGeoJSON(`select ${FIRE_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from fire_dept_facilities where firesta_ is not null and ST_DWithin(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${coords[0]}, ${coords[1]}), 4326), 2272), 5820)`);
+        } else {
+          const url = 'https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/Fire_Dept_Facilities/FeatureServer/0/query?';
+          const params = {
+            'returnGeometry': true,
+            'where': 'FIRESTA_ IS NOT NULL',
+            'outSR': 4326,
+            'outFields': '*',
+            'inSr': 4326,
+            'geometryType': 'esriGeometryPolygon',
+            'spatialRel': 'esriSpatialRelContains',
+            'f': 'geojson',
+            'geometry': JSON.stringify({ "rings": buffer, "spatialReference": { "wkid": 4326 } }),
+          };
 
-        const response = await axios.get(url, { params });
-        if (response.status === 200) {
-          const data = response.data;
-
+          const response = await axios.get(url, { params });
+          if (response.status !== 200) {
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('nearbyFireStations - await resolved but HTTP status was not successful');
+            return;
+          }
+          data = response.data;
+        }
+        {
           let features = (data || {}).features;
           const feature = GeocodeStore.aisData.features[0];
           const from = point(feature.geometry.coordinates);
@@ -331,8 +343,6 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
 
           this.nearbyFireStations = features;
           this.setLoadingData(false);
-        } else {
-          if (import.meta.env.VITE_DEBUG == 'true') console.warn('nearbyFireStations - await resolved but HTTP status was not successful');
         }
       } catch {
         if (import.meta.env.VITE_DEBUG == 'true') console.error('nearbyFireStations - await never resolved, failed to fetch address data');
