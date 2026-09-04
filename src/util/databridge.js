@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const DATABRIDGE_URL = 'https://0spy4bb9w1.execute-api.us-east-1.amazonaws.com/queryDatabridge/databridge';
+export const DATABRIDGE_URL = 'https://haydr3k097.execute-api.us-east-1.amazonaws.com/queryDatabridge/databridge';
 
 // fetches from databridge-api (via the maps-api-proxy lambda), reshaped to a GeoJSON
 // FeatureCollection matching the ArcGIS response shape: the envelope is data.features[].properties
