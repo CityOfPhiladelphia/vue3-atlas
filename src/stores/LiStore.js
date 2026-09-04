@@ -105,7 +105,7 @@ export const useLiStore = defineStore('LiStore', {
         }
         // if (import.meta.env.VITE_DEBUG == 'true') console.log('where:', where);
         if (API_SOURCES.liBuildingFootprints === 'databridge') {
-          const result = await fetchDatabridgeGeoJSON(`select ${FOOTPRINTS_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from li_building_footprints where ${where}`);
+          const result = await fetchDatabridgeGeoJSON(`select ${FOOTPRINTS_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from building_footprints_3857 where ${where}`);
           if (result) {
             // reshape to the ArcGIS pjson format LI.vue reads: attributes + geometry.rings
             this.liBuildingFootprints = {

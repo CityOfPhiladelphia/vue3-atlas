@@ -16,10 +16,9 @@ export const API_SOURCES = {
   permits: 'carto',
   inspections: 'carto',
   businessLicenses: 'carto',
-  // databridge branch built but DORMANT: li_building_footprints geometry carries the
-  // ~0.9m offset (visible at parcel zoom) and building_footprints_3857 500s on every
-  // query. Flip to 'databridge' when a shifted footprints table works - bead tracks it.
-  liBuildingFootprints: 'arcgis',
+  // uses building_footprints_3857, which carries the NAD83->WGS84 shift and aligns
+  // with the Esri basemap (~0.15m; the plain tables sit ~0.9m off)
+  liBuildingFootprints: 'databridge',
   // Note: zoningAppeals not migrated - no ArcGIS service available
 
   // DorStore
