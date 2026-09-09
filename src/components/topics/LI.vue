@@ -129,11 +129,6 @@ const onPermitsSortChange = async (params) => {
   permitsCurrentPage.value = 1;
   loadRemotePermitsPage();
 };
-// vue-good-table's built-in search box: in remote mode it emits 'search', which feeds
-// the same debounced server-search path; in local mode vgt filters the rows itself
-const onPermitsVgtSearch = (params) => {
-  permitsSearchTerm.value = params.searchTerm;
-};
 
 const permits = computed(() => {
   if (permitsRemote.value) {
@@ -581,12 +576,10 @@ const liAppealsTableData = computed(() => {
           :rows="permitsTableData.rows"
           :total-rows="permitsRemote ? permitsLength : undefined"
           :pagination-options="paginationOptions(permitsRemote ? permitsLength : permitsTableData.rows.length)"
-          :search-options="{ enabled: permitsSearchEnabled, placeholder: 'Search Permits' }"
           style-class="table"
           @page-change="onPermitsPageChange"
           @per-page-change="onPermitsPerPageChange"
           @sort-change="onPermitsSortChange"
-          @search="onPermitsVgtSearch"
 >
           <template #emptystate>
             <div v-if="LiStore.loadingLiPermits">
@@ -600,13 +593,23 @@ const liAppealsTableData = computed(() => {
             </div>
           </template>
           <template #pagination-top="props">
-            <custom-pagination-labels
-              :mode="'pages'"
-              :total="props.total"
-              :per-page="5"
-              @page-changed="props.pageChanged"
-              @per-page-changed="props.perPageChanged"
-            />
+            <div class="pagination-with-search">
+              <input
+                v-if="permitsSearchEnabled"
+                v-model="permitsSearchTerm"
+                type="text"
+                class="pagination-search-input"
+                placeholder="Search Permits"
+                aria-label="Search Permits"
+              >
+              <custom-pagination-labels
+                :mode="'pages'"
+                :total="props.total"
+                :per-page="5"
+                @page-changed="props.pageChanged"
+                @per-page-changed="props.perPageChanged"
+              />
+            </div>
           </template>
         </vue-good-table>
       </div>
@@ -878,10 +881,25 @@ const liAppealsTableData = computed(() => {
   font-weight: bold;
 }
 
-.permits-filter {
-  /* TextFilter's root is a bulma .columns, whose own -0.75rem top margin must be overcome */
-  margin-top: 0.5rem !important;
-  margin-left: -4px !important;
+.pagination-with-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pagination-search-input {
+  flex: 1 1 220px;
+  max-width: 340px;
+  min-width: 180px;
+  padding: 4px 8px;
+  border: 1px solid #cccccc;
+  border-radius: 2px;
+  font-size: 14px;
+}
+
+/* the pagination labels keep enough width that their controls never wrap */
+.pagination-with-search .vgt-wrap__footer {
+  flex: 1 0 310px;
 }
 
 .li-building-select {
