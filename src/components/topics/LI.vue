@@ -1,10 +1,12 @@
 <script setup>
-import { computed, ref, watch, onMounted } from 'vue';
+import { computed, watch, onMounted } from 'vue';
 import { polygon, featureCollection } from '@turf/helpers';
 
 import CustomPaginationLabels from '@/components/pagination/CustomPaginationLabels.vue';
+import PaginationWithSearch from '@/components/pagination/PaginationWithSearch.vue';
 import useTables from '@/composables/useTables';
 import useTableSearch from '@/composables/useTableSearch';
+import useRemoteTableUi from '@/composables/useRemoteTableUi';
 const { paginationOptions } = useTables();
 
 import { useMainStore } from '@/stores/MainStore';
@@ -84,55 +86,28 @@ const permitsCompareFn = (a, b) => new Date(b.permitissuedate) - new Date(a.perm
 
 // remote mode: parcels over the store's permit threshold page and search server-side
 const permitsRemote = computed(() => LiStore.liPermitsRemote);
-const permitsCurrentPage = ref(1);
-const permitsPerPage = ref(5);
-const remotePermitRows = ref([]);
-const loadRemotePermitsPage = async () => {
-  remotePermitRows.value = await LiStore.permitsUiPage(permitsCurrentPage.value, permitsPerPage.value);
-};
+let permitsUi;
 const { searchTerm: permitsSearchTerm, searchEnabled: permitsSearchThreshold, filterRows: filterPermitRows } = useTableSearch({
   fields: [ 'permitnumber', 'permitdescription', 'status' ],
   onSearch: async (term) => {
     if (!permitsRemote.value) return;
     await LiStore.setPermitsSearch(term);
-    permitsCurrentPage.value = 1;
-    loadRemotePermitsPage();
+    permitsUi.currentPage.value = 1;
+    permitsUi.load();
   },
 });
-watch(() => [ LiStore.liPermitsRemote, LiStore.liPermitsBaseSql ], () => {
+permitsUi = useRemoteTableUi({
+  isRemote: () => LiStore.liPermitsRemote,
+  resetKey: () => LiStore.liPermitsBaseSql,
+  fetchUiPage: (page, perPage) => LiStore.permitsUiPage(page, perPage),
+  setSort: (field, type) => LiStore.setPermitsSort(field, type),
   // a new address means a fresh table: clear any leftover search
-  if (permitsSearchTerm.value) {
-    permitsSearchTerm.value = '';
-  }
-  if (LiStore.liPermitsRemote) {
-    permitsCurrentPage.value = 1;
-    loadRemotePermitsPage();
-  }
-}, { immediate: true });
-const onPermitsPageChange = (params) => {
-  if (!permitsRemote.value) return;
-  permitsCurrentPage.value = params.currentPage;
-  if (params.currentPerPage) {
-    permitsPerPage.value = params.currentPerPage;
-  }
-  loadRemotePermitsPage();
-};
-const onPermitsPerPageChange = (params) => {
-  if (!permitsRemote.value) return;
-  permitsPerPage.value = params.currentPerPage;
-  permitsCurrentPage.value = 1;
-  loadRemotePermitsPage();
-};
-const onPermitsSortChange = async (params) => {
-  if (!permitsRemote.value) return;
-  await LiStore.setPermitsSort(params[0].field, params[0].type);
-  permitsCurrentPage.value = 1;
-  loadRemotePermitsPage();
-};
+  onReset: () => { if (permitsSearchTerm.value) permitsSearchTerm.value = ''; },
+});
 
 const permits = computed(() => {
   if (permitsRemote.value) {
-    return remotePermitRows.value;
+    return permitsUi.rows.value;
   }
   const rows = LiStore.liPermits.rows ? [ ...LiStore.liPermits.rows ].sort(permitsCompareFn) : null;
   return filterPermitRows(rows);
@@ -172,8 +147,41 @@ const violationsLength = computed(() => violations.value && violations.value.len
 
 // BUSINESS LICENSES
 const businessLicensesCompareFn = (a, b) => new Date(b.initialissuedate) - new Date(a.initialissuedate);
-const businessLicenses = computed(() => LiStore.liBusinessLicenses.rows ? [ ...LiStore.liBusinessLicenses.rows ].sort(businessLicensesCompareFn) : null );
-const businessLicensesLength = computed(() => businessLicenses.value && businessLicenses.value.length ? businessLicenses.value.length : 0);
+const licensesRemote = computed(() => LiStore.liLicensesRemote);
+let licensesUi;
+const { searchTerm: licensesSearchTerm, searchEnabled: licensesSearchThreshold, filterRows: filterLicenseRows } = useTableSearch({
+  fields: [ 'licensenum', 'business_name', 'licensetype', 'licensestatus' ],
+  onSearch: async (term) => {
+    if (!licensesRemote.value) return;
+    await LiStore.setLicensesSearch(term);
+    licensesUi.currentPage.value = 1;
+    licensesUi.load();
+  },
+});
+licensesUi = useRemoteTableUi({
+  isRemote: () => LiStore.liLicensesRemote,
+  resetKey: () => LiStore.liLicensesBaseSql,
+  fetchUiPage: (page, perPage) => LiStore.licensesUiPage(page, perPage),
+  setSort: (field, type) => LiStore.setLicensesSort(field, type),
+  onReset: () => { if (licensesSearchTerm.value) licensesSearchTerm.value = ''; },
+});
+const businessLicenses = computed(() => {
+  if (licensesRemote.value) {
+    return licensesUi.rows.value;
+  }
+  const rows = LiStore.liBusinessLicenses.rows ? [ ...LiStore.liBusinessLicenses.rows ].sort(businessLicensesCompareFn) : null;
+  return filterLicenseRows(rows);
+});
+const businessLicensesLength = computed(() => {
+  if (licensesRemote.value) {
+    return LiStore.liLicensesTotal || 0;
+  }
+  return businessLicenses.value && businessLicenses.value.length ? businessLicenses.value.length : 0;
+});
+const licensesUnfilteredTotal = computed(() => licensesRemote.value
+  ? (LiStore.liLicensesGrandTotal || 0)
+  : (LiStore.liBusinessLicenses.rows ? LiStore.liBusinessLicenses.rows.length : 0));
+const licensesSearchEnabled = computed(() => licensesSearchThreshold(licensesUnfilteredTotal.value));
 
 // L&I Appeals
 const liAppealsCompareFn = (a, b) => new Date(b.createddate) - new Date(a.createddate);
@@ -577,9 +585,9 @@ const liAppealsTableData = computed(() => {
           :total-rows="permitsRemote ? permitsLength : undefined"
           :pagination-options="paginationOptions(permitsUnfilteredTotal)"
           style-class="table"
-          @page-change="onPermitsPageChange"
-          @per-page-change="onPermitsPerPageChange"
-          @sort-change="onPermitsSortChange"
+          @page-change="permitsUi.onPageChange"
+          @per-page-change="permitsUi.onPerPageChange"
+          @sort-change="permitsUi.onSortChange"
 >
           <template #emptystate>
             <div v-if="LiStore.loadingLiPermits">
@@ -593,39 +601,14 @@ const liAppealsTableData = computed(() => {
             </div>
           </template>
           <template #pagination-top="props">
-            <div class="pagination-with-search">
-              <div
-                v-if="permitsSearchEnabled"
-                class="pagination-search-wrap"
-              >
-                <input
-                  v-model="permitsSearchTerm"
-                  type="text"
-                  class="pagination-search-input"
-                  placeholder="Search Permits"
-                  aria-label="Search Permits"
-                >
-                <button
-                  v-if="permitsSearchTerm"
-                  type="button"
-                  class="pagination-search-clear"
-                  aria-label="Clear search"
-                  @click="permitsSearchTerm = ''"
-                >
-                  <font-awesome-icon
-                    :icon="['fas', 'times']"
-                    size="lg"
-                  />
-                </button>
-              </div>
-              <custom-pagination-labels
-                :mode="'pages'"
-                :total="props.total"
-                :per-page="5"
-                @page-changed="props.pageChanged"
-                @per-page-changed="props.perPageChanged"
-              />
-            </div>
+            <pagination-with-search
+              v-model="permitsSearchTerm"
+              :search-enabled="permitsSearchEnabled"
+              placeholder="Search Permits"
+              :total="props.total"
+              @page-changed="props.pageChanged"
+              @per-page-changed="props.perPageChanged"
+            />
           </template>
         </vue-good-table>
       </div>
@@ -855,11 +838,16 @@ const liAppealsTableData = computed(() => {
       >
         <vue-good-table
           id="business-licenses"
+          :mode="licensesRemote ? 'remote' : ''"
           :columns="businessLicensesTableData.columns"
           :rows="businessLicensesTableData.rows"
-          :pagination-options="paginationOptions(businessLicensesTableData.rows.length)"
+          :total-rows="licensesRemote ? businessLicensesLength : undefined"
+          :pagination-options="paginationOptions(licensesUnfilteredTotal)"
           style-class="table"
-        >
+          @page-change="licensesUi.onPageChange"
+          @per-page-change="licensesUi.onPerPageChange"
+          @sort-change="licensesUi.onSortChange"
+>
           <template #emptystate>
             <div v-if="LiStore.loadingLiBusinessLicenses">
               Loading business licenses... <font-awesome-icon
@@ -872,10 +860,11 @@ const liAppealsTableData = computed(() => {
             </div>
           </template>
           <template #pagination-top="props">
-            <custom-pagination-labels
-              :mode="'pages'"
+            <pagination-with-search
+              v-model="licensesSearchTerm"
+              :search-enabled="licensesSearchEnabled"
+              placeholder="Search Business Licenses"
               :total="props.total"
-              :per-page="5"
               @page-changed="props.pageChanged"
               @per-page-changed="props.perPageChanged"
             />
@@ -895,46 +884,6 @@ const liAppealsTableData = computed(() => {
 
 .summary {
   font-weight: bold;
-}
-
-.pagination-with-search {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  /* matches the .vgt-wrap__footer side padding so the input sits in from the table edge like the page controls do */
-  padding-left: .4rem;
-}
-
-.pagination-search-wrap {
-  position: relative;
-  flex: 1 1 220px;
-  max-width: 340px;
-  min-width: 180px;
-}
-
-.pagination-search-input {
-  width: 100%;
-  padding: 4px 28px 4px 8px;
-  border: 1px solid #cccccc;
-  border-radius: 2px;
-  font-size: 14px;
-}
-
-.pagination-search-clear {
-  position: absolute;
-  right: 6px;
-  top: 50%;
-  transform: translateY(-50%);
-  border: none;
-  background: none;
-  padding: 0;
-  cursor: pointer;
-  color: #666666;
-}
-
-/* the pagination labels keep enough width that their controls never wrap */
-.pagination-with-search .vgt-wrap__footer {
-  flex: 1 0 310px;
 }
 
 .li-building-select {
