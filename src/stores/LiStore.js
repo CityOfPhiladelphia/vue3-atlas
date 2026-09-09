@@ -10,6 +10,18 @@ import axios from 'axios';
 // databridge has no select *: shape must be transformed to 4326 explicitly, so columns are listed
 const FOOTPRINTS_DATABRIDGE_COLS = 'bin, address, building_name, approx_hgt, max_hgt, base_elevation, square_ft, parcel_id_num, parcel_id_source, fcode, objectid';
 
+// permits remote mode: above the threshold (also the databridge row cap) the permits
+// table pages and searches server-side instead of fetching every row
+const PERMITS_REMOTE_THRESHOLD = 999;
+const PERMITS_SERVER_PAGE = 100;
+// vue-good-table column field -> SQL column for server-side sorting
+const PERMITS_SORT_COLUMNS = {
+  permitissuedate: 'permitissuedate',
+  link: 'permitnumber',
+  permitdescription: 'permitdescription',
+  status: 'status',
+};
+
 // Helper to convert ArcGIS epoch timestamps to ISO date strings for table components
 // Format: yyyy-MM-dd'T'HH:mm:ssZ (matches table dateInputFormat)
 const epochToIso = (epoch) => {
@@ -30,6 +42,15 @@ export const useLiStore = defineStore('LiStore', {
       loadingLiBuildingCerts: false,
       liPermits: {},
       loadingLiPermits: false,
+      // remote-mode permits state: used when a parcel has more permits than
+      // PERMITS_REMOTE_THRESHOLD - pages are fetched from the server on demand
+      liPermitsRemote: false,
+      liPermitsTotal: null,
+      liPermitsGrandTotal: null,
+      liPermitsPages: {},
+      liPermitsSearch: '',
+      liPermitsSort: null,
+      liPermitsBaseSql: null,
       liAisZoningDocs: {},
       loadingLiAisZoningDocs: false,
       liEclipseZoningDocs: {},
@@ -68,6 +89,13 @@ export const useLiStore = defineStore('LiStore', {
       this.liBuildingCerts = {};
       this.liPermits = {};
       this.loadingLiPermits = true;
+      this.liPermitsRemote = false;
+      this.liPermitsTotal = null;
+      this.liPermitsGrandTotal = null;
+      this.liPermitsPages = {};
+      this.liPermitsSearch = '';
+      this.liPermitsSort = null;
+      this.liPermitsBaseSql = null;
       this.liAisZoningDocs = {};
       this.loadingLiAisZoningDocs = true;
       this.liEclipseZoningDocs = {};
@@ -368,47 +396,115 @@ export const useLiStore = defineStore('LiStore', {
         // if (import.meta.env.VITE_DEBUG == 'true') console.log('fillLiPermits is running');
         const GeocodeStore = useGeocodeStore();
         const feature = GeocodeStore.aisData.features[0];
-        let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
         const eclipse_location_id = feature.properties.eclipse_location_id.replace(/\|/g, "', '");
         const streetaddress = feature.properties.street_address;
         const opaQuery = feature.properties.opa_account_num ? ` OR opa_account_num IN ('${ feature.properties.opa_account_num}')` : ``;
         const pwd_parcel_id = feature.properties.pwd_parcel_id;
         const addressId = feature.properties.li_address_key.replace(/\|/g, "', '");
 
-        const sql = `SELECT * FROM PERMITS WHERE address = '${ streetaddress }' or addressobjectid IN ('${ addressId }') \
+        // the UNION query both modes count and page over; ORDER BY is applied per fetch
+        this.liPermitsBaseSql = `SELECT * FROM PERMITS WHERE address = '${ streetaddress }' or addressobjectid IN ('${ addressId }') \
         AND systemofrecord IN ('HANSEN') ${ opaQuery } \
         UNION SELECT * FROM PERMITS WHERE addressobjectid IN ('${ eclipse_location_id }') OR parcel_id_num IN ( '${ pwd_parcel_id }' ) \
-        AND systemofrecord IN ('ECLIPSE')${ opaQuery }\
-        ORDER BY permittype`;
+        AND systemofrecord IN ('ECLIPSE')${ opaQuery }`;
 
-        let data;
-        if (API_SOURCES.permits === 'databridge') {
-          data = await fetchDatabridgeRows(sql);
-          if (!data) {
-            this.loadingLiPermits = false;
-            if (import.meta.env.VITE_DEBUG == 'true') console.warn('permits - databridge query did not return rows')
-            return;
-          }
-        } else {
-          const response = await fetch(baseUrl + sql);
-          if (!response.ok) {
-            this.loadingLiPermits = false;
-            if (import.meta.env.VITE_DEBUG == 'true') console.warn('permits - await resolved but HTTP status was not successful')
-            return;
-          }
-          data = await response.json();
-        }
-        {
-          data.rows.forEach((permit) => {
-            permit.link = `<a target='_blank' href='https://li.phila.gov/Property-History/search/Permit-Detail?address="${encodeURIComponent(permit.address)}"&Id=${permit.permitnumber}'>${permit.permitnumber} <i class='fa fa-external-link'></i></a>`;
-          });
-          this.liPermits = data;
+        const countData = await this._fetchPermitsSql(`select count(*) as n from (${this.liPermitsBaseSql}) permits_sub`);
+        const total = countData && countData.rows && countData.rows.length ? Number(countData.rows[0].n) : null;
+        this.liPermitsTotal = total;
+        this.liPermitsGrandTotal = total;
+
+        if (total !== null && total > PERMITS_REMOTE_THRESHOLD) {
+          this.liPermitsRemote = true;
+          this.liPermitsPages = {};
+          this.liPermitsSearch = '';
+          this.liPermitsSort = null;
+          await this.fetchPermitsServerPage(0);
           this.loadingLiPermits = false;
+          return;
         }
+
+        this.liPermitsRemote = false;
+        const data = await this._fetchPermitsSql(`select * from (${this.liPermitsBaseSql}) permits_sub ORDER BY permittype`);
+        if (!data) {
+          this.loadingLiPermits = false;
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('permits - query did not return rows')
+          return;
+        }
+        this._decoratePermitRows(data.rows);
+        this.liPermits = data;
+        this.loadingLiPermits = false;
       } catch {
         this.loadingLiPermits = false;
         if (import.meta.env.VITE_DEBUG == 'true') console.error('permits - await never resolved, failed to fetch address data')
       }
+    },
+    // transport for permits SQL: databridge or direct carto, per the switch
+    async _fetchPermitsSql(sql) {
+      if (API_SOURCES.permits === 'databridge') {
+        return fetchDatabridgeRows(sql);
+      }
+      const response = await fetch('https://phl.carto.com/api/v2/sql?q=' + encodeURIComponent(sql));
+      if (!response.ok) {
+        return null;
+      }
+      return response.json();
+    },
+    _decoratePermitRows(rows) {
+      rows.forEach((permit) => {
+        permit.link = `<a target='_blank' href='https://li.phila.gov/Property-History/search/Permit-Detail?address="${encodeURIComponent(permit.address)}"&Id=${permit.permitnumber}'>${permit.permitnumber} <i class='fa fa-external-link'></i></a>`;
+      });
+    },
+    _permitsOrderBy() {
+      const sort = this.liPermitsSort;
+      const column = sort && PERMITS_SORT_COLUMNS[sort.field] ? PERMITS_SORT_COLUMNS[sort.field] : 'permitissuedate';
+      const direction = sort && sort.type === 'asc' ? 'asc' : 'desc';
+      return `order by ${column} ${direction} nulls last`;
+    },
+    _permitsSearchWhere() {
+      if (!this.liPermitsSearch) {
+        return '';
+      }
+      const term = this.liPermitsSearch.replace(/'/g, "''");
+      return ` where (permitnumber::text ilike '%${term}%' or permitdescription ilike '%${term}%' or status ilike '%${term}%')`;
+    },
+    async fetchPermitsServerPage(pageIndex) {
+      if (this.liPermitsPages[pageIndex]) {
+        return;
+      }
+      const sql = `select * from (${this.liPermitsBaseSql}) permits_sub${this._permitsSearchWhere()} ${this._permitsOrderBy()} limit ${PERMITS_SERVER_PAGE} offset ${pageIndex * PERMITS_SERVER_PAGE}`;
+      const data = await this._fetchPermitsSql(sql);
+      if (data && data.rows) {
+        this._decoratePermitRows(data.rows);
+        this.liPermitsPages[pageIndex] = data.rows;
+      }
+    },
+    // serve one UI page from the buffer, fetching its server page if missing;
+    // kicks off a background fetch of the next server page so boundary clicks don't wait
+    async permitsUiPage(uiPage, perPage) {
+      const firstRow = (uiPage - 1) * perPage;
+      const serverPage = Math.floor(firstRow / PERMITS_SERVER_PAGE);
+      await this.fetchPermitsServerPage(serverPage);
+      if ((serverPage + 1) * PERMITS_SERVER_PAGE < this.liPermitsTotal) {
+        this.fetchPermitsServerPage(serverPage + 1);
+      }
+      const pageRows = this.liPermitsPages[serverPage] || [];
+      const start = firstRow - serverPage * PERMITS_SERVER_PAGE;
+      return pageRows.slice(start, start + perPage);
+    },
+    async setPermitsSearch(term) {
+      this.liPermitsSearch = term || '';
+      this.liPermitsPages = {};
+      // total must reflect the filter so the pagination is honest
+      const countData = await this._fetchPermitsSql(`select count(*) as n from (${this.liPermitsBaseSql}) permits_sub${this._permitsSearchWhere()}`);
+      if (countData && countData.rows && countData.rows.length) {
+        this.liPermitsTotal = Number(countData.rows[0].n);
+      }
+      await this.fetchPermitsServerPage(0);
+    },
+    async setPermitsSort(field, type) {
+      this.liPermitsSort = { field: field, type: type };
+      this.liPermitsPages = {};
+      await this.fetchPermitsServerPage(0);
     },
     addDataToZoningDocs(data) {
       data.rows.forEach((item) => {

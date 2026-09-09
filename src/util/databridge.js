@@ -6,15 +6,24 @@ export const DATABRIDGE_URL = 'https://haydr3k097.execute-api.us-east-1.amazonaw
 // FeatureCollection matching the ArcGIS response shape: the envelope is data.features[].properties
 // with the geometry as a geom property (select ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom),
 // feature.id stamped from objectid, single-poly MultiPolygons unwrapped
-// databridge (carto v3) returns timestamps without a timezone; old carto returned the same
-// instants as UTC with a trailing Z, which the tables' date parsing expects. A naive
-// timestamp is local time, so Date() then toISOString() reproduces the old carto value.
+// databridge (carto v3) serializes timestamps inconsistently: without a timezone on
+// plain selects ('2022-06-15T00:00:00'), and as UTC with milliseconds when the query
+// has an ORDER BY ('2024-11-04T00:00:00.000Z'). The tables' date parsing expects old
+// carto's form: UTC with a trailing Z and no milliseconds. A naive timestamp is local
+// time, so Date() then toISOString() reproduces the old carto value; the millisecond
+// form just needs the '.000' stripped.
 const NAIVE_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
+const MILLIS_TIMESTAMP = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})\.\d{3}Z$/;
 function normalizeTimestamps(properties) {
   for (const key of Object.keys(properties)) {
     const value = properties[key];
-    if (typeof value === 'string' && NAIVE_TIMESTAMP.test(value)) {
+    if (typeof value !== 'string') {
+      continue;
+    }
+    if (NAIVE_TIMESTAMP.test(value)) {
       properties[key] = new Date(value).toISOString().replace('.000Z', 'Z');
+    } else if (MILLIS_TIMESTAMP.test(value)) {
+      properties[key] = value.replace(MILLIS_TIMESTAMP, '$1Z');
     }
   }
   return properties;

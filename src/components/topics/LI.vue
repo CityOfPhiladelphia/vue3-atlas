@@ -1,9 +1,11 @@
 <script setup>
-import { computed, watch, onMounted } from 'vue';
+import { computed, ref, watch, onMounted } from 'vue';
 import { polygon, featureCollection } from '@turf/helpers';
 
 import CustomPaginationLabels from '@/components/pagination/CustomPaginationLabels.vue';
+import TextFilter from '@/components/TextFilter.vue';
 import useTables from '@/composables/useTables';
+import useTableSearch from '@/composables/useTableSearch';
 const { paginationOptions } = useTables();
 
 import { useMainStore } from '@/stores/MainStore';
@@ -80,8 +82,75 @@ const selectedBuildingCerts = computed(() => {
 
 // PERMITS
 const permitsCompareFn = (a, b) => new Date(b.permitissuedate) - new Date(a.permitissuedate);
-const permits = computed(() => LiStore.liPermits.rows ? [ ...LiStore.liPermits.rows ].sort(permitsCompareFn) : null );
-const permitsLength = computed(() => permits.value && permits.value.length ? permits.value.length : 0);
+
+// remote mode: parcels over the store's permit threshold page and search server-side
+const permitsRemote = computed(() => LiStore.liPermitsRemote);
+const permitsCurrentPage = ref(1);
+const permitsPerPage = ref(5);
+const remotePermitRows = ref([]);
+const loadRemotePermitsPage = async () => {
+  remotePermitRows.value = await LiStore.permitsUiPage(permitsCurrentPage.value, permitsPerPage.value);
+};
+const { searchTerm: permitsSearchTerm, searchEnabled: permitsSearchThreshold, filterRows: filterPermitRows } = useTableSearch({
+  fields: [ 'permitnumber', 'permitdescription', 'status' ],
+  onSearch: async (term) => {
+    if (!permitsRemote.value) return;
+    await LiStore.setPermitsSearch(term);
+    permitsCurrentPage.value = 1;
+    loadRemotePermitsPage();
+  },
+});
+watch(() => [ LiStore.liPermitsRemote, LiStore.liPermitsBaseSql ], () => {
+  // a new address means a fresh table: clear any leftover search
+  if (permitsSearchTerm.value) {
+    permitsSearchTerm.value = '';
+  }
+  if (LiStore.liPermitsRemote) {
+    permitsCurrentPage.value = 1;
+    loadRemotePermitsPage();
+  }
+}, { immediate: true });
+const onPermitsPageChange = (params) => {
+  if (!permitsRemote.value) return;
+  permitsCurrentPage.value = params.currentPage;
+  if (params.currentPerPage) {
+    permitsPerPage.value = params.currentPerPage;
+  }
+  loadRemotePermitsPage();
+};
+const onPermitsPerPageChange = (params) => {
+  if (!permitsRemote.value) return;
+  permitsPerPage.value = params.currentPerPage;
+  permitsCurrentPage.value = 1;
+  loadRemotePermitsPage();
+};
+const onPermitsSortChange = async (params) => {
+  if (!permitsRemote.value) return;
+  await LiStore.setPermitsSort(params[0].field, params[0].type);
+  permitsCurrentPage.value = 1;
+  loadRemotePermitsPage();
+};
+
+const permits = computed(() => {
+  if (permitsRemote.value) {
+    return remotePermitRows.value;
+  }
+  const rows = LiStore.liPermits.rows ? [ ...LiStore.liPermits.rows ].sort(permitsCompareFn) : null;
+  return filterPermitRows(rows);
+});
+const permitsLength = computed(() => {
+  if (permitsRemote.value) {
+    return LiStore.liPermitsTotal || 0;
+  }
+  return permits.value && permits.value.length ? permits.value.length : 0;
+});
+// the bar's visibility keys off the unfiltered total so it doesn't vanish mid-search
+const permitsSearchEnabled = computed(() => {
+  const unfilteredTotal = permitsRemote.value
+    ? (LiStore.liPermitsGrandTotal || 0)
+    : (LiStore.liPermits.rows ? LiStore.liPermits.rows.length : 0);
+  return permitsSearchThreshold(unfilteredTotal);
+});
 
 // ZONING DOCS
 const liZoningDocsCompareFn = (a, b) => new Date(b.scan_date || a.issue_date) - new Date(a.scan_date || a.issue_date);
@@ -497,17 +566,29 @@ const liAppealsTableData = computed(() => {
         />
         <span v-else>({{ permitsLength }})</span>
       </h2>
+      <TextFilter
+        v-if="permitsSearchEnabled"
+        v-model="permitsSearchTerm"
+        class="permits-filter"
+        :search-label="'Search Permits'"
+        :placeholder="'Search Permits'"
+      />
       <div
         v-if="permitsTableData.rows"
         class="horizontal-table"
       >
         <vue-good-table
           id="permits"
+          :mode="permitsRemote ? 'remote' : ''"
           :columns="permitsTableData.columns"
           :rows="permitsTableData.rows"
-          :pagination-options="paginationOptions(permitsTableData.rows.length)"
+          :total-rows="permitsRemote ? permitsLength : undefined"
+          :pagination-options="paginationOptions(permitsRemote ? permitsLength : permitsTableData.rows.length)"
           style-class="table"
-        >
+          @page-change="onPermitsPageChange"
+          @per-page-change="onPermitsPerPageChange"
+          @sort-change="onPermitsSortChange"
+>
           <template #emptystate>
             <div v-if="LiStore.loadingLiPermits">
               Loading permits... <font-awesome-icon
@@ -796,6 +877,12 @@ const liAppealsTableData = computed(() => {
 
 .summary {
   font-weight: bold;
+}
+
+.permits-filter {
+  /* TextFilter's root is a bulma .columns, whose own -0.75rem top margin must be overcome */
+  margin-top: 0.5rem !important;
+  margin-left: -4px !important;
 }
 
 .li-building-select {
