@@ -6,16 +6,14 @@ export const API_SOURCES = {
   // OpaStore
   opaData: 'databridge',
 
-  // LiStore - migrated
-  buildingCertSummary: 'carto',
-  buildingCerts: 'carto',
-  violations: 'carto',
-  appeals: 'carto',
-
-  // LiStore - migrated
-  permits: 'carto',
-  inspections: 'carto',
-  businessLicenses: 'carto',
+  // LiStore - the databridge branches send the same SQL as carto through the lambda
+  buildingCertSummary: 'databridge',
+  buildingCerts: 'databridge',
+  violations: 'databridge',
+  appeals: 'databridge',
+  permits: 'databridge',
+  inspections: 'databridge',
+  businessLicenses: 'databridge',
   // uses building_footprints_3857, which carries the NAD83->WGS84 shift and aligns
   // with the Esri basemap (~0.15m; the plain tables sit ~0.9m off)
   liBuildingFootprints: 'databridge',

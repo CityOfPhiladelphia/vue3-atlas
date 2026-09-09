@@ -6,6 +6,35 @@ export const DATABRIDGE_URL = 'https://haydr3k097.execute-api.us-east-1.amazonaw
 // FeatureCollection matching the ArcGIS response shape: the envelope is data.features[].properties
 // with the geometry as a geom property (select ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom),
 // feature.id stamped from objectid, single-poly MultiPolygons unwrapped
+// databridge (carto v3) returns timestamps without a timezone; old carto returned the same
+// instants as UTC with a trailing Z, which the tables' date parsing expects. A naive
+// timestamp is local time, so Date() then toISOString() reproduces the old carto value.
+const NAIVE_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
+function normalizeTimestamps(properties) {
+  for (const key of Object.keys(properties)) {
+    const value = properties[key];
+    if (typeof value === 'string' && NAIVE_TIMESTAMP.test(value)) {
+      properties[key] = new Date(value).toISOString().replace('.000Z', 'Z');
+    }
+  }
+  return properties;
+}
+
+// fetches from databridge-api and flattens the envelope to the Carto rows shape:
+// { rows: [...] } - for attribute queries with no geometry
+export async function fetchDatabridgeRows(sql) {
+  const params = { sql };
+  // the proxy identifies callers by origin, which localhost is not registered as
+  if (import.meta.env.VITE_DEBUG == 'true') {
+    params.client_id = import.meta.env.VITE_AIS_CLIENTID_ATLAS;
+  }
+  const response = await axios(DATABRIDGE_URL, { params });
+  if (response.status !== 200 || !response.data.data || !response.data.data.features) {
+    return null;
+  }
+  return { rows: response.data.data.features.map((f) => normalizeTimestamps(f.properties)) };
+}
+
 export async function fetchDatabridgeGeoJSON(sql) {
   const params = { sql };
   // the proxy identifies callers by origin, which localhost is not registered as

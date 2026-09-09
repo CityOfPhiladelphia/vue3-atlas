@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { useGeocodeStore } from '@/stores/GeocodeStore.js'
 import { API_SOURCES } from '@/config/apiSources.js';
-import { fetchDatabridgeGeoJSON } from '@/util/databridge.js';
+import { fetchDatabridgeGeoJSON, fetchDatabridgeRows } from '@/util/databridge.js';
 
 import useTransforms from '@/composables/useTransforms';
 const { date } = useTransforms();
@@ -195,8 +195,17 @@ export const useLiStore = defineStore('LiStore', {
         } else {
           bin = '';
         }
-        const url = baseUrl += `SELECT * FROM building_cert_summary WHERE structure_id IN ('${bin}')`;
-        const response = await fetch(url);
+        const sql = `SELECT * FROM building_cert_summary WHERE structure_id IN ('${bin}')`;
+        if (API_SOURCES.buildingCertSummary === 'databridge') {
+          const data = await fetchDatabridgeRows(sql);
+          if (data) {
+            this.liBuildingCertSummary = data;
+          } else {
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('liBuildingCertSummary - databridge query did not return rows')
+          }
+          return;
+        }
+        const response = await fetch(baseUrl + sql);
         if (response.ok) {
           this.liBuildingCertSummary = await response.json()
         } else {
@@ -262,16 +271,27 @@ export const useLiStore = defineStore('LiStore', {
         } else {
           bin = '';
         }
-        const url = baseUrl += `SELECT * FROM building_certs WHERE bin IN ('${bin}')`;
-        const response = await fetch(url);
-        if (response.ok) {
-          let data = await response.json();
+        const sql = `SELECT * FROM building_certs WHERE bin IN ('${bin}')`;
+        let data;
+        if (API_SOURCES.buildingCerts === 'databridge') {
+          data = await fetchDatabridgeRows(sql);
+          if (!data) {
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('liBuildingCerts - databridge query did not return rows')
+            return;
+          }
+        } else {
+          const response = await fetch(baseUrl + sql);
+          if (!response.ok) {
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('liBuildingCerts - await resolved but HTTP status was not successful')
+            return;
+          }
+          data = await response.json();
+        }
+        {
           data.rows.forEach((item) => {
             item.link = `<a target='_blank' href='https://li.phila.gov/property-history/search/building-certification-detail?address="${encodeURIComponent(item.address)}"&Id=${item.bin}'>${item.buildingcerttype} <i class='fa fa-external-link'></i></a>`;
           })
           this.liBuildingCerts = data;
-        } else {
-          if (import.meta.env.VITE_DEBUG == 'true') console.warn('liBuildingCerts - await resolved but HTTP status was not successful')
         }
       } catch {
         if (import.meta.env.VITE_DEBUG == 'true') console.error('liBuildingCerts - await never resolved, failed to fetch address data')
@@ -355,23 +375,35 @@ export const useLiStore = defineStore('LiStore', {
         const pwd_parcel_id = feature.properties.pwd_parcel_id;
         const addressId = feature.properties.li_address_key.replace(/\|/g, "', '");
 
-        const url = baseUrl += `SELECT * FROM PERMITS WHERE address = '${ streetaddress }' or addressobjectid IN ('${ addressId }') \
+        const sql = `SELECT * FROM PERMITS WHERE address = '${ streetaddress }' or addressobjectid IN ('${ addressId }') \
         AND systemofrecord IN ('HANSEN') ${ opaQuery } \
         UNION SELECT * FROM PERMITS WHERE addressobjectid IN ('${ eclipse_location_id }') OR parcel_id_num IN ( '${ pwd_parcel_id }' ) \
         AND systemofrecord IN ('ECLIPSE')${ opaQuery }\
         ORDER BY permittype`;
 
-        const response = await fetch(url);
-        if (response.ok) {
-          const data = await response.json();
+        let data;
+        if (API_SOURCES.permits === 'databridge') {
+          data = await fetchDatabridgeRows(sql);
+          if (!data) {
+            this.loadingLiPermits = false;
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('permits - databridge query did not return rows')
+            return;
+          }
+        } else {
+          const response = await fetch(baseUrl + sql);
+          if (!response.ok) {
+            this.loadingLiPermits = false;
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('permits - await resolved but HTTP status was not successful')
+            return;
+          }
+          data = await response.json();
+        }
+        {
           data.rows.forEach((permit) => {
             permit.link = `<a target='_blank' href='https://li.phila.gov/Property-History/search/Permit-Detail?address="${encodeURIComponent(permit.address)}"&Id=${permit.permitnumber}'>${permit.permitnumber} <i class='fa fa-external-link'></i></a>`;
           });
           this.liPermits = data;
           this.loadingLiPermits = false;
-        } else {
-          this.loadingLiPermits = false;
-          if (import.meta.env.VITE_DEBUG == 'true') console.warn('permits - await resolved but HTTP status was not successful')
         }
       } catch {
         this.loadingLiPermits = false;
@@ -569,14 +601,29 @@ export const useLiStore = defineStore('LiStore', {
         const pwd_parcel_id = feature.properties.pwd_parcel_id;
         const addressId = feature.properties.li_address_key.replace(/\|/g, "', '");
 
-        const url = baseUrl += `SELECT * FROM case_investigations WHERE (address = '${ streetaddress }' or addressobjectid IN ('${ addressId }')) \
+        const sql = `SELECT * FROM case_investigations WHERE (address = '${ streetaddress }' or addressobjectid IN ('${ addressId }')) \
             AND systemofrecord IN ('HANSEN') ${ opaQuery } UNION SELECT * FROM case_investigations WHERE \
             addressobjectid IN ('${ eclipse_location_id }') OR parcel_id_num IN ( '${ pwd_parcel_id }' ) \
             AND systemofrecord IN ('ECLIPSE') ${ opaQuery }`;
 
-        const response = await fetch(url);
-        if (response.ok) {
-          const data = await response.json();
+        let data;
+        if (API_SOURCES.inspections === 'databridge') {
+          data = await fetchDatabridgeRows(sql);
+          if (!data) {
+            this.loadingLiInspections = false;
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('liInspections - databridge query did not return rows')
+            return;
+          }
+        } else {
+          const response = await fetch(baseUrl + sql);
+          if (!response.ok) {
+            this.loadingLiInspections = false;
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('liInspections - await resolved but HTTP status was not successful')
+            return;
+          }
+          data = await response.json();
+        }
+        {
           data.rows.forEach((item) => {
             let address = item.address;
             if (item.unit_num && item.unit_num != null) {
@@ -596,9 +643,6 @@ export const useLiStore = defineStore('LiStore', {
           });
           this.liInspections = data;
           this.loadingLiInspections = false;
-        } else {
-          this.loadingLiInspections = false;
-          if (import.meta.env.VITE_DEBUG == 'true') console.warn('liInspections - await resolved but HTTP status was not successful')
         }
       } catch {
         this.loadingLiInspections = false;
@@ -678,7 +722,7 @@ export const useLiStore = defineStore('LiStore', {
         const pwd_parcel_id = feature.properties.pwd_parcel_id;
         const addressId = feature.properties.li_address_key.replace(/\|/g, "', '");
 
-        const url = baseUrl += `SELECT * FROM VIOLATIONS WHERE ( address = '${ streetaddress }' \
+        const sql = `SELECT * FROM VIOLATIONS WHERE ( address = '${ streetaddress }' \
           OR addressobjectid IN ('${ addressId }') \
           OR parcel_id_num IN ( '${ pwd_parcel_id }' ) ) \
           ${ opaQuery } \
@@ -689,9 +733,24 @@ export const useLiStore = defineStore('LiStore', {
           AND systemofrecord IN ('ECLIPSE') \
           ORDER BY casenumber DESC`;
 
-        const response = await fetch(url);
-        if (response.ok) {
-          const data = await response.json();
+        let data;
+        if (API_SOURCES.violations === 'databridge') {
+          data = await fetchDatabridgeRows(sql);
+          if (!data) {
+            this.loadingLiViolations = false;
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('liViolations - databridge query did not return rows')
+            return;
+          }
+        } else {
+          const response = await fetch(baseUrl + sql);
+          if (!response.ok) {
+            this.loadingLiViolations = false;
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('liViolations - await resolved but HTTP status was not successful')
+            return;
+          }
+          data = await response.json();
+        }
+        {
           data.rows.forEach((item) => {
             let address = item.address;
             if (item.unit_num && item.unit_num != null) {
@@ -707,9 +766,6 @@ export const useLiStore = defineStore('LiStore', {
           });
           this.liViolations = data;
           this.loadingLiViolations = false;
-        } else {
-          this.loadingLiViolations = false;
-          if (import.meta.env.VITE_DEBUG == 'true') console.warn('liViolations - await resolved but HTTP status was not successful')
         }
       } catch {
         this.loadingLiViolations = false;
@@ -814,10 +870,24 @@ export const useLiStore = defineStore('LiStore', {
           ${opaQuery } \
           ORDER BY licensetype`;
         }
-        const url = baseUrl += query;
-        const response = await fetch(url);
-        if (response.ok) {
-          const data = await response.json();
+        let data;
+        if (API_SOURCES.businessLicenses === 'databridge') {
+          data = await fetchDatabridgeRows(query);
+          if (!data) {
+            this.loadingLiBusinessLicenses = false;
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('liBusinessLicenses - databridge query did not return rows')
+            return;
+          }
+        } else {
+          const response = await fetch(baseUrl + query);
+          if (!response.ok) {
+            this.loadingLiBusinessLicenses = false;
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('liBusinessLicenses - await resolved but HTTP status was not successful')
+            return;
+          }
+          data = await response.json();
+        }
+        {
           data.rows.forEach((item) => {
             let address = item.address;
             if (item.unit_num && item.unit_num != null) {
@@ -827,9 +897,6 @@ export const useLiStore = defineStore('LiStore', {
           });
           this.liBusinessLicenses = data;
           this.loadingLiBusinessLicenses = false;
-        } else {
-          this.loadingLiBusinessLicenses = false;
-          if (import.meta.env.VITE_DEBUG == 'true') console.warn('liBusinessLicenses - await resolved but HTTP status was not successful')
         }
       } catch {
         this.loadingLiBusinessLicenses = false;
@@ -944,13 +1011,28 @@ export const useLiStore = defineStore('LiStore', {
 
         let query = `SELECT * FROM APPEALS WHERE ${conditions.join(' OR ')} ORDER BY appealtype`;
 
-        const url = baseUrl += query;
-        console.log('fillLiAppealsCarto fetching url:', url);
-        const response = await fetch(url);
-        console.log('fillLiAppealsCarto response.ok:', response.ok);
-        if (response.ok) {
-          const data = await response.json();
+        let data;
+        if (API_SOURCES.appeals === 'databridge') {
+          data = await fetchDatabridgeRows(query);
+          if (!data) {
+            this.loadingLiAppeals = false;
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('liAppeals - databridge query did not return rows')
+            return;
+          }
+        } else {
+          const url = baseUrl += query;
+          console.log('fillLiAppealsCarto fetching url:', url);
+          const response = await fetch(url);
+          console.log('fillLiAppealsCarto response.ok:', response.ok);
+          if (!response.ok) {
+            this.loadingLiAppeals = false;
+            console.warn('liAppeals - await resolved but HTTP status was not successful')
+            return;
+          }
+          data = await response.json();
           console.log('fillLiAppealsCarto data.rows.length:', data.rows?.length);
+        }
+        {
           data.rows.forEach((item) => {
             let address = item.address;
             if (item.unit_num && item.unit_num != null) {
@@ -962,9 +1044,6 @@ export const useLiStore = defineStore('LiStore', {
           console.log('fillLiAppealsCarto forEach completed, setting liAppeals');
           this.liAppeals = data;
           this.loadingLiAppeals = false;
-        } else {
-          this.loadingLiAppeals = false;
-          console.warn('liAppeals - await resolved but HTTP status was not successful')
         }
       } catch (err) {
         this.loadingLiAppeals = false;
