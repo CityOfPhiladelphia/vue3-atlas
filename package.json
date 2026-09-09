@@ -45,7 +45,7 @@
     "@turf/midpoint": "^7.0.0",
     "@turf/nearest-point": "^7.0.0",
     "accounting": "^0.4.1",
-    "axios": "^1.6.8",
+    "axios": "^1.18.0",
     "date-fns": "^3.6.0",
     "date-fns-tz": "^3.2.0",
     "maplibre-gl": "^4.1.3",
