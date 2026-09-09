@@ -143,13 +143,13 @@ const permitsLength = computed(() => {
   }
   return permits.value && permits.value.length ? permits.value.length : 0;
 });
-// the bar's visibility keys off the unfiltered total so it doesn't vanish mid-search
-const permitsSearchEnabled = computed(() => {
-  const unfilteredTotal = permitsRemote.value
-    ? (LiStore.liPermitsGrandTotal || 0)
-    : (LiStore.liPermits.rows ? LiStore.liPermits.rows.length : 0);
-  return permitsSearchThreshold(unfilteredTotal);
-});
+// the search bar and the pagination row both key off the unfiltered total: vue-good-table
+// only renders the pagination-top slot (which holds the search input) while paging is
+// enabled, so a search that narrows to a handful of rows must not switch it off
+const permitsUnfilteredTotal = computed(() => permitsRemote.value
+  ? (LiStore.liPermitsGrandTotal || 0)
+  : (LiStore.liPermits.rows ? LiStore.liPermits.rows.length : 0));
+const permitsSearchEnabled = computed(() => permitsSearchThreshold(permitsUnfilteredTotal.value));
 
 // ZONING DOCS
 const liZoningDocsCompareFn = (a, b) => new Date(b.scan_date || a.issue_date) - new Date(a.scan_date || a.issue_date);
@@ -575,7 +575,7 @@ const liAppealsTableData = computed(() => {
           :columns="permitsTableData.columns"
           :rows="permitsTableData.rows"
           :total-rows="permitsRemote ? permitsLength : undefined"
-          :pagination-options="paginationOptions(permitsRemote ? permitsLength : permitsTableData.rows.length)"
+          :pagination-options="paginationOptions(permitsUnfilteredTotal)"
           style-class="table"
           @page-change="onPermitsPageChange"
           @per-page-change="onPermitsPerPageChange"
@@ -594,14 +594,30 @@ const liAppealsTableData = computed(() => {
           </template>
           <template #pagination-top="props">
             <div class="pagination-with-search">
-              <input
+              <div
                 v-if="permitsSearchEnabled"
-                v-model="permitsSearchTerm"
-                type="text"
-                class="pagination-search-input"
-                placeholder="Search Permits"
-                aria-label="Search Permits"
+                class="pagination-search-wrap"
               >
+                <input
+                  v-model="permitsSearchTerm"
+                  type="text"
+                  class="pagination-search-input"
+                  placeholder="Search Permits"
+                  aria-label="Search Permits"
+                >
+                <button
+                  v-if="permitsSearchTerm"
+                  type="button"
+                  class="pagination-search-clear"
+                  aria-label="Clear search"
+                  @click="permitsSearchTerm = ''"
+                >
+                  <font-awesome-icon
+                    :icon="['fas', 'times']"
+                    size="lg"
+                  />
+                </button>
+              </div>
               <custom-pagination-labels
                 :mode="'pages'"
                 :total="props.total"
@@ -885,16 +901,35 @@ const liAppealsTableData = computed(() => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  /* matches the .vgt-wrap__footer side padding so the input sits in from the table edge like the page controls do */
+  padding-left: .4rem;
 }
 
-.pagination-search-input {
+.pagination-search-wrap {
+  position: relative;
   flex: 1 1 220px;
   max-width: 340px;
   min-width: 180px;
-  padding: 4px 8px;
+}
+
+.pagination-search-input {
+  width: 100%;
+  padding: 4px 28px 4px 8px;
   border: 1px solid #cccccc;
   border-radius: 2px;
   font-size: 14px;
+}
+
+.pagination-search-clear {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  color: #666666;
 }
 
 /* the pagination labels keep enough width that their controls never wrap */
