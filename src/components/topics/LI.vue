@@ -3,7 +3,6 @@ import { computed, ref, watch, onMounted } from 'vue';
 import { polygon, featureCollection } from '@turf/helpers';
 
 import CustomPaginationLabels from '@/components/pagination/CustomPaginationLabels.vue';
-import TextFilter from '@/components/TextFilter.vue';
 import useTables from '@/composables/useTables';
 import useTableSearch from '@/composables/useTableSearch';
 const { paginationOptions } = useTables();
@@ -129,6 +128,11 @@ const onPermitsSortChange = async (params) => {
   await LiStore.setPermitsSort(params[0].field, params[0].type);
   permitsCurrentPage.value = 1;
   loadRemotePermitsPage();
+};
+// vue-good-table's built-in search box: in remote mode it emits 'search', which feeds
+// the same debounced server-search path; in local mode vgt filters the rows itself
+const onPermitsVgtSearch = (params) => {
+  permitsSearchTerm.value = params.searchTerm;
 };
 
 const permits = computed(() => {
@@ -566,13 +570,6 @@ const liAppealsTableData = computed(() => {
         />
         <span v-else>({{ permitsLength }})</span>
       </h2>
-      <TextFilter
-        v-if="permitsSearchEnabled"
-        v-model="permitsSearchTerm"
-        class="permits-filter"
-        :search-label="'Search Permits'"
-        :placeholder="'Search Permits'"
-      />
       <div
         v-if="permitsTableData.rows"
         class="horizontal-table"
@@ -584,10 +581,12 @@ const liAppealsTableData = computed(() => {
           :rows="permitsTableData.rows"
           :total-rows="permitsRemote ? permitsLength : undefined"
           :pagination-options="paginationOptions(permitsRemote ? permitsLength : permitsTableData.rows.length)"
+          :search-options="{ enabled: permitsSearchEnabled, placeholder: 'Search Permits' }"
           style-class="table"
           @page-change="onPermitsPageChange"
           @per-page-change="onPermitsPerPageChange"
           @sort-change="onPermitsSortChange"
+          @search="onPermitsVgtSearch"
 >
           <template #emptystate>
             <div v-if="LiStore.loadingLiPermits">
