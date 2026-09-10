@@ -24,8 +24,6 @@ const MapStore = useMapStore();
 import CollectionSummary from '@/components/CollectionSummary.vue';
 import VerticalTable from '@/components/VerticalTable.vue';
 
-import TextFilter from '@/components/TextFilter.vue';
-const textSearch = ref('');
 
 let selectedParcelId = computed(() => { return MainStore.selectedParcelId });
 const selectedParcel = computed(() => {
@@ -35,29 +33,52 @@ const selectedParcel = computed(() => {
     return null;
   }
 });
+const selectedDocEntry = computed(() => {
+  return selectedParcelId.value ? DorStore.dorDocuments[selectedParcelId.value] : null;
+});
+const docsRemote = computed(() => !!(selectedDocEntry.value && selectedDocEntry.value.remote));
+let docsUi;
+const { searchTerm: docsSearchTerm, searchEnabled: docsSearchThreshold, filterRows: filterDocRows } = useTableSearch({
+  fields: [ 'grantors', 'grantees', 'unit_num' ],
+  // the documents table has always offered search regardless of size - keep that
+  minRows: 0,
+  onSearch: async (term) => {
+    if (!docsRemote.value) return;
+    await DorStore.setDocsSearch(selectedParcelId.value, term);
+    docsUi.currentPage.value = 1;
+    docsUi.load();
+  },
+});
+docsUi = useRemoteTableUi({
+  isRemote: () => docsRemote.value,
+  resetKey: () => `${selectedParcelId.value}|${selectedDocEntry.value ? selectedDocEntry.value.baseSql : ''}`,
+  fetchUiPage: (page, perPage) => DorStore.docsUiPage(selectedParcelId.value, page, perPage),
+  setSort: (field, type) => DorStore.setDocsSort(selectedParcelId.value, field, type),
+  onReset: () => { if (docsSearchTerm.value) docsSearchTerm.value = ''; },
+});
+
 const selectedDocs = computed(() => {
-  if (selectedParcelId.value && DorStore.dorDocuments[selectedParcelId.value]) {
-    // if (import.meta.env.VITE_DEBUG == 'true') console.log('selectedParcelId.value:', selectedParcelId.value);
-    let data = [];
-    for (let feature of DorStore.dorDocuments[selectedParcelId.value].features) {
-      if (feature.attributes.grantors != null && feature.attributes.grantors.toLowerCase().includes(textSearch.value.toLowerCase())
-        || feature.attributes.grantees != null && feature.attributes.grantees.toLowerCase().includes(textSearch.value.toLowerCase())
-        || feature.attributes.unit_num != null && feature.attributes.unit_num.toLowerCase().includes(textSearch.value.toLowerCase())
-      ){
-        data.push({
-          ...feature.attributes,
-        });
-      }
-    }
+  if (docsRemote.value) {
+    return docsUi.rows.value;
+  }
+  if (selectedDocEntry.value && selectedDocEntry.value.features) {
+    let data = selectedDocEntry.value.features.map((feature) => ({ ...feature.attributes }));
     data.sort((a, b) => new Date(b.display_date) - new Date(a.display_date));
-    return data;
+    return filterDocRows(data);
   } else {
     return null;
   }
 });
 const selectedDocsLength = computed(() => {
+  if (docsRemote.value) {
+    return selectedDocEntry.value.total || 0;
+  }
   return selectedDocs.value ? selectedDocs.value.length : 0;
 });
+const docsUnfilteredTotal = computed(() => docsRemote.value
+  ? (selectedDocEntry.value.grandTotal || 0)
+  : (selectedDocEntry.value && selectedDocEntry.value.features ? selectedDocEntry.value.features.length : 0));
+const docsSearchEnabled = computed(() => docsSearchThreshold(docsUnfilteredTotal.value));
 
 const selectedCondoEntry = computed(() => {
   return selectedParcelId.value ? DorStore.dorCondos[selectedParcelId.value] : null;
@@ -336,20 +357,19 @@ const dorDocsTableData = computed(() => {
             spin
           /><span v-else>({{ selectedDocsLength }})</span>
         </h2>
-        <TextFilter
-          v-model="textSearch"
-          class="dor-docs-filter"
-          :search-label="'Search Documents'"
-          :placeholder="'Search Documents'"
-        />
         <div class="horizontal-table">
           <vue-good-table
             id="dor-documents"
+            :mode="docsRemote ? 'remote' : ''"
             :columns="dorDocsTableData.columns"
             :rows="dorDocsTableData.rows"
+            :total-rows="docsRemote ? selectedDocsLength : undefined"
             style-class="table"
-            :pagination-options="paginationOptions(dorDocsTableData.rows.length)"
-          >
+            :pagination-options="paginationOptions(docsUnfilteredTotal)"
+            @page-change="docsUi.onPageChange"
+            @per-page-change="docsUi.onPerPageChange"
+            @sort-change="docsUi.onSortChange"
+>
             <template #emptystate>
               <div v-if="DorStore.loadingDorData">
                 Loading DOR Documents... <font-awesome-icon
@@ -362,10 +382,11 @@ const dorDocsTableData = computed(() => {
               </div>
             </template>
             <template #pagination-top="props">
-              <custom-pagination-labels
-                :mode="'pages'"
+              <pagination-with-search
+                v-model="docsSearchTerm"
+                :search-enabled="docsSearchEnabled"
+                placeholder="Search Documents"
                 :total="props.total"
-                :per-page="5"
                 @page-changed="props.pageChanged"
                 @per-page-changed="props.perPageChanged"
               />
@@ -406,10 +427,6 @@ const dorDocsTableData = computed(() => {
 </template>
 
 <style>
-
-.dor-docs-filter {
-  margin-left: -4px !important;
-}
 
 .dor-parcel-select {
   color: #444444;

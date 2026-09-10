@@ -22,7 +22,8 @@ export const API_SOURCES = {
   // DorStore
   // dorCondos regimes over the databridge row cap (Naval Square) page server-side
   dorCondos: 'databridge',
-  dorDocuments: 'carto',
+  // regmaps over the databridge row cap (worst: 5,346 docs) page server-side
+  dorDocuments: 'databridge',
   regmaps: 'databridge',
 
   // NearbyActivityStore

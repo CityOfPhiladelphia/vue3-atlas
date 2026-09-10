@@ -17,6 +17,18 @@ const CONDOS_SORT_COLUMNS = {
 };
 const CONDOS_SEARCH_COLUMNS = [ 'recmap', 'condoparcel', 'condo_name', 'condounit' ];
 
+// vue-good-table column field -> SQL column for server-side sorting of deeds documents
+const DOCS_SORT_COLUMNS = {
+  link: 'document_id',
+  date: 'display_date',
+  document_type: 'document_type',
+  grantors: 'grantors',
+  grantees: 'grantees',
+  unit_num: 'unit_num',
+};
+const DOCS_SEARCH_COLUMNS = [ 'grantors', 'grantees', 'unit_num' ];
+const DOCS_BASE_COLS = 'document_id, display_date, document_type, grantors, grantees, unit_num';
+
 import bboxPolygon from '@turf/bbox-polygon';
 import axios from 'axios';
 
@@ -223,6 +235,63 @@ export const useDorStore = defineStore("DorStore", {
       entry.sort = { field: field, type: type };
       entry.pages = {};
       await this.fetchCondosServerPage(parcelId, 0);
+    },
+    _decorateDocRows(rows) {
+      rows.forEach((doc) => {
+        doc.date = date(doc.display_date);
+        doc.link = `<a target='_blank' href='https://epayss.phila-records.com/web/web/integration/document?DocumentNumberId=${doc.document_id}'>${doc.document_id}<i class='fa fa-external-link'></i></a>`;
+      });
+    },
+    async fetchDocsServerPage(parcelId, pageIndex) {
+      const entry = this.dorDocuments[parcelId];
+      if (!entry || !entry.remote || entry.pages[pageIndex]) {
+        return;
+      }
+      const where = buildSearchWhere(entry.search, DOCS_SEARCH_COLUMNS);
+      const orderBy = buildOrderBy(entry.sort, DOCS_SORT_COLUMNS, 'display_date');
+      const data = await fetchRowsWithFallback('dorDocuments', buildPageSql(entry.baseSql, where, orderBy, REMOTE_SERVER_PAGE, pageIndex));
+      if (data && data.rows) {
+        this._decorateDocRows(data.rows);
+        entry.pages[pageIndex] = data.rows;
+      }
+    },
+    async docsUiPage(parcelId, uiPage, perPage) {
+      const entry = this.dorDocuments[parcelId];
+      if (!entry || !entry.remote) {
+        return [];
+      }
+      const firstRow = (uiPage - 1) * perPage;
+      const serverPage = Math.floor(firstRow / REMOTE_SERVER_PAGE);
+      await this.fetchDocsServerPage(parcelId, serverPage);
+      if ((serverPage + 1) * REMOTE_SERVER_PAGE < entry.total) {
+        this.fetchDocsServerPage(parcelId, serverPage + 1);
+      }
+      const pageRows = entry.pages[serverPage] || [];
+      const start = firstRow - serverPage * REMOTE_SERVER_PAGE;
+      return pageRows.slice(start, start + perPage);
+    },
+    async setDocsSearch(parcelId, term) {
+      const entry = this.dorDocuments[parcelId];
+      if (!entry || !entry.remote) {
+        return;
+      }
+      entry.search = term || '';
+      entry.pages = {};
+      const where = buildSearchWhere(entry.search, DOCS_SEARCH_COLUMNS);
+      const countData = await fetchRowsWithFallback('dorDocuments', buildCountSql(entry.baseSql, where));
+      if (countData && countData.rows && countData.rows.length) {
+        entry.total = Number(countData.rows[0].n);
+      }
+      await this.fetchDocsServerPage(parcelId, 0);
+    },
+    async setDocsSort(parcelId, field, type) {
+      const entry = this.dorDocuments[parcelId];
+      if (!entry || !entry.remote) {
+        return;
+      }
+      entry.sort = { field: field, type: type };
+      entry.pages = {};
+      await this.fetchDocsServerPage(parcelId, 0);
     },
     async _fillDorCondosArcGIS() {
       return new Promise((resolve) => {
@@ -505,6 +574,38 @@ export const useDorStore = defineStore("DorStore", {
             try {
               // if (import.meta.env.VITE_DEBUG == 'true') console.log('in loop in try, feature:', feature);
               let theWhere = where(feature);
+
+              if (API_SOURCES.dorDocuments === 'databridge') {
+                const baseSql = `select distinct ${DOCS_BASE_COLS} from rtt_summary where ${theWhere}`;
+                const countData = await fetchRowsWithFallback('dorDocuments', buildCountSql(baseSql, ''));
+                const total = countData && countData.rows && countData.rows.length ? Number(countData.rows[0].n) : null;
+
+                if (total !== null && total > REMOTE_THRESHOLD) {
+                  this.dorDocuments[feature.properties.objectid] = {
+                    remote: true,
+                    baseSql: baseSql,
+                    total: total,
+                    grandTotal: total,
+                    pages: {},
+                    search: '',
+                    sort: null,
+                    features: [],
+                  };
+                  await this.fetchDocsServerPage(feature.properties.objectid, 0);
+                  continue;
+                }
+
+                const data = await fetchRowsWithFallback('dorDocuments', baseSql);
+                if (data && data.rows) {
+                  this._decorateDocRows(data.rows);
+                  this.dorDocuments[feature.properties.objectid] = {
+                    features: data.rows.map((row) => ({ attributes: row })),
+                  };
+                } else {
+                  if (import.meta.env.VITE_DEBUG == 'true') console.warn('dorDocs - query did not return rows')
+                }
+                continue;
+              }
 
               let response;
               if (API_SOURCES.dorDocuments === 'arcgis') {
