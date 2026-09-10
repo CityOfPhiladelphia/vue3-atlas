@@ -20,7 +20,7 @@ export const API_SOURCES = {
   // the two zoning-documents queries (ais_zoning_documents, li_zoning_docs)
   aisZoningDocs: 'databridge',
   eclipseZoningDocs: 'databridge',
-  // Note: zoningAppeals not migrated - no ArcGIS service available
+  // (zoningAppeals lives in the ZoningStore section below)
 
   // DorStore
   // dorCondos regimes over the databridge row cap (Naval Square) page server-side
@@ -42,6 +42,13 @@ export const API_SOURCES = {
 
   // ZoningStore
   rcos: 'databridge',
+  // the base/overlays/proposed queries carry per-transport sql (phl. schema + the_geom
+  // on carto vs unqualified + shape on databridge), built in the store
+  zoningBase: 'databridge',
+  zoningOverlays: 'databridge',
+  // proposedzoning_imp_public is NOT in databridge (404 as of 2026-09-10) - flip when it lands
+  proposedZoning: 'carto',
+  zoningAppeals: 'databridge',
 
   // VotingStore (these replaced the old VITE_VOTING_DATA_SOURCE env switch; Voting.vue
   // and Map.vue also read these flags to pick the rows-vs-features response shape)
