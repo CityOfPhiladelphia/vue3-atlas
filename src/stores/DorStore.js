@@ -2,11 +2,20 @@ import { defineStore } from 'pinia';
 import { useParcelsStore } from './ParcelsStore';
 import { useGeocodeStore } from './GeocodeStore';
 import { API_SOURCES } from '@/config/apiSources.js';
-import { fetchDatabridgeGeoJSON } from '@/util/databridge.js';
+import { fetchDatabridgeGeoJSON, fetchRowsWithFallback } from '@/util/databridge.js';
+import { buildSearchWhere, buildOrderBy, buildCountSql, buildPageSql, REMOTE_THRESHOLD, REMOTE_SERVER_PAGE } from '@/util/remoteTable.js';
 
 // databridge has no select *: shape must be transformed to 4326 explicitly, so columns are listed
 // RECMAP aliased uppercase because Deeds.vue reads properties.RECMAP (the AGO field's real casing)
 const REGMAPS_DATABRIDGE_COLS = 'recmap as "RECMAP", recsub, scale, objectid';
+
+// vue-good-table column field -> SQL column for server-side sorting of deeded condos
+const CONDOS_SORT_COLUMNS = {
+  condo_parcel: 'condoparcel',
+  condo_name: 'condo_name',
+  unit_number: 'condounit',
+};
+const CONDOS_SEARCH_COLUMNS = [ 'recmap', 'condoparcel', 'condo_name', 'condounit' ];
 
 import bboxPolygon from '@turf/bbox-polygon';
 import axios from 'axios';
@@ -111,7 +120,109 @@ export const useDorStore = defineStore("DorStore", {
       if (API_SOURCES.dorCondos === 'arcgis') {
         return this._fillDorCondosArcGIS();
       }
+      if (API_SOURCES.dorCondos === 'databridge') {
+        return this._fillDorCondosDatabridge();
+      }
       return this._fillDorCondosCarto();
+    },
+    // per parcel: small regimes fetch whole; regimes over the databridge row cap
+    // (Naval Square, 1,003 active units) get a remote entry that pages server-side
+    async _fillDorCondosDatabridge() {
+      this.dorCondos = {};
+      if (import.meta.env.VITE_DEBUG == 'true') console.log('fillDorCondos (databridge) is running');
+      const ParcelsStore = useParcelsStore();
+      const parcels = ParcelsStore.dor.features;
+      if (!parcels) return;
+      for (const feature of parcels) {
+        try {
+          const baseSql = `select * from condominium where mapref = '${ feature.properties.mapreg }' and status in ('1','3')`;
+          const countData = await fetchRowsWithFallback('dorCondos', buildCountSql(baseSql, ''));
+          const total = countData && countData.rows && countData.rows.length ? Number(countData.rows[0].n) : null;
+
+          if (total !== null && total > REMOTE_THRESHOLD) {
+            this.dorCondos[feature.properties.objectid] = {
+              remote: true,
+              baseSql: baseSql,
+              total: total,
+              grandTotal: total,
+              pages: {},
+              search: '',
+              sort: null,
+              rows: [],
+            };
+            await this.fetchCondosServerPage(feature.properties.objectid, 0);
+            continue;
+          }
+
+          const data = await fetchRowsWithFallback('dorCondos', baseSql);
+          if (data) {
+            this._decorateCondoRows(data.rows);
+            this.dorCondos[feature.properties.objectid] = data;
+          } else {
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillDorCondos - query did not return rows');
+          }
+        } catch {
+          if (import.meta.env.VITE_DEBUG == 'true') console.error('fillDorCondos - await never resolved, failed to fetch data');
+        }
+      }
+    },
+    _decorateCondoRows(rows) {
+      for (let row of rows) {
+        row.condo_parcel = row.recmap + '-' + row.condoparcel;
+        row.unit_number = 'Unit #' + row.condounit;
+      }
+    },
+    async fetchCondosServerPage(parcelId, pageIndex) {
+      const entry = this.dorCondos[parcelId];
+      if (!entry || !entry.remote || entry.pages[pageIndex]) {
+        return;
+      }
+      const where = buildSearchWhere(entry.search, CONDOS_SEARCH_COLUMNS);
+      // units read naturally in ascending order, unlike the date-led tables
+      const orderBy = buildOrderBy(entry.sort || { field: 'unit_number', type: 'asc' }, CONDOS_SORT_COLUMNS, 'condounit');
+      const data = await fetchRowsWithFallback('dorCondos', buildPageSql(entry.baseSql, where, orderBy, REMOTE_SERVER_PAGE, pageIndex));
+      if (data && data.rows) {
+        this._decorateCondoRows(data.rows);
+        entry.pages[pageIndex] = data.rows;
+      }
+    },
+    async condosUiPage(parcelId, uiPage, perPage) {
+      const entry = this.dorCondos[parcelId];
+      if (!entry || !entry.remote) {
+        return [];
+      }
+      const firstRow = (uiPage - 1) * perPage;
+      const serverPage = Math.floor(firstRow / REMOTE_SERVER_PAGE);
+      await this.fetchCondosServerPage(parcelId, serverPage);
+      if ((serverPage + 1) * REMOTE_SERVER_PAGE < entry.total) {
+        this.fetchCondosServerPage(parcelId, serverPage + 1);
+      }
+      const pageRows = entry.pages[serverPage] || [];
+      const start = firstRow - serverPage * REMOTE_SERVER_PAGE;
+      return pageRows.slice(start, start + perPage);
+    },
+    async setCondosSearch(parcelId, term) {
+      const entry = this.dorCondos[parcelId];
+      if (!entry || !entry.remote) {
+        return;
+      }
+      entry.search = term || '';
+      entry.pages = {};
+      const where = buildSearchWhere(entry.search, CONDOS_SEARCH_COLUMNS);
+      const countData = await fetchRowsWithFallback('dorCondos', buildCountSql(entry.baseSql, where));
+      if (countData && countData.rows && countData.rows.length) {
+        entry.total = Number(countData.rows[0].n);
+      }
+      await this.fetchCondosServerPage(parcelId, 0);
+    },
+    async setCondosSort(parcelId, field, type) {
+      const entry = this.dorCondos[parcelId];
+      if (!entry || !entry.remote) {
+        return;
+      }
+      entry.sort = { field: field, type: type };
+      entry.pages = {};
+      await this.fetchCondosServerPage(parcelId, 0);
     },
     async _fillDorCondosArcGIS() {
       return new Promise((resolve) => {

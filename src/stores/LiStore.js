@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia';
 import { useGeocodeStore } from '@/stores/GeocodeStore.js'
 import { API_SOURCES } from '@/config/apiSources.js';
-import { fetchDatabridgeGeoJSON, fetchDatabridgeRows } from '@/util/databridge.js';
-import { buildSearchWhere, buildOrderBy, buildCountSql, buildPageSql } from '@/util/remoteTable.js';
+import { fetchDatabridgeGeoJSON, fetchDatabridgeRows, fetchRowsWithFallback } from '@/util/databridge.js';
+import { buildSearchWhere, buildOrderBy, buildCountSql, buildPageSql, REMOTE_THRESHOLD, REMOTE_SERVER_PAGE } from '@/util/remoteTable.js';
 
 import useTransforms from '@/composables/useTransforms';
 const { date } = useTransforms();
@@ -10,11 +10,6 @@ import axios from 'axios';
 
 // databridge has no select *: shape must be transformed to 4326 explicitly, so columns are listed
 const FOOTPRINTS_DATABRIDGE_COLS = 'bin, address, building_name, approx_hgt, max_hgt, base_elevation, square_ft, parcel_id_num, parcel_id_source, fcode, objectid';
-
-// remote table mode: above the threshold (also the databridge row cap) a table
-// pages and searches server-side instead of fetching every row
-const REMOTE_THRESHOLD = 999;
-const REMOTE_SERVER_PAGE = 100;
 // vue-good-table column field -> SQL column for server-side sorting
 const PERMITS_SORT_COLUMNS = {
   permitissuedate: 'permitissuedate',
@@ -457,22 +452,7 @@ export const useLiStore = defineStore('LiStore', {
     // A failed databridge call falls through to direct carto (loudly) so a proxy
     // hiccup degrades to the fallback instead of an empty topic - see bead vue3-atlas-h1v
     async _fetchLiSql(sourceKey, sql) {
-      if (API_SOURCES[sourceKey] === 'databridge') {
-        try {
-          const data = await fetchDatabridgeRows(sql);
-          if (data) {
-            return data;
-          }
-        } catch {
-          // fall through to carto below
-        }
-        console.warn(`${sourceKey} - databridge request failed, falling back to direct carto`);
-      }
-      const response = await fetch('https://phl.carto.com/api/v2/sql?q=' + encodeURIComponent(sql));
-      if (!response.ok) {
-        return null;
-      }
-      return response.json();
+      return fetchRowsWithFallback(sourceKey, sql);
     },
     _decoratePermitRows(rows) {
       rows.forEach((permit) => {

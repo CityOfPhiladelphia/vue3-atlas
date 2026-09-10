@@ -2,6 +2,10 @@
 
 import { ref, computed, onBeforeMount } from 'vue';
 
+import useTableSearch from '@/composables/useTableSearch';
+import useRemoteTableUi from '@/composables/useRemoteTableUi';
+import PaginationWithSearch from '@/components/pagination/PaginationWithSearch.vue';
+
 import useTransforms from '@/composables/useTransforms';
 const { date, integer, prettyNumber } = useTransforms();
 
@@ -55,17 +59,49 @@ const selectedDocsLength = computed(() => {
   return selectedDocs.value ? selectedDocs.value.length : 0;
 });
 
+const selectedCondoEntry = computed(() => {
+  return selectedParcelId.value ? DorStore.dorCondos[selectedParcelId.value] : null;
+});
+const condosRemote = computed(() => !!(selectedCondoEntry.value && selectedCondoEntry.value.remote));
+let condosUi;
+const { searchTerm: condosSearchTerm, searchEnabled: condosSearchThreshold, filterRows: filterCondoRows } = useTableSearch({
+  fields: [ 'condo_parcel', 'condo_name', 'unit_number' ],
+  onSearch: async (term) => {
+    if (!condosRemote.value) return;
+    await DorStore.setCondosSearch(selectedParcelId.value, term);
+    condosUi.currentPage.value = 1;
+    condosUi.load();
+  },
+});
+condosUi = useRemoteTableUi({
+  isRemote: () => condosRemote.value,
+  resetKey: () => `${selectedParcelId.value}|${selectedCondoEntry.value ? selectedCondoEntry.value.baseSql : ''}`,
+  fetchUiPage: (page, perPage) => DorStore.condosUiPage(selectedParcelId.value, page, perPage),
+  setSort: (field, type) => DorStore.setCondosSort(selectedParcelId.value, field, type),
+  onReset: () => { if (condosSearchTerm.value) condosSearchTerm.value = ''; },
+});
+
 const selectedCondos = computed(() => {
+  if (condosRemote.value) {
+    return condosUi.rows.value;
+  }
   if (selectedParcelId.value && DorStore.dorCondos[selectedParcelId.value]) {
-    return DorStore.dorCondos[selectedParcelId.value].rows;
+    return filterCondoRows(DorStore.dorCondos[selectedParcelId.value].rows);
   } else {
     return null;
   }
 });
 
 const selectedCondosLength = computed(() => {
+  if (condosRemote.value) {
+    return selectedCondoEntry.value.total || 0;
+  }
   return selectedCondos.value ? selectedCondos.value.length : 0;
 });
+const condosUnfilteredTotal = computed(() => condosRemote.value
+  ? (selectedCondoEntry.value.grandTotal || 0)
+  : (selectedCondoEntry.value && selectedCondoEntry.value.rows ? selectedCondoEntry.value.rows.length : 0));
+const condosSearchEnabled = computed(() => condosSearchThreshold(condosUnfilteredTotal.value));
 
 const regmaps = computed(() => {
   if (!DorStore.regmaps.data) {
@@ -101,11 +137,7 @@ const selectedRegmap = computed(() => {
 });
 
 const deededCondosExist = computed(() => {
-  let flag = false;
-  if (DorStore.dorCondos[selectedParcelId.value] && DorStore.dorCondos[selectedParcelId.value].rows && DorStore.dorCondos[selectedParcelId.value].rows.length > 0) {
-    flag = true;
-  }
-  return flag;
+  return condosUnfilteredTotal.value > 0;
 });
 
 const getAddress = (address) => {
@@ -258,16 +290,23 @@ const dorDocsTableData = computed(() => {
           Deeded Condominiums ({{ selectedCondosLength }})
         </h2>
         <vue-good-table
+          id="deeded-condos"
+          :mode="condosRemote ? 'remote' : ''"
           :columns="condosTableData.columns"
           :rows="condosTableData.rows"
-          :pagination-options="paginationOptions(condosTableData.rows.length)"
+          :total-rows="condosRemote ? selectedCondosLength : undefined"
+          :pagination-options="paginationOptions(condosUnfilteredTotal)"
           style-class="table"
-        >
+          @page-change="condosUi.onPageChange"
+          @per-page-change="condosUi.onPerPageChange"
+          @sort-change="condosUi.onSortChange"
+>
           <template #pagination-top="props">
-            <custom-pagination-labels
-              :mode="'pages'"
+            <pagination-with-search
+              v-model="condosSearchTerm"
+              :search-enabled="condosSearchEnabled"
+              placeholder="Search Condominiums"
               :total="props.total"
-              :per-page="5"
               @page-changed="props.pageChanged"
               @per-page-changed="props.perPageChanged"
             />

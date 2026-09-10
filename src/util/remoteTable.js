@@ -1,6 +1,9 @@
 // shared SQL builders for tables that page, sort, and search server-side when a
 // parcel's row count exceeds the databridge row cap (results of 1000+ rows error) -
-// see LiStore's permits and business licenses remote modes
+// see the permits, business licenses, and deeded condos remote modes
+
+export const REMOTE_THRESHOLD = 999;
+export const REMOTE_SERVER_PAGE = 100;
 
 export function buildSearchWhere(term, columns) {
   if (!term) {

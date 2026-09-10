@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { API_SOURCES } from '@/config/apiSources.js';
 
 export const DATABRIDGE_URL = 'https://haydr3k097.execute-api.us-east-1.amazonaws.com/queryDatabridge/databridge';
 
@@ -27,6 +28,28 @@ function normalizeTimestamps(properties) {
     }
   }
   return properties;
+}
+
+// fetches rows for a dataset through its configured source: databridge first (per the
+// named apiSources switch), falling back LOUDLY to direct carto when databridge fails -
+// proxy hiccups degrade instead of emptying topics, without silently masking outages
+export async function fetchRowsWithFallback(sourceKey, sql) {
+  if (API_SOURCES[sourceKey] === 'databridge') {
+    try {
+      const data = await fetchDatabridgeRows(sql);
+      if (data) {
+        return data;
+      }
+    } catch {
+      // fall through to carto below
+    }
+    console.warn(`${sourceKey} - databridge request failed, falling back to direct carto`);
+  }
+  const response = await fetch('https://phl.carto.com/api/v2/sql?q=' + encodeURIComponent(sql));
+  if (!response.ok) {
+    return null;
+  }
+  return response.json();
 }
 
 // fetches from databridge-api and flattens the envelope to the Carto rows shape:

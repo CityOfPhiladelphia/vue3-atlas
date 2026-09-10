@@ -20,7 +20,8 @@ export const API_SOURCES = {
   // Note: zoningAppeals not migrated - no ArcGIS service available
 
   // DorStore
-  dorCondos: 'carto',
+  // dorCondos regimes over the databridge row cap (Naval Square) page server-side
+  dorCondos: 'databridge',
   dorDocuments: 'carto',
   regmaps: 'databridge',
 
