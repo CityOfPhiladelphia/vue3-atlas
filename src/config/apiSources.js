@@ -46,8 +46,7 @@ export const API_SOURCES = {
   // on carto vs unqualified + shape on databridge), built in the store
   zoningBase: 'databridge',
   zoningOverlays: 'databridge',
-  // proposedzoning_imp_public is NOT in databridge (404 as of 2026-09-10) - flip when it lands
-  proposedZoning: 'carto',
+  proposedZoning: 'databridge',
   zoningAppeals: 'databridge',
 
   // VotingStore (these replaced the old VITE_VOTING_DATA_SOURCE env switch; Voting.vue
