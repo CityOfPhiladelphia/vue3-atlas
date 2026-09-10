@@ -104,4 +104,21 @@ const term = defineModel();
 .pagination-with-search .vgt-wrap__footer {
   flex: 1 0 310px;
 }
+
+/* on phones there is no room for both in one row - search takes its own line,
+   pagination sits below at its natural width */
+@media screen and (max-width: 767px) {
+  .pagination-with-search {
+    flex-wrap: wrap;
+  }
+
+  .pagination-search-wrap {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+
+  .pagination-with-search .vgt-wrap__footer {
+    flex: 0 1 auto;
+  }
+}
 </style>
