@@ -3,6 +3,11 @@
 // 'databridge' routes through the maps-api-proxy queryDatabridge lambda (prod gateway; URL in src/util/databridge.js)
 
 export const API_SOURCES = {
+  // AIS geocoding (GeocodeStore, CondosStore; autocomplete is already on the proxy):
+  // 'proxy' routes through the maps-api-proxy queryAis lambda with a loud direct
+  // fallback; 'direct' skips the proxy chain entirely - the rollback if it's down
+  ais: 'proxy',
+
   // OpaStore
   opaData: 'databridge',
 

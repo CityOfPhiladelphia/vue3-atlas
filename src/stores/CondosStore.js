@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { useGeocodeStore } from '@/stores/GeocodeStore.js'
-import axios from 'axios';
+import { fetchAisSearch } from '@/util/ais.js';
 
 export const useCondosStore = defineStore('CondosStore', {
   state: () => {
@@ -27,32 +27,26 @@ export const useCondosStore = defineStore('CondosStore', {
         const AddressLoaded = GeocodeStore.aisData.features
         if (!AddressLoaded) { return }
         const aisData = AddressLoaded[0];
-        let params = {
-          include_units: true,
-          opa_only: true,
-          page: page,
-        };
-        const response = await axios(`https://api.phila.gov/ais/v1/search/${encodeURIComponent(address)}`, { params });
-        // if (import.meta.env.VITE_DEBUG == 'true') console.log('condos response:', response);
-        if (response.status === 200) {
+        const data = await fetchAisSearch(address, { includeUnits: true, opaOnly: true, page: page });
+        if (data) {
           if (import.meta.env.VITE_DEBUG == 'true') console.log('Condos - await resolved and HTTP status is successful')
           this.dataPageFilled = page;
-          if (response.data.features.length > 0) {
+          if (data.features.length > 0) {
             // Remove all features that share an OPA account number with another feature
             const opaCounts = {};
-            for (const f of response.data.features) {
+            for (const f of data.features) {
               const opa = f.properties.opa_account_num;
               opaCounts[opa] = (opaCounts[opa] || 0) + 1;
             }
-            let features = response.data.features.filter(f => opaCounts[f.properties.opa_account_num] === 1);
+            let features = data.features.filter(f => opaCounts[f.properties.opa_account_num] === 1);
             // If only 1 feature remains and it's the searched address itself, exclude it
             if (features.length === 1 && features[0].properties.street_address === aisData.properties.street_address) {
               features = [];
             }
-            const duplicatesRemoved = response.data.features.length - features.length;
+            const duplicatesRemoved = data.features.length - features.length;
             if (page === 1) {
-              this.condosData.page_count = response.data.page_count;
-              this.condosData.total_size = response.data.total_size - duplicatesRemoved;
+              this.condosData.page_count = data.page_count;
+              this.condosData.total_size = data.total_size - duplicatesRemoved;
             }
             this.condosData.pages['page_'+page] = { features };
           }
