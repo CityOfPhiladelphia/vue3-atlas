@@ -43,6 +43,13 @@ export const API_SOURCES = {
   // ZoningStore
   rcos: 'databridge',
 
+  // VotingStore (these replaced the old VITE_VOTING_DATA_SOURCE env switch; Voting.vue
+  // and Map.vue also read these flags to pick the rows-vs-features response shape)
+  politicalDivisions: 'databridge',
+  pollingPlaces: 'databridge',
+  electedOfficials: 'databridge',
+  electionSplit: 'databridge',
+
   // CityServicesStore
   // controls BOTH schools call sites (fillAllSchools + fillNearbySchools) - they must
   // stay on the same source: the designated-school filter matches feature.id across them

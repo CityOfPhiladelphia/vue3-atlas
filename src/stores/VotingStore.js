@@ -2,6 +2,8 @@ import axios from 'axios';
 
 import { defineStore } from 'pinia';
 import { useGeocodeStore } from '@/stores/GeocodeStore.js'
+import { API_SOURCES } from '@/config/apiSources.js';
+import { fetchRowsWithFallback } from '@/util/databridge.js';
 
 export const useVotingStore = defineStore("VotingStore", {
   state: () => {
@@ -37,16 +39,20 @@ export const useVotingStore = defineStore("VotingStore", {
       const GeocodeStore = useGeocodeStore();
       try {
         const feature = GeocodeStore.aisData.features[0];
-        if (import.meta.env.VITE_VOTING_DATA_SOURCE === 'carto') {
-          let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
-          const url = baseUrl += `SELECT *, ST_AsGeoJSON(the_geom) FROM political_divisions WHERE ST_Intersects(the_geom, ST_SetSRID(ST_Point(${feature.geometry.coordinates[0]}, ${feature.geometry.coordinates[1]}), 4326))`;
-          const response = await fetch(url);
-          if (response.ok) {
-            this.divisions = await response.json();
+        if (API_SOURCES.politicalDivisions !== 'arcgis') {
+          const addressPoint = `ST_SetSRID(ST_Point(${feature.geometry.coordinates[0]}, ${feature.geometry.coordinates[1]}), 4326)`;
+          const data = await fetchRowsWithFallback('politicalDivisions', {
+            // the unaliased carto ST_AsGeoJSON lands in a column named st_asgeojson, which
+            // Map.vue reads - the databridge alias must match it
+            databridge: `SELECT *, ST_AsGeoJSON(ST_Transform(shape, 4326)) as st_asgeojson FROM political_divisions WHERE ST_Intersects(shape, ST_Transform(${addressPoint}, 2272))`,
+            carto: `SELECT *, ST_AsGeoJSON(the_geom) FROM political_divisions WHERE ST_Intersects(the_geom, ${addressPoint})`,
+          });
+          if (data) {
+            this.divisions = data;
           } else {
             if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillDivisions - await resolved but HTTP status was not successful');
           }
-        } else if (import.meta.env.VITE_VOTING_DATA_SOURCE === 'arcgis') {
+        } else {
           let url = 'https://services.arcgis.com/fLeGjb7u4uXqeF9q/arcgis/rest/services/Political_Divisions/FeatureServer/0/query';
           let params = {
             'returnGeometry': true,
@@ -81,16 +87,17 @@ export const useVotingStore = defineStore("VotingStore", {
         } else if (feature.properties.political_division) {
           precinct = feature.properties.political_division;
         }
-        if (import.meta.env.VITE_VOTING_DATA_SOURCE === 'carto') {
-          let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
-          const url = baseUrl += `select ST_X(the_geom) as lng, ST_Y(the_geom) as lat, * from polling_places where precinct ='${precinct}'`;
-          const response = await fetch(url);
-          if (response.ok) {
-            this.pollingPlaces = await response.json();
+        if (API_SOURCES.pollingPlaces !== 'arcgis') {
+          const data = await fetchRowsWithFallback('pollingPlaces', {
+            databridge: `select ST_X(ST_Transform(shape, 4326)) as lng, ST_Y(ST_Transform(shape, 4326)) as lat, * from polling_places where precinct ='${precinct}'`,
+            carto: `select ST_X(the_geom) as lng, ST_Y(the_geom) as lat, * from polling_places where precinct ='${precinct}'`,
+          });
+          if (data) {
+            this.pollingPlaces = data;
           } else {
             if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillPollingPlaces - await resolved but HTTP status was not successful');
           }
-        } else if (import.meta.env.VITE_VOTING_DATA_SOURCE === 'arcgis') {
+        } else {
 
           let baseUrl = 'https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/POLLING_PLACES/FeatureServer/0/query';
           let params = {
@@ -121,16 +128,14 @@ export const useVotingStore = defineStore("VotingStore", {
 
       try {
         const feature = GeocodeStore.aisData.features[0];
-        if (import.meta.env.VITE_VOTING_DATA_SOURCE === 'carto') {
-          let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
-          const url = baseUrl += `SELECT * FROM elected_officials WHERE office = 'city_council' AND district = '${feature.properties.council_district_2024}'`;
-          const response = await fetch(url);
-          if (response.ok) {
-            this.electedOfficials = await response.json();
+        if (API_SOURCES.electedOfficials !== 'arcgis') {
+          const data = await fetchRowsWithFallback('electedOfficials', `SELECT * FROM elected_officials WHERE office = 'city_council' AND district = '${feature.properties.council_district_2024}'`);
+          if (data) {
+            this.electedOfficials = data;
           } else {
             if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillElectedOfficials - await resolved but HTTP status was not successful');
           }
-        } else if (import.meta.env.VITE_VOTING_DATA_SOURCE === 'arcgis') {
+        } else {
           let baseUrl = 'https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/ELECTED_OFFICIALS/FeatureServer/0/query';
           let params = {
             'returnGeometry': false,
@@ -171,16 +176,14 @@ export const useVotingStore = defineStore("VotingStore", {
         } else if (feature.properties.political_division) {
           precinct = feature.properties.political_division;
         }
-        if (import.meta.env.VITE_VOTING_DATA_SOURCE === 'carto') {
-          let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
-          const url = baseUrl += `SELECT * FROM splits WHERE precinct = '${precinct}'`;
-          const response = await fetch(url);
-          if (response.ok) {
-            this.electionSplit = await response.json();
+        if (API_SOURCES.electionSplit !== 'arcgis') {
+          const data = await fetchRowsWithFallback('electionSplit', `SELECT * FROM splits WHERE precinct = '${precinct}'`);
+          if (data) {
+            this.electionSplit = data;
           } else {
             if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillElectionSplit - await resolved but HTTP status was not successful');
           }
-        } else if (import.meta.env.VITE_VOTING_DATA_SOURCE === 'arcgis') {
+        } else {
 
           let baseUrl = 'https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/SPLITS/FeatureServer/0/query';
           let params = {
