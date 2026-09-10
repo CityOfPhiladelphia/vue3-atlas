@@ -369,15 +369,11 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
     },
     async fillAllParksRecLocationTypes() {
       try {
-        const params = {
-          where: '1=1',
-          outFields: '*',
-          f: 'geojson',
-        }
-        const response = await axios.get('https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/ppr_location_types_atlas/FeatureServer/0/query?', { params });
-        if (response.status === 200) {
-          const data = response.data;
-          this.allParksRecLocationTypes = data.features.map(feature => feature.properties);
+        // the AGO layer this used to fetch was retired when the table was published
+        // to carto/databridge (2026-09-10), so the fallback here is direct carto
+        const data = await fetchRowsWithFallback('parksRecLocationTypes', 'select * from ppr_location_types_atlas');
+        if (data) {
+          this.allParksRecLocationTypes = data.rows;
         } else {
           if (import.meta.env.VITE_DEBUG == 'true') console.warn('parksRecLocationTypes - await resolved but HTTP status was not successful');
         }

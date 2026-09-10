@@ -77,6 +77,9 @@ const PROXY_SOURCES = {
   schoolCatchments: 'databridge',
   // ppr_facilities joined to ppr_website_locatorpoints; per-transport sql built in the store
   nearbyRecreationFacilities: 'databridge',
+  // the atlas-specific display labels; the AGO layer this came from was retired
+  // upstream 2026-09-10 when the table landed in carto/databridge
+  parksRecLocationTypes: 'databridge',
 
   // ParcelsStore
   // The plain dor_parcel/pwd_parcels tables (carto and databridge) sit ~0.9m off
