@@ -31,6 +31,14 @@ export const API_SOURCES = {
 
   // NearbyActivityStore
   vacantIndicatorPoints: 'databridge',
+  // the nearby-radius datasets share fetchNearby, which builds per-transport sql
+  // (carto the_geom vs databridge shape); fallback goes to direct carto
+  nearby311: 'databridge',
+  nearbyCrimeIncidents: 'databridge',
+  nearbyZoningAppeals: 'databridge',
+  nearbyConstructionPermits: 'databridge',
+  nearbyDemolitionPermits: 'databridge',
+  nearbyUnsafeBuildings: 'databridge',
 
   // ZoningStore
   rcos: 'databridge',

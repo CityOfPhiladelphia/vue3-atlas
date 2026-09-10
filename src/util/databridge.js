@@ -33,10 +33,14 @@ function normalizeTimestamps(properties) {
 // fetches rows for a dataset through its configured source: databridge first (per the
 // named apiSources switch), falling back LOUDLY to direct carto when databridge fails -
 // proxy hiccups degrade instead of emptying topics, without silently masking outages
+// sql is one string when the same statement runs on both transports, or
+// { databridge, carto } when their geometry columns force different statements
 export async function fetchRowsWithFallback(sourceKey, sql) {
+  const databridgeSql = typeof sql === 'string' ? sql : sql.databridge;
+  const cartoSql = typeof sql === 'string' ? sql : sql.carto;
   if (API_SOURCES[sourceKey] === 'databridge') {
     try {
-      const data = await fetchDatabridgeRows(sql);
+      const data = await fetchDatabridgeRows(databridgeSql);
       if (data) {
         return data;
       }
@@ -45,7 +49,7 @@ export async function fetchRowsWithFallback(sourceKey, sql) {
     }
     console.warn(`${sourceKey} - databridge request failed, falling back to direct carto`);
   }
-  const response = await fetch('https://phl.carto.com/api/v2/sql?q=' + encodeURIComponent(sql));
+  const response = await fetch('https://phl.carto.com/api/v2/sql?q=' + encodeURIComponent(cartoSql));
   if (!response.ok) {
     return null;
   }
