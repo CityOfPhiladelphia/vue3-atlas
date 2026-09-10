@@ -2,7 +2,14 @@
 // Change individual values to 'carto' or 'arcgis' as needed
 // 'databridge' routes through the maps-api-proxy queryDatabridge lambda (prod gateway; URL in src/util/databridge.js)
 
-export const API_SOURCES = {
+// MASTER SWITCH: set false to move EVERY call off maps-api-proxy at once (incident
+// rollback when the whole lambda/gateway chain is down). Each 'databridge' dataset
+// drops to a direct branch - carto, or AGO where that's the dataset's only direct
+// branch - and ais drops to direct. The per-dataset values below still control
+// routing individually while this is true.
+export const USE_PROXY = true;
+
+const PROXY_SOURCES = {
   // AIS geocoding (GeocodeStore, CondosStore; autocomplete is already on the proxy):
   // 'proxy' routes through the maps-api-proxy queryAis lambda with a loud direct
   // fallback; 'direct' skips the proxy chain entirely - the rollback if it's down
@@ -81,3 +88,12 @@ export const API_SOURCES = {
   pwdParcels: 'databridge',
   dorParcels: 'databridge',
 };
+
+export const API_SOURCES = USE_PROXY
+  ? PROXY_SOURCES
+  : Object.fromEntries(
+    Object.entries(PROXY_SOURCES).map(([key, value]) => [
+      key,
+      value === 'databridge' ? 'carto' : value === 'proxy' ? 'direct' : value,
+    ])
+  );
