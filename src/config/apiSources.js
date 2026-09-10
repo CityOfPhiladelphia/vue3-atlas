@@ -50,6 +50,8 @@ export const API_SOURCES = {
   policeStations: 'databridge',
   fireStations: 'databridge',
   schoolCatchments: 'databridge',
+  // ppr_facilities joined to ppr_website_locatorpoints; per-transport sql built in the store
+  nearbyRecreationFacilities: 'databridge',
 
   // ParcelsStore
   // The plain dor_parcel/pwd_parcels tables (carto and databridge) sit ~0.9m off

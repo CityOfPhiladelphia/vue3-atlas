@@ -12,7 +12,7 @@ import slugify from 'slugify';
 
 import useTransforms from '@/composables/useTransforms';
 import { API_SOURCES } from '@/config/apiSources.js';
-import { fetchDatabridgeGeoJSON } from '@/util/databridge.js';
+import { fetchDatabridgeGeoJSON, fetchRowsWithFallback } from '@/util/databridge.js';
 const { phoneNumber } = useTransforms();
 
 // databridge has no select *: shape must be transformed to 4326 explicitly, so columns are listed
@@ -390,36 +390,41 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
         const GeocodeStore = useGeocodeStore();
         this.setLoadingData(true);
         const feature = GeocodeStore.aisData.features[0];
-        let dataSource = {
-          url: 'https://phl.carto.com/api/v2/sql?',
+
+        // carto's geometry column is the_geom (4326); databridge's is shape (2272)
+        const buildQuery = (geomExpr, geomCol) => {
+          const distQuery = "(ST_Distance(" + geomExpr + "::geography, ST_SetSRID(ST_Point("
+            + feature.geometry.coordinates[0]
+            + "," + feature.geometry.coordinates[1]
+            + "),4326)::geography))";
+
+          const latQuery = `ST_Y(${geomExpr})`;
+          const lngQuery = `ST_X(${geomExpr})`;
+
+          let query = `WITH pprf AS (SELECT * FROM ppr_facilities) `
+          query += `SELECT pprf.location_type, pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, pprf.id, pprf.facility_type, pprf.facility_description, ${distQuery} as distance, ${latQuery} as lat, ${lngQuery} as lng FROM ppr_website_locatorpoints pprlp`
+          query += ` LEFT JOIN pprf ON pprf.website_locator_points_link_id = pprlp.linkid`
+          query += ` WHERE pprf.facility_is_published='true' and ${distQuery} < 1609.34`;
+          query += ` GROUP BY pprf.location_type, pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, ${geomCol}, pprf.facility_type, pprf.facility_description, pprf.id`;
+          query += ` ORDER BY distance`;
+          return query;
         };
 
-        const distQuery = "(ST_Distance(pprlp.the_geom::geography, ST_SetSRID(ST_Point("
-          + feature.geometry.coordinates[0]
-          + "," + feature.geometry.coordinates[1]
-          + "),4326)::geography))";
-
-        const latQuery = "ST_Y(pprlp.the_geom)";
-        const lngQuery = "ST_X(pprlp.the_geom)";
-
-        let query = `WITH pprf AS (SELECT * FROM ppr_facilities) `
-        query += `SELECT pprf.location_type, pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, pprf.id, pprf.facility_type, pprf.facility_description, ${distQuery} as distance, ${latQuery} as lat, ${lngQuery} as lng FROM ppr_website_locatorpoints pprlp`
-        query += ` LEFT JOIN pprf ON pprf.website_locator_points_link_id = pprlp.linkid`
-        query += ` WHERE pprf.facility_is_published='true' and ${distQuery} < 1609.34`;
-        // query += ` WHERE pprf.facility_is_published='true' and ${distQuery} < 1609.34`;
-        query += ` GROUP BY pprf.location_type, pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, pprlp.the_geom, pprf.facility_type, pprf.facility_description, pprf.id`;
-        // query += ` GROUP BY pprf.public_name, pprf.address, pprf.contact_phone, pprf.location_contact_name, pprlp.the_geom, pprf.facility_type, pprf.id`;
-        query += ` ORDER BY distance`;
-
-        let params = {
-          q: query,
-        };
-
-        const response = await axios.get(dataSource.url, { params })
-        if (response.status === 200) {
-          const data = response.data;
+        const data = await fetchRowsWithFallback('nearbyRecreationFacilities', {
+          databridge: buildQuery('ST_Transform(pprlp.shape, 4326)', 'pprlp.shape'),
+          carto: buildQuery('pprlp.the_geom', 'pprlp.the_geom'),
+        });
+        if (data) {
           if (import.meta.env.VITE_DEBUG) console.log('nearbyRecreationFacilities, data:', data);
           data.rows.forEach(row => {
+            // the ppr json columns (address, location_type) are typed text, so both
+            // carto and databridge serialize them as strings
+            if (typeof row.address === 'string' && row.address) {
+              row.address = JSON.parse(row.address);
+            }
+            if (typeof row.location_type === 'string' && row.location_type) {
+              row.location_type = JSON.parse(row.location_type);
+            }
             row.distance_mi = (row.distance / 1609.34).toFixed(2) + ' mi';
             if (row.public_name) {
               row.location = `<a target="_blank" href="https://www.phila.gov/parks-rec-finder/#/location/${slugify(row.public_name.toLowerCase())}/${row.id}">${row.public_name}</a><br>${row.address.full}`;
