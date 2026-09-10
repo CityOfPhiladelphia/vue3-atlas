@@ -6,7 +6,7 @@ name: dev Push to S3 dev2 bucket
 on:
   push:
     branches:
-      - wip/permits-vgt-search
+      - wip/databridge-pilot
 jobs:
   build:
 
