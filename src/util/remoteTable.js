@@ -13,10 +13,12 @@ export function buildSearchWhere(term, columns) {
   return ` where (${columns.map((column) => `${column}::text ilike '%${safe}%'`).join(' or ')})`;
 }
 
-export function buildOrderBy(sort, columnMap, defaultColumn) {
+export function buildOrderBy(sort, columnMap, defaultColumn, tiebreaker) {
   const column = sort && columnMap[sort.field] ? columnMap[sort.field] : defaultColumn;
   const direction = sort && sort.type === 'asc' ? 'asc' : 'desc';
-  return `order by ${column} ${direction} nulls last`;
+  // the tiebreaker (a unique column) makes the order total: postgres gives tied rows
+  // no consistent order, so without it a row can straddle or vanish between offset pages
+  return `order by ${column} ${direction} nulls last, ${tiebreaker} asc`;
 }
 
 export function buildCountSql(baseSql, searchWhere) {
