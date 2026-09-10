@@ -17,6 +17,9 @@ export const API_SOURCES = {
   // uses building_footprints_3857, which carries the NAD83->WGS84 shift and aligns
   // with the Esri basemap (~0.15m; the plain tables sit ~0.9m off)
   liBuildingFootprints: 'databridge',
+  // the two zoning-documents queries (ais_zoning_documents, li_zoning_docs)
+  aisZoningDocs: 'databridge',
+  eclipseZoningDocs: 'databridge',
   // Note: zoningAppeals not migrated - no ArcGIS service available
 
   // DorStore

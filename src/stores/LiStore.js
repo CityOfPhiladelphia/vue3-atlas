@@ -548,11 +548,9 @@ export const useLiStore = defineStore('LiStore', {
       try {
         const GeocodeStore = useGeocodeStore();
         const feature = GeocodeStore.aisData.features[0];
-        let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
-        const url = baseUrl += `select * from ais_zoning_documents where doc_id = ANY('{ ${feature.properties.zoning_document_ids} }'::text[])`;
-        const response = await fetch(url);
-        if (response.ok) {
-          const data = await response.json();
+        const sql = `select * from ais_zoning_documents where doc_id = ANY('{ ${feature.properties.zoning_document_ids} }'::text[])`;
+        const data = await this._fetchLiSql('aisZoningDocs', sql);
+        if (data) {
           let addedData = this.addDataToZoningDocs(data);
           this.liAisZoningDocs = addedData;
           this.loadingLiAisZoningDocs = false;
@@ -569,7 +567,6 @@ export const useLiStore = defineStore('LiStore', {
       try {
         const GeocodeStore = useGeocodeStore();
         const feature = GeocodeStore.aisData.features[0];
-        let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
         let query = null;
         if (feature.properties.eclipse_location_id === null || feature.properties.eclipse_location_id === '') {
           query = 'select * from li_zoning_docs where address_objectid in (' + null + ')';
@@ -584,10 +581,8 @@ export const useLiStore = defineStore('LiStore', {
           str = str.slice(0, str.length - 3);
           query = `select * from li_zoning_docs where address_objectid in (${ str })`;
         }
-        const url = baseUrl += query;
-        const response = await fetch(url);
-        if (response.ok) {
-          const data = await response.json();
+        const data = await this._fetchLiSql('eclipseZoningDocs', query);
+        if (data) {
           let addedData = this.addDataToZoningDocs(data);
           this.liEclipseZoningDocs = addedData;
           this.loadingLiEclipseZoningDocs = false;
