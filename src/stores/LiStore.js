@@ -464,7 +464,7 @@ export const useLiStore = defineStore('LiStore', {
         return;
       }
       const where = buildSearchWhere(this.liPermitsSearch, PERMITS_SEARCH_COLUMNS);
-      const orderBy = buildOrderBy(this.liPermitsSort, PERMITS_SORT_COLUMNS, 'permitissuedate', 'objectid');
+      const orderBy = buildOrderBy(this.liPermitsSort, PERMITS_SORT_COLUMNS, 'permitissuedate', 'permitnumber, objectid');
       const data = await this._fetchLiSql('permits', buildPageSql(this.liPermitsBaseSql, where, orderBy, REMOTE_SERVER_PAGE, pageIndex));
       if (data && data.rows) {
         this._decoratePermitRows(data.rows);
@@ -997,7 +997,7 @@ export const useLiStore = defineStore('LiStore', {
         return;
       }
       const where = buildSearchWhere(this.liLicensesSearch, LICENSES_SEARCH_COLUMNS);
-      const orderBy = buildOrderBy(this.liLicensesSort, LICENSES_SORT_COLUMNS, 'initialissuedate', 'objectid');
+      const orderBy = buildOrderBy(this.liLicensesSort, LICENSES_SORT_COLUMNS, 'initialissuedate', 'licensenum, objectid');
       const data = await this._fetchLiSql('businessLicenses', buildPageSql(this.liLicensesBaseSql, where, orderBy, REMOTE_SERVER_PAGE, pageIndex));
       if (data && data.rows) {
         this._decorateLicenseRows(data.rows);

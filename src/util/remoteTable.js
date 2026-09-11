@@ -16,9 +16,11 @@ export function buildSearchWhere(term, columns) {
 export function buildOrderBy(sort, columnMap, defaultColumn, tiebreaker) {
   const column = sort && columnMap[sort.field] ? columnMap[sort.field] : defaultColumn;
   const direction = sort && sort.type === 'asc' ? 'asc' : 'desc';
-  // the tiebreaker (a unique column) makes the order total: postgres gives tied rows
-  // no consistent order, so without it a row can straddle or vanish between offset pages
-  return `order by ${column} ${direction} nulls last, ${tiebreaker} asc`;
+  // the tiebreaker makes the order total: postgres gives tied rows no consistent
+  // order, so without it a row can straddle or vanish between offset pages. Pass a
+  // human-meaningful column first (the row's visible id) and end with a unique
+  // column (objectid) as the guarantee, e.g. 'permitnumber, objectid'
+  return `order by ${column} ${direction} nulls last, ${tiebreaker}`;
 }
 
 export function buildCountSql(baseSql, searchWhere) {

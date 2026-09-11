@@ -191,7 +191,7 @@ export const useDorStore = defineStore("DorStore", {
       }
       const where = buildSearchWhere(entry.search, CONDOS_SEARCH_COLUMNS);
       // units read naturally in ascending order, unlike the date-led tables
-      const orderBy = buildOrderBy(entry.sort || { field: 'unit_number', type: 'asc' }, CONDOS_SORT_COLUMNS, 'condounit', 'objectid');
+      const orderBy = buildOrderBy(entry.sort || { field: 'unit_number', type: 'asc' }, CONDOS_SORT_COLUMNS, 'condounit', 'condoparcel, objectid');
       const data = await fetchRowsWithFallback('dorCondos', buildPageSql(entry.baseSql, where, orderBy, REMOTE_SERVER_PAGE, pageIndex));
       if (data && data.rows) {
         this._decorateCondoRows(data.rows);
