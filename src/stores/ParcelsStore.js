@@ -9,7 +9,7 @@ import { fetchDatabridgeGeoJSON } from '@/util/databridge.js';
 const { processParcels } = useParcels();
 
 // databridge has no select *: shape must be transformed to 4326 explicitly, so columns are listed
-const DOR_DATABRIDGE_COLS = 'recsub, basereg, mapreg, parcel, recmap, stcod, house, suf, unit, stex, stdir, stnam, stdessuf, condoflag, inactdate, orig_date, status, stdes, addr_std, pin, frac, unit_type, objectid';
+const DOR_DATABRIDGE_COLS = 'recsub, basereg, mapreg, parcel, recmap, stcod, house, suf, unit, stex, stdir, stnam, stdessuf, condoflag, inactdate, orig_date, status, stdes, addr_source, addr_std, pin, frac, unit_type, objectid';
 const PWD_DATABRIDGE_COLS = 'parcelid, address, owner1, owner2, brt_id, gross_area, objectid';
 
 // fetches parcels from carto as GeoJSON, normalized to match the ArcGIS response shape:
