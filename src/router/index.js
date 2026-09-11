@@ -44,6 +44,7 @@ const clearStoreData = async () => {
   CityServicesStore.clearAllCityServicesData();
   const CondosStore = useCondosStore();
   CondosStore.lastPageUsed = 1;
+  CondosStore.dataPageFilled = null;
   CondosStore.condosData.pages = { page_1: { features: [] } };
 }
 
@@ -196,11 +197,15 @@ const dataFetch = async (to, from) => {
     return;
   }
 
-  // check for condos
+  // check for condos - only when the store doesn't already hold this address's condos
+  // (dataPageFilled is nulled by clearStoreData on address change), so switching topics
+  // or nearby data types doesn't re-await the same AIS units call every time
   const CondosStore = useCondosStore();
-  CondosStore.loadingCondosData = true;
-  await CondosStore.fillCondoData(address);
-  CondosStore.loadingCondosData = false;
+  if (!CondosStore.dataPageFilled) {
+    CondosStore.loadingCondosData = true;
+    await CondosStore.fillCondoData(address);
+    CondosStore.loadingCondosData = false;
+  }
 
   // if the topic is condos and the address changes and there are no condos, reroute to property
   if (to.params.topic == "condos" && !CondosStore.condosData.pages.page_1.features.length) {

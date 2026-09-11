@@ -8,6 +8,11 @@ import { point, polygon, lineString } from '@turf/helpers';
 import distance from '@turf/distance';
 import explode from '@turf/explode';
 import nearest from '@turf/nearest-point';
+import { API_SOURCES } from '@/config/apiSources.js';
+import { fetchDatabridgeGeoJSON, fetchRowsWithFallback } from '@/util/databridge.js';
+
+// databridge has no select *: shape must be transformed to 4326 explicitly, so columns are listed
+const VACANT_POINTS_DATABRIDGE_COLS = 'objectid, land_rank, build_rank, vacant_rank, date_update, councildistrict, zoningbasedistrict, zipcode, vacant_flag, address, owner1, owner2, bldg_desc, opa_id, lniaddresskey';
 
 const evaluateParams = (feature, dataSource) => {
   const params = {};
@@ -31,8 +36,15 @@ const evaluateParams = (feature, dataSource) => {
   return params;
 }
 
+// the same tables sit behind both transports, but with different geometry columns:
+// carto v2 has the_geom (4326), databridge has shape (2272) needing an explicit transform
+const NEARBY_GEOM = {
+  carto: { expr: 'the_geom', column: 'the_geom' },
+  databridge: { expr: 'ST_Transform(shape, 4326)', column: 'shape' },
+};
+
 // this was the fetch function from @phila/vue-datafetch http-client.js
-const fetchNearby = (feature, dataSource) => {
+const fetchNearby = (feature, dataSource, source = 'carto') => {
   const params = evaluateParams(feature, dataSource);
   const options = dataSource.options;
   // const srid = options.srid || 4326;
@@ -49,20 +61,22 @@ const fetchNearby = (feature, dataSource) => {
 
   const groupby = options.groupby || null;
 
-  const distQuery = "(ST_Distance(the_geom::geography, ST_SetSRID(ST_Point("
+  const geom = NEARBY_GEOM[source];
+
+  const distQuery = "(ST_Distance(" + geom.expr + "::geography, ST_SetSRID(ST_Point("
                   + feature.geometry.coordinates[0]
                   + "," + feature.geometry.coordinates[1]
                   + "),4326)::geography))";
 
-  const latQuery = "ST_Y(the_geom)";
-  const lngQuery = "ST_X(the_geom)";
+  const latQuery = "ST_Y(" + geom.expr + ")";
+  const lngQuery = "ST_X(" + geom.expr + ")";
 
   let select;
   
   if (!groupby) {
     select = '*';
   } else {
-    select = groupby + ', the_geom';
+    select = groupby + ', ' + geom.column;
   }
   // if (calculateDistance) {
   select = select + ", " + distQuery + 'as distance,' + latQuery + 'as lat, ' + lngQuery + 'as lng';
@@ -100,9 +114,17 @@ const fetchNearby = (feature, dataSource) => {
   }
 
   if (groupby) {
-    params['q'] = params['q'] + " group by " + groupby + ", the_geom";
+    params['q'] = params['q'] + " group by " + groupby + ", " + geom.column;
   }
   return params
+}
+
+// the sql pair for fetchRowsWithFallback: the two transports need different geometry sql
+const nearbySqlPair = (feature, dataSource) => {
+  return {
+    databridge: fetchNearby(feature, dataSource, 'databridge').q,
+    carto: fetchNearby(feature, dataSource).q,
+  };
 }
 
   
@@ -138,7 +160,7 @@ export const useNearbyActivityStore = defineStore('NearbyActivityStore', {
         nearbyVacantIndicatorPoints: {
           title: 'Vacant Properties',
           id_field: 'id',
-          info_field: 'ADDRESS',
+          info_field: 'address',
         },
         nearbyConstructionPermits: {
           title: 'Construction Permits',
@@ -201,7 +223,6 @@ export const useNearbyActivityStore = defineStore('NearbyActivityStore', {
         this.setLoadingData(true);
         const feature = GeocodeStore.aisData.features[0];
         let dataSource = {
-          url: 'https://phl.carto.com/api/v2/sql?',
           options: {
             table: 'public_cases_fc',
             dateMinNum: 365,
@@ -209,10 +230,8 @@ export const useNearbyActivityStore = defineStore('NearbyActivityStore', {
             dateField: 'requested_datetime',
           },
         };
-        let params = fetchNearby(feature, dataSource);
-        const response = await axios.get(dataSource.url, { params })
-        if (response.status === 200) {
-          const data = response.data;
+        const data = await fetchRowsWithFallback('nearby311', nearbySqlPair(feature, dataSource));
+        if (data) {
           data.rows.forEach(row => {
             row.distance_ft = (row.distance * 3.28084).toFixed(0) + ' ft';
             if (row.media_url) {
@@ -240,7 +259,6 @@ export const useNearbyActivityStore = defineStore('NearbyActivityStore', {
         this.setLoadingData(true);
         const feature = GeocodeStore.aisData.features[0];
         let dataSource = {
-          url: 'https://phl.carto.com/api/v2/sql?',
           options: {
             table: 'incidents_part1_part2',
             dateMinNum: 90,
@@ -248,10 +266,8 @@ export const useNearbyActivityStore = defineStore('NearbyActivityStore', {
             dateField: 'dispatch_date',
           },
         };
-        let params = fetchNearby(feature, dataSource);
-        const response = await axios.get(dataSource.url, { params })
-        if (response.status === 200) {
-          const data = response.data;
+        const data = await fetchRowsWithFallback('nearbyCrimeIncidents', nearbySqlPair(feature, dataSource));
+        if (data) {
           if (import.meta.env.VITE_DEBUG) console.log('nearbyCrimeIncidents data:', data);
           data.rows.forEach(row => {
             row.distance_ft = (row.distance * 3.28084).toFixed(0) + ' ft';
@@ -272,19 +288,16 @@ export const useNearbyActivityStore = defineStore('NearbyActivityStore', {
         this.setLoadingData(true);
         const feature = GeocodeStore.aisData.features[0];
         let dataSource = {
-          url: 'https://phl.carto.com/api/v2/sql?',
           options: {
             table: 'appeals',
             dateMinNum: 1,
             dateMinType: 'year',
             dateField: 'scheduleddate',
-            where: "appealtype like '%ZBA%' OR appealtype = 'Zoning Board of Adjustment'",
+            where: "(appealtype like '%ZBA%' OR appealtype = 'Zoning Board of Adjustment')",
           },
         };
-        let params = fetchNearby(feature, dataSource);
-        const response = await axios.get(dataSource.url, { params })
-        if (response.status === 200) {
-          const data = response.data;
+        const data = await fetchRowsWithFallback('nearbyZoningAppeals', nearbySqlPair(feature, dataSource));
+        if (data) {
           data.rows.forEach(row => {
             row.distance_ft = (row.distance * 3.28084).toFixed(0) + ' ft';
             row.link = `<a target="blank" href="https://li.phila.gov/zba-appeals-calendar/appeal?from=2-6-2000&to=4-6-2050&region=all&Id=${row.appealnumber}">${row.appealnumber}</a>`;
@@ -323,41 +336,49 @@ export const useNearbyActivityStore = defineStore('NearbyActivityStore', {
           'geometry': JSON.stringify({ "rings": buffer, "spatialReference": { "wkid": 4326 }}),
         };
 
-        const response = await axios.get(url, { params });
-        if (response.status === 200) {
-          const data = await response.data;
-
-          let features = (data || {}).features;
-          const feature = GeocodeStore.aisData.features[0];
-          const from = point(feature.geometry.coordinates);
-
-          features = features.map(feature => {
-            const featureCoords = feature.geometry.coordinates;
-            let dist;
-            if (Array.isArray(featureCoords[0])) {
-              let instance;
-              if (feature.geometry.type === 'LineString') {
-                instance = lineString([ featureCoords[0], featureCoords[1] ], { name: 'line 1' });
-              } else {
-                instance = polygon([ featureCoords[0] ]);
-              }
-              const vertices = explode(instance);
-              const closestVertex = nearest(from, vertices);
-              dist = distance(from, closestVertex, { units: 'miles' });
-            } else {
-              const to = point(featureCoords);
-              dist = distance(from, to, { units: 'miles' });
-            }
-            const distFeet = parseInt(dist * 5280);
-            feature.properties.distance_ft = distFeet + ' ft';
-            return feature;
-          });
-
-          this.nearbyVacantIndicatorPoints.rows = features;
-          this.setLoadingData(false);
+        let data;
+        if (API_SOURCES.vacantIndicatorPoints === 'databridge') {
+          // same 750ft-around-the-address semantics as the buffer-contains query above
+          // (this store's fillBufferForAddress call uses the 750ft default); shape is
+          // native EPSG:2272 whose units are feet, so ST_DWithin takes 750 directly
+          data = await fetchDatabridgeGeoJSON(`select ${VACANT_POINTS_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from vacant_indicators_points where ST_DWithin(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${coordinates[0]}, ${coordinates[1]}), 4326), 2272), 750)`);
         } else {
-          if (import.meta.env.VITE_DEBUG == 'true') console.warn('nearbyVacantIndicatorPoints - await resolved but HTTP status was not successful');
+          const response = await axios.get(url, { params });
+          if (response.status !== 200) {
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('nearbyVacantIndicatorPoints - await resolved but HTTP status was not successful');
+            return;
+          }
+          data = response.data;
         }
+
+        let features = (data || {}).features;
+        const feature = GeocodeStore.aisData.features[0];
+        const from = point(feature.geometry.coordinates);
+
+        features = features.map(feature => {
+          const featureCoords = feature.geometry.coordinates;
+          let dist;
+          if (Array.isArray(featureCoords[0])) {
+            let instance;
+            if (feature.geometry.type === 'LineString') {
+              instance = lineString([ featureCoords[0], featureCoords[1] ], { name: 'line 1' });
+            } else {
+              instance = polygon([ featureCoords[0] ]);
+            }
+            const vertices = explode(instance);
+            const closestVertex = nearest(from, vertices);
+            dist = distance(from, closestVertex, { units: 'miles' });
+          } else {
+            const to = point(featureCoords);
+            dist = distance(from, to, { units: 'miles' });
+          }
+          const distFeet = parseInt(dist * 5280);
+          feature.properties.distance_ft = distFeet + ' ft';
+          return feature;
+        });
+
+        this.nearbyVacantIndicatorPoints.rows = features;
+        this.setLoadingData(false);
       } catch {
         if (import.meta.env.VITE_DEBUG == 'true') console.error('nearbyVacantIndicatorPoints - await never resolved, failed to fetch address data');
       }
@@ -369,19 +390,18 @@ export const useNearbyActivityStore = defineStore('NearbyActivityStore', {
         this.setLoadingData(true);
         const feature = GeocodeStore.aisData.features[0];
         let dataSource = {
-          url: 'https://phl.carto.com/api/v2/sql?',
           options: {
             table: 'permits',
-            where: "typeofwork like '%NEW CONSTRUCTION%'",
+            // ilike: the table's typeofwork values are mixed-case (e.g. 'New Construction',
+            // 'New construction, addition, GFA change') and case-sensitive like matches nothing
+            where: "typeofwork ilike '%new construction%'",
             dateMinNum: 1,
             dateMinType: 'year',
             dateField: 'permitissuedate',
           },
         };
-        let params = fetchNearby(feature, dataSource);
-        const response = await axios.get(dataSource.url, { params })
-        if (response.status === 200) {
-          const data = response.data;
+        const data = await fetchRowsWithFallback('nearbyConstructionPermits', nearbySqlPair(feature, dataSource));
+        if (data) {
           data.rows.forEach(row => {
             row.distance_ft = (row.distance * 3.28084).toFixed(0) + ' ft';
           });
@@ -401,19 +421,17 @@ export const useNearbyActivityStore = defineStore('NearbyActivityStore', {
         this.setLoadingData(true);
         const feature = GeocodeStore.aisData.features[0];
         let dataSource = {
-          url: 'https://phl.carto.com/api/v2/sql?',
           options: {
             table: 'permits',
-            where: "permitdescription like '%DEMOLITION PERMIT%'",
+            // ilike: the table's value is 'Demolition Permit' and case-sensitive like matches nothing
+            where: "permitdescription ilike '%demolition permit%'",
             dateMinNum: 1,
             dateMinType: 'year',
             dateField: 'permitissuedate',
           },
         };
-        let params = fetchNearby(feature, dataSource);
-        const response = await axios.get(dataSource.url, { params })
-        if (response.status === 200) {
-          const data = response.data;
+        const data = await fetchRowsWithFallback('nearbyDemolitionPermits', nearbySqlPair(feature, dataSource));
+        if (data) {
           data.rows.forEach(row => {
             row.distance_ft = (row.distance * 3.28084).toFixed(0) + ' ft';
           });
@@ -433,7 +451,6 @@ export const useNearbyActivityStore = defineStore('NearbyActivityStore', {
         this.setLoadingData(true);
         const feature = GeocodeStore.aisData.features[0];
         let dataSource = {
-          url: 'https://phl.carto.com/api/v2/sql?',
           options: {
             table: 'violations',
             where: "((caseprioritydesc like '%IMMINENTLY DANGEROUS%' and casestatus not in ('CLOSED', 'CANCELLED')) or (caseprioritydesc like 'UNSAFE' and casestatus not in ('CLOSED', 'CANCELLED')))",
@@ -443,10 +460,8 @@ export const useNearbyActivityStore = defineStore('NearbyActivityStore', {
             groupby: 'casenumber, casecreateddate, caseprioritydesc, casestatus, address',
           },
         };
-        let params = fetchNearby(feature, dataSource);
-        const response = await axios.get(dataSource.url, { params })
-        if (response.status === 200) {
-          const data = response.data;
+        const data = await fetchRowsWithFallback('nearbyUnsafeBuildings', nearbySqlPair(feature, dataSource));
+        if (data) {
           data.rows.forEach(row => {
             row.distance_ft = (row.distance * 3.28084).toFixed(0) + ' ft';
             row.link = `<a target='_blank' href='https://li.phila.gov/property-history/search/violation-detail?address=${row.address}&Id=${row.casenumber}'>${row.casestatus}</a>`;

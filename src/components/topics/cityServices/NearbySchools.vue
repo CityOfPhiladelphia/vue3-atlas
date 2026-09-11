@@ -237,8 +237,14 @@ const schoolsVertTableData = computed(() => {
   return '';
 });
 
+// distance ties broke on backend row order, which differs between sources - the
+// name tiebreak keeps equal-distance schools in a stable, explainable order
+const nearbySchoolsCompareFn = (a, b) =>
+  parseFloat(a.properties.distance_mi) - parseFloat(b.properties.distance_mi)
+  || a.properties.school_name_label.localeCompare(b.properties.school_name_label);
 const nearbySchools = computed(() => {
-  return CityServicesStore.nearbySchools;
+  if (!CityServicesStore.nearbySchools) return CityServicesStore.nearbySchools;
+  return [ ...CityServicesStore.nearbySchools ].sort(nearbySchoolsCompareFn);
 })
 
 const nearbySchoolsGeojson = computed(() => {

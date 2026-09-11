@@ -3,7 +3,10 @@ import { computed, watch, onMounted } from 'vue';
 import { polygon, featureCollection } from '@turf/helpers';
 
 import CustomPaginationLabels from '@/components/pagination/CustomPaginationLabels.vue';
+import PaginationWithSearch from '@/components/pagination/PaginationWithSearch.vue';
 import useTables from '@/composables/useTables';
+import useTableSearch from '@/composables/useTableSearch';
+import useRemoteTableUi from '@/composables/useRemoteTableUi';
 const { paginationOptions } = useTables();
 
 import { useMainStore } from '@/stores/MainStore';
@@ -80,8 +83,48 @@ const selectedBuildingCerts = computed(() => {
 
 // PERMITS
 const permitsCompareFn = (a, b) => new Date(b.permitissuedate) - new Date(a.permitissuedate);
-const permits = computed(() => LiStore.liPermits.rows ? [ ...LiStore.liPermits.rows ].sort(permitsCompareFn) : null );
-const permitsLength = computed(() => permits.value && permits.value.length ? permits.value.length : 0);
+
+// remote mode: parcels over the store's permit threshold page and search server-side
+const permitsRemote = computed(() => LiStore.liPermitsRemote);
+let permitsUi;
+const { searchTerm: permitsSearchTerm, searchEnabled: permitsSearchThreshold, filterRows: filterPermitRows } = useTableSearch({
+  fields: [ 'permitnumber', 'permitdescription', 'status' ],
+  onSearch: async (term) => {
+    if (!permitsRemote.value) return;
+    await LiStore.setPermitsSearch(term);
+    permitsUi.currentPage.value = 1;
+    permitsUi.load();
+  },
+});
+permitsUi = useRemoteTableUi({
+  isRemote: () => LiStore.liPermitsRemote,
+  resetKey: () => LiStore.liPermitsBaseSql,
+  fetchUiPage: (page, perPage) => LiStore.permitsUiPage(page, perPage),
+  setSort: (field, type) => LiStore.setPermitsSort(field, type),
+  // a new address means a fresh table: clear any leftover search
+  onReset: () => { if (permitsSearchTerm.value) permitsSearchTerm.value = ''; },
+});
+
+const permits = computed(() => {
+  if (permitsRemote.value) {
+    return permitsUi.rows.value;
+  }
+  const rows = LiStore.liPermits.rows ? [ ...LiStore.liPermits.rows ].sort(permitsCompareFn) : null;
+  return filterPermitRows(rows);
+});
+const permitsLength = computed(() => {
+  if (permitsRemote.value) {
+    return LiStore.liPermitsTotal || 0;
+  }
+  return permits.value && permits.value.length ? permits.value.length : 0;
+});
+// the search bar and the pagination row both key off the unfiltered total: vue-good-table
+// only renders the pagination-top slot (which holds the search input) while paging is
+// enabled, so a search that narrows to a handful of rows must not switch it off
+const permitsUnfilteredTotal = computed(() => permitsRemote.value
+  ? (LiStore.liPermitsGrandTotal || 0)
+  : (LiStore.liPermits.rows ? LiStore.liPermits.rows.length : 0));
+const permitsSearchEnabled = computed(() => permitsSearchThreshold(permitsUnfilteredTotal.value));
 
 // ZONING DOCS
 const liZoningDocsCompareFn = (a, b) => new Date(b.scan_date || a.issue_date) - new Date(a.scan_date || a.issue_date);
@@ -104,8 +147,41 @@ const violationsLength = computed(() => violations.value && violations.value.len
 
 // BUSINESS LICENSES
 const businessLicensesCompareFn = (a, b) => new Date(b.initialissuedate) - new Date(a.initialissuedate);
-const businessLicenses = computed(() => LiStore.liBusinessLicenses.rows ? [ ...LiStore.liBusinessLicenses.rows ].sort(businessLicensesCompareFn) : null );
-const businessLicensesLength = computed(() => businessLicenses.value && businessLicenses.value.length ? businessLicenses.value.length : 0);
+const licensesRemote = computed(() => LiStore.liLicensesRemote);
+let licensesUi;
+const { searchTerm: licensesSearchTerm, searchEnabled: licensesSearchThreshold, filterRows: filterLicenseRows } = useTableSearch({
+  fields: [ 'licensenum', 'business_name', 'licensetype', 'licensestatus' ],
+  onSearch: async (term) => {
+    if (!licensesRemote.value) return;
+    await LiStore.setLicensesSearch(term);
+    licensesUi.currentPage.value = 1;
+    licensesUi.load();
+  },
+});
+licensesUi = useRemoteTableUi({
+  isRemote: () => LiStore.liLicensesRemote,
+  resetKey: () => LiStore.liLicensesBaseSql,
+  fetchUiPage: (page, perPage) => LiStore.licensesUiPage(page, perPage),
+  setSort: (field, type) => LiStore.setLicensesSort(field, type),
+  onReset: () => { if (licensesSearchTerm.value) licensesSearchTerm.value = ''; },
+});
+const businessLicenses = computed(() => {
+  if (licensesRemote.value) {
+    return licensesUi.rows.value;
+  }
+  const rows = LiStore.liBusinessLicenses.rows ? [ ...LiStore.liBusinessLicenses.rows ].sort(businessLicensesCompareFn) : null;
+  return filterLicenseRows(rows);
+});
+const businessLicensesLength = computed(() => {
+  if (licensesRemote.value) {
+    return LiStore.liLicensesTotal || 0;
+  }
+  return businessLicenses.value && businessLicenses.value.length ? businessLicenses.value.length : 0;
+});
+const licensesUnfilteredTotal = computed(() => licensesRemote.value
+  ? (LiStore.liLicensesGrandTotal || 0)
+  : (LiStore.liBusinessLicenses.rows ? LiStore.liBusinessLicenses.rows.length : 0));
+const licensesSearchEnabled = computed(() => licensesSearchThreshold(licensesUnfilteredTotal.value));
 
 // L&I Appeals
 const liAppealsCompareFn = (a, b) => new Date(b.createddate) - new Date(a.createddate);
@@ -135,7 +211,9 @@ const buildingData = computed(() => {
     },
     {
       label: 'Building Footprint (approx)',
-      value: prettyNumber(Math.round(selectedLiBuilding.attributes.Shape__Area * 6.3225)) + ' sq ft' || 'N/A',
+      // databridge provides true square feet (square_ft); the ArcGIS layer only has
+      // Shape__Area in web-mercator units, x 6.3225 approximates sq ft at Philly's latitude
+      value: prettyNumber(Math.round(selectedLiBuilding.attributes.square_ft ?? selectedLiBuilding.attributes.Shape__Area * 6.3225)) + ' sq ft' || 'N/A',
     },
   ];
 });
@@ -151,8 +229,8 @@ const buildingCertsTableData = computed(() => ({
       label: 'Date Inspected',
       field: 'inspectiondate',
       type: 'date',
-      // 'T' (epoch millis) was the AGO-era format; carto serves ISO strings,
-      // which parsed as invalid and left both date columns blank
+      // 'T' (epoch millis) was the AGO-era format; carto and databridge serve ISO
+      // strings, which parsed as invalid and left both date columns blank
       dateInputFormat: "yyyy-MM-dd'T'HH:mm:ssX",
       dateOutputFormat: 'MM/dd/yyyy',
     },
@@ -503,11 +581,16 @@ const liAppealsTableData = computed(() => {
       >
         <vue-good-table
           id="permits"
+          :mode="permitsRemote ? 'remote' : ''"
           :columns="permitsTableData.columns"
           :rows="permitsTableData.rows"
-          :pagination-options="paginationOptions(permitsTableData.rows.length)"
+          :total-rows="permitsRemote ? permitsLength : undefined"
+          :pagination-options="paginationOptions(permitsUnfilteredTotal)"
           style-class="table"
-        >
+          @page-change="permitsUi.onPageChange"
+          @per-page-change="permitsUi.onPerPageChange"
+          @sort-change="permitsUi.onSortChange"
+>
           <template #emptystate>
             <div v-if="LiStore.loadingLiPermits">
               Loading permits... <font-awesome-icon
@@ -520,10 +603,11 @@ const liAppealsTableData = computed(() => {
             </div>
           </template>
           <template #pagination-top="props">
-            <custom-pagination-labels
-              :mode="'pages'"
+            <pagination-with-search
+              v-model="permitsSearchTerm"
+              :search-enabled="permitsSearchEnabled"
+              placeholder="Search Permits"
               :total="props.total"
-              :per-page="5"
               @page-changed="props.pageChanged"
               @per-page-changed="props.perPageChanged"
             />
@@ -756,11 +840,16 @@ const liAppealsTableData = computed(() => {
       >
         <vue-good-table
           id="business-licenses"
+          :mode="licensesRemote ? 'remote' : ''"
           :columns="businessLicensesTableData.columns"
           :rows="businessLicensesTableData.rows"
-          :pagination-options="paginationOptions(businessLicensesTableData.rows.length)"
+          :total-rows="licensesRemote ? businessLicensesLength : undefined"
+          :pagination-options="paginationOptions(licensesUnfilteredTotal)"
           style-class="table"
-        >
+          @page-change="licensesUi.onPageChange"
+          @per-page-change="licensesUi.onPerPageChange"
+          @sort-change="licensesUi.onSortChange"
+>
           <template #emptystate>
             <div v-if="LiStore.loadingLiBusinessLicenses">
               Loading business licenses... <font-awesome-icon
@@ -773,10 +862,11 @@ const liAppealsTableData = computed(() => {
             </div>
           </template>
           <template #pagination-top="props">
-            <custom-pagination-labels
-              :mode="'pages'"
+            <pagination-with-search
+              v-model="licensesSearchTerm"
+              :search-enabled="licensesSearchEnabled"
+              placeholder="Search Business Licenses"
               :total="props.total"
-              :per-page="5"
               @page-changed="props.pageChanged"
               @per-page-changed="props.perPageChanged"
             />

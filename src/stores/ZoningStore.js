@@ -5,7 +5,12 @@ import { useParcelsStore } from './ParcelsStore';
 import { useGeocodeStore } from '@/stores/GeocodeStore.js'
 
 import useTransforms from '@/composables/useTransforms';
+import { API_SOURCES } from '@/config/apiSources.js';
+import { fetchDatabridgeGeoJSON, fetchRowsWithFallback } from '@/util/databridge.js';
 const { rcoPrimaryContact, phoneNumber, date } = useTransforms();
+
+// databridge has no select *: shape must be transformed to 4326 explicitly, so columns are listed
+const RCO_DATABRIDGE_COLS = 'organization_name, organization_address, meeting_location_address, org_type, primary_name, primary_phone, primary_email, primary_address, alternate_name, websites, effective_date, expirationyear, lni_id, objectid';
 
 import { format } from 'date-fns';
 
@@ -62,25 +67,27 @@ export const useZoningStore = defineStore('ZoningStore', {
         const features = ParcelsStore.dor.features;
         if (!features) return;
         for (let feature of features) {
-          let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
           const mapreg = feature.properties.mapreg;
-          const query = "\
+          // carto's tables sit in the phl schema with geometry the_geom (4326); databridge's
+          // are unqualified with geometry shape (2272) - the overlap math is area RATIOS,
+          // so the srid difference washes out
+          const sqlFor = (schema, geom) => "\
             WITH all_zoning AS \
               ( \
                 SELECT * \
-                FROM   phl.zoning_basedistricts \
+                FROM   " + schema + "zoning_basedistricts \
               ), \
             parcel AS \
               ( \
                 SELECT * \
-                FROM   phl.dor_parcel \
+                FROM   " + schema + "dor_parcel \
                 WHERE  dor_parcel.mapreg = '" + mapreg + "' \
               ), \
             zp AS \
               ( \
                 SELECT all_zoning.* \
                 FROM   all_zoning, parcel \
-                WHERE  St_intersects(parcel.the_geom, all_zoning.the_geom) \
+                WHERE  St_intersects(parcel." + geom + ", all_zoning." + geom + ") \
               ), \
             combine AS \
               ( \
@@ -89,7 +96,7 @@ export const useZoningStore = defineStore('ZoningStore', {
                 zp.pending, \
                 zp.pendingbill, \
                 zp.pendingbillurl, \
-                St_area(St_intersection(zp.the_geom, parcel.the_geom)) / St_area(parcel.the_geom) AS overlap_area \
+                St_area(St_intersection(zp." + geom + ", parcel." + geom + ")) / St_area(parcel." + geom + ") AS overlap_area \
                 FROM zp, parcel \
               ), \
             total AS \
@@ -101,10 +108,12 @@ export const useZoningStore = defineStore('ZoningStore', {
             SELECT * \
             FROM total \
             WHERE sum_overlap_area >= 0.01";
-          const url = baseUrl += query;
-          const response = await fetch(url);
-          if (response.ok) {
-            this.zoningBase[feature.properties.objectid] = await response.json();
+          const data = await fetchRowsWithFallback('zoningBase', {
+            databridge: sqlFor('', 'shape'),
+            carto: sqlFor('phl.', 'the_geom'),
+          });
+          if (data) {
+            this.zoningBase[feature.properties.objectid] = data;
             this.loadingZoningBase = false;
           } else {
             this.loadingZoningBase = false;
@@ -122,21 +131,21 @@ export const useZoningStore = defineStore('ZoningStore', {
       if (!features) return;
       for (let feature of features) {
         try {
-          let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
           const mapreg = feature.properties.mapreg;
           console.log('fillProposedZoning - mapreg:', mapreg);
-          const query = "WITH all_proposed_zoning AS ( SELECT * FROM phl.proposedzoning_imp_public ), \
+          const sqlFor = (schema, geom) => "WITH all_proposed_zoning AS ( SELECT * FROM " + schema + "proposedzoning_imp_public ), \
             parcel AS \
-            ( SELECT * FROM phl.dor_parcel WHERE dor_parcel.mapreg = '" + mapreg + "' ), \
+            ( SELECT * FROM " + schema + "dor_parcel WHERE dor_parcel.mapreg = '" + mapreg + "' ), \
             zp_overlaps AS \
-              ( SELECT all_proposed_zoning.* FROM all_proposed_zoning, parcel WHERE st_overlaps(parcel.the_geom, all_proposed_zoning.the_geom) AND ST_Area(ST_Intersection(parcel.the_geom, all_proposed_zoning.the_geom)) / ST_Area(parcel.the_geom) > 0.05), \
+              ( SELECT all_proposed_zoning.* FROM all_proposed_zoning, parcel WHERE st_overlaps(parcel." + geom + ", all_proposed_zoning." + geom + ") AND ST_Area(ST_Intersection(parcel." + geom + ", all_proposed_zoning." + geom + ")) / ST_Area(parcel." + geom + ") > 0.05), \
             zp_contains AS \
-              ( SELECT all_proposed_zoning.* FROM all_proposed_zoning, parcel WHERE st_contains(all_proposed_zoning.the_geom, parcel.the_geom)) \
-            SELECT * from zp_overlaps UNION SELECT * from zp_contains";
-          const url = baseUrl += query;
-          const response = await fetch(url);
-          if (response.ok) {
-            const data = await response.json();
+              ( SELECT all_proposed_zoning.* FROM all_proposed_zoning, parcel WHERE st_contains(all_proposed_zoning." + geom + ", parcel." + geom + ")) \
+            SELECT * from zp_overlaps UNION SELECT * from zp_contains ORDER BY enacted_date desc nulls last";
+          const data = await fetchRowsWithFallback('proposedZoning', {
+            databridge: sqlFor('', 'shape'),
+            carto: sqlFor('phl.', 'the_geom'),
+          });
+          if (data) {
             if (import.meta.env.VITE_DEBUG == 'true') console.log('data:', data);
             data.rows.forEach(item => {
               if (import.meta.env.VITE_DEBUG == 'true') console.log('item:', item);
@@ -284,20 +293,23 @@ export const useZoningStore = defineStore('ZoningStore', {
       if (!features) return;
       for (let feature of features) {
         try {
-          let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
           const mapreg = feature.properties.mapreg;
-          const query = "WITH all_zoning AS \
-              ( SELECT * FROM phl.zoning_overlays ), \
+          // the databridge geometry needs the 4326 transform for the map overlay; its
+          // source polygons carry far more vertices than carto's, so a 1-foot simplify
+          // and 6-decimal cap keep the payload reasonable (~500KB down to ~80KB)
+          const sqlFor = (schema, geom, geomOut) => "WITH all_zoning AS \
+              ( SELECT * FROM " + schema + "zoning_overlays ), \
             parcel AS \
-              ( SELECT * FROM phl.dor_parcel WHERE dor_parcel.mapreg = '" + mapreg + "' ), \
+              ( SELECT * FROM " + schema + "dor_parcel WHERE dor_parcel.mapreg = '" + mapreg + "' ), \
             zp AS \
-              ( SELECT all_zoning.* FROM all_zoning, parcel WHERE st_intersects(parcel.the_geom, all_zoning.the_geom)) \
-            SELECT code_section, code_section_link, objectid, overlay_name, overlay_symbol, pending, pendingbill, pendingbillurl, sunset_date, type, ST_AsGeoJSON(the_geom) as geometry \
-              FROM zp";
-          const url = baseUrl += query;
-          const response = await fetch(url);
-          if (response.ok) {
-            const data = await response.json();
+              ( SELECT all_zoning.* FROM all_zoning, parcel WHERE st_intersects(parcel." + geom + ", all_zoning." + geom + ")) \
+            SELECT code_section, code_section_link, objectid, overlay_name, overlay_symbol, pending, pendingbill, pendingbillurl, sunset_date, type, " + geomOut + " as geometry \
+              FROM zp ORDER BY overlay_name";
+          const data = await fetchRowsWithFallback('zoningOverlays', {
+            databridge: sqlFor('', 'shape', 'ST_AsGeoJSON(ST_Transform(ST_SimplifyPreserveTopology(shape, 1), 4326), 6)'),
+            carto: sqlFor('phl.', 'the_geom', 'ST_AsGeoJSON(the_geom)'),
+          });
+          if (data) {
             if (import.meta.env.VITE_DEBUG == 'true') console.log('data:', data);
             data.rows.forEach(row => {
               row.link = `<a target='_blank' href='${row.code_section_link}'>${row.code_section} <i class='fas fa-external-link'></i></a>`
@@ -372,7 +384,6 @@ export const useZoningStore = defineStore('ZoningStore', {
       try {
         const GeocodeStore = useGeocodeStore();
         const feature = GeocodeStore.aisData.features[0];
-        let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
         const streetaddress = feature.properties.street_address;
         const pwd_parcel_id = feature.properties.pwd_parcel_id;
         const addressId = feature.properties.li_address_key.replace(/\|/g, "', '");
@@ -392,11 +403,9 @@ export const useZoningStore = defineStore('ZoningStore', {
           AND systemofrecord IN ('ECLIPSE') \
           ORDER BY scheduleddate DESC`;
 
-        const url = baseUrl += query;
-        const response = await fetch(url);
-        if (response.ok) {
-          let data = await response.json();
-          console.log('response ok, response:', response, 'data:', data);
+        const data = await fetchRowsWithFallback('zoningAppeals', query);
+        if (data) {
+          console.log('data:', data);
           data.rows.forEach((row) => {
             console.log('in loop, row:', row);
             let address = row.address;
@@ -424,45 +433,57 @@ export const useZoningStore = defineStore('ZoningStore', {
       try {
         const GeocodeStore = useGeocodeStore();
         const feature = GeocodeStore.aisData.features[0];
-        let url = '//services.arcgis.com/fLeGjb7u4uXqeF9q/arcgis/rest/services/Zoning_RCO/FeatureServer/0/query';
 
-        let params = {
-          'returnGeometry': true,
-          'where': "1=1",
-          'outSR': 4326,
-          'outFields': '*',
-          'inSr': 4326,
-          'geometryType': 'esriGeometryPoint',
-          'spatialRel': 'esriSpatialRelWithin',
-          'f': 'geojson',
-          'geometry': JSON.stringify({ "x": feature.geometry.coordinates[0], "y": feature.geometry.coordinates[1], "spatialReference": { "wkid": 4326 }}),
-        };
-
-        const response = await axios.get(url, { params });
-        if (response.status === 200) {
-          let data = await response.data;
-
-          data.features.sort((a, b) => {
-            if (a.properties.organization_name < b.properties.organization_name) {
-              return -1;
-            }
-            if (a.properties.organization_name > b.properties.organization_name) {
-              return 1;
-            }
-            return 0;
-          });
-
-          data.features.forEach(item => {
-            item.properties.rco = `<b>${item.properties.organization_name}</b><br>${item.properties.organization_address }`;
-            item.properties.contact = `${rcoPrimaryContact(item.properties.primary_name)}<br>${phoneNumber(item.properties.primary_phone)}<br><a target='_blank' href='mailto:${item.properties.primary_email}'>${item.properties.primary_email}</a>`;
-            item.properties.website_link = item.properties.websites ? `<a target='_blank' href='${item.properties.websites}'>${item.properties.websites}</a>` : 'No website provided';
-          })
-          this.rcos = data;
-          this.loadingRcos = false;
+        let data;
+        if (API_SOURCES.rcos === 'databridge') {
+          const coords = feature.geometry.coordinates;
+          data = await fetchDatabridgeGeoJSON(`select ${RCO_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from zoning_rco where ST_Contains(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${coords[0]}, ${coords[1]}), 4326), 2272))`);
+          if (!data) {
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillRcos - databridge query did not return features');
+            this.loadingRcos = false;
+            return;
+          }
         } else {
-          this.loadingRcos = false;
-          if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillRcos - await resolved but HTTP status was not successful');
+          let url = '//services.arcgis.com/fLeGjb7u4uXqeF9q/arcgis/rest/services/Zoning_RCO/FeatureServer/0/query';
+
+          let params = {
+            'returnGeometry': true,
+            'where': "1=1",
+            'outSR': 4326,
+            'outFields': '*',
+            'inSr': 4326,
+            'geometryType': 'esriGeometryPoint',
+            'spatialRel': 'esriSpatialRelWithin',
+            'f': 'geojson',
+            'geometry': JSON.stringify({ "x": feature.geometry.coordinates[0], "y": feature.geometry.coordinates[1], "spatialReference": { "wkid": 4326 }}),
+          };
+
+          const response = await axios.get(url, { params });
+          if (response.status !== 200) {
+            if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillRcos - await resolved but HTTP status was not successful');
+            this.loadingRcos = false;
+            return;
+          }
+          data = response.data;
         }
+
+        data.features.sort((a, b) => {
+            if (a.properties.organization_name < b.properties.organization_name) {
+            return -1;
+          }
+          if (a.properties.organization_name > b.properties.organization_name) {
+            return 1;
+          }
+          return 0;
+        });
+
+        data.features.forEach(item => {
+          item.properties.rco = `<b>${item.properties.organization_name}</b><br>${item.properties.organization_address }`;
+          item.properties.contact = `${rcoPrimaryContact(item.properties.primary_name)}<br>${phoneNumber(item.properties.primary_phone)}<br><a target='_blank' href='mailto:${item.properties.primary_email}'>${item.properties.primary_email}</a>`;
+          item.properties.website_link = item.properties.websites ? `<a target='_blank' href='${item.properties.websites}'>${item.properties.websites}</a>` : 'No website provided';
+        })
+        this.rcos = data;
+        this.loadingRcos = false;
       } catch {
         this.loadingRcos = false;
         if (import.meta.env.VITE_DEBUG == 'true') console.error('fillRcos - await never resolved, failed to fetch data');
