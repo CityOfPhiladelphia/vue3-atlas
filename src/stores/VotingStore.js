@@ -171,9 +171,12 @@ export const useVotingStore = defineStore("VotingStore", {
         } else if (feature.properties.political_division) {
           precinct = feature.properties.political_division;
         }
+        // AIS zero-pads precincts ('0528') but the splits table stores them unpadded
+        // ('528'), so wards 1-9 matched nothing - query both forms
+        const unpadded = String(parseInt(precinct, 10));
         if (import.meta.env.VITE_VOTING_DATA_SOURCE === 'carto') {
           let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
-          const url = baseUrl += `SELECT * FROM splits WHERE precinct = '${precinct}'`;
+          const url = baseUrl += `SELECT * FROM splits WHERE precinct IN ('${precinct}', '${unpadded}')`;
           const response = await fetch(url);
           if (response.ok) {
             this.electionSplit = await response.json();
@@ -185,7 +188,7 @@ export const useVotingStore = defineStore("VotingStore", {
           let baseUrl = 'https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/SPLITS/FeatureServer/0/query';
           let params = {
             'returnGeometry': false,
-            'where': `PRECINCT = '${precinct}'`,
+            'where': `PRECINCT IN ('${precinct}', '${unpadded}')`,
             'outSR': 4326,
             'outFields': '*',
             'inSr': 4326,
