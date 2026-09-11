@@ -140,7 +140,7 @@ export const useZoningStore = defineStore('ZoningStore', {
               ( SELECT all_proposed_zoning.* FROM all_proposed_zoning, parcel WHERE st_overlaps(parcel." + geom + ", all_proposed_zoning." + geom + ") AND ST_Area(ST_Intersection(parcel." + geom + ", all_proposed_zoning." + geom + ")) / ST_Area(parcel." + geom + ") > 0.05), \
             zp_contains AS \
               ( SELECT all_proposed_zoning.* FROM all_proposed_zoning, parcel WHERE st_contains(all_proposed_zoning." + geom + ", parcel." + geom + ")) \
-            SELECT * from zp_overlaps UNION SELECT * from zp_contains";
+            SELECT * from zp_overlaps UNION SELECT * from zp_contains ORDER BY enacted_date desc nulls last";
           const data = await fetchRowsWithFallback('proposedZoning', {
             databridge: sqlFor('', 'shape'),
             carto: sqlFor('phl.', 'the_geom'),
@@ -304,7 +304,7 @@ export const useZoningStore = defineStore('ZoningStore', {
             zp AS \
               ( SELECT all_zoning.* FROM all_zoning, parcel WHERE st_intersects(parcel." + geom + ", all_zoning." + geom + ")) \
             SELECT code_section, code_section_link, objectid, overlay_name, overlay_symbol, pending, pendingbill, pendingbillurl, sunset_date, type, " + geomOut + " as geometry \
-              FROM zp";
+              FROM zp ORDER BY overlay_name";
           const data = await fetchRowsWithFallback('zoningOverlays', {
             databridge: sqlFor('', 'shape', 'ST_AsGeoJSON(ST_Transform(ST_SimplifyPreserveTopology(shape, 1), 4326), 6)'),
             carto: sqlFor('phl.', 'the_geom', 'ST_AsGeoJSON(the_geom)'),

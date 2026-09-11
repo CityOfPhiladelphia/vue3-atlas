@@ -15,13 +15,23 @@ export const DATABRIDGE_URL = 'https://haydr3k097.execute-api.us-east-1.amazonaw
 // form just needs the '.000' stripped.
 const NAIVE_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
 const MILLIS_TIMESTAMP = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})\.\d{3}Z$/;
+// date-only columns arrive as midnight timestamps, but the timezone varies with which
+// serialization databridge happens to use (naive local vs UTC-midnight .000Z) - and a
+// UTC midnight rendered in local time displays a day early. Old carto always serves
+// midnight EASTERN, so both midnight forms are normalized to the local calendar date
+// to keep every displayed date identical to direct carto / prod. Whether that stored
+// calendar date itself is right is a separate question - bead vue3-atlas-qt1.
+const MIDNIGHT_UTC = /^(\d{4}-\d{2}-\d{2})T00:00:00(\.000)?Z$/;
 function normalizeTimestamps(properties) {
   for (const key of Object.keys(properties)) {
     const value = properties[key];
     if (typeof value !== 'string') {
       continue;
     }
-    if (NAIVE_TIMESTAMP.test(value)) {
+    const midnightUtc = value.match(MIDNIGHT_UTC);
+    if (midnightUtc) {
+      properties[key] = new Date(`${midnightUtc[1]}T00:00:00`).toISOString().replace('.000Z', 'Z');
+    } else if (NAIVE_TIMESTAMP.test(value)) {
       properties[key] = new Date(value).toISOString().replace('.000Z', 'Z');
     } else if (MILLIS_TIMESTAMP.test(value)) {
       properties[key] = value.replace(MILLIS_TIMESTAMP, '$1Z');
