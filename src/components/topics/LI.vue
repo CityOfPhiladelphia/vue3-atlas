@@ -229,7 +229,9 @@ const buildingCertsTableData = computed(() => ({
       label: 'Date Inspected',
       field: 'inspectiondate',
       type: 'date',
-      dateInputFormat: 'T',
+      // 'T' (epoch millis) was the AGO-era format; carto and databridge serve ISO
+      // strings, which parsed as invalid and left both date columns blank
+      dateInputFormat: "yyyy-MM-dd'T'HH:mm:ssX",
       dateOutputFormat: 'MM/dd/yyyy',
     },
     {
@@ -240,7 +242,7 @@ const buildingCertsTableData = computed(() => ({
       label: 'Expiration Date',
       field: 'expirationdate',
       type: 'date',
-      dateInputFormat: 'T',
+      dateInputFormat: "yyyy-MM-dd'T'HH:mm:ssX",
       dateOutputFormat: 'MM/dd/yyyy',
     }
   ],
