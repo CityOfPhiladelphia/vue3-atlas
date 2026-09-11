@@ -13,28 +13,22 @@ export const DATABRIDGE_URL = 'https://haydr3k097.execute-api.us-east-1.amazonaw
 // carto's form: UTC with a trailing Z and no milliseconds. A naive timestamp is local
 // time, so Date() then toISOString() reproduces the old carto value; the millisecond
 // form just needs the '.000' stripped.
-const NAIVE_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
-const MILLIS_TIMESTAMP = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})\.\d{3}Z$/;
-// date-only columns arrive as midnight timestamps, but the timezone varies with which
-// serialization databridge happens to use (naive local vs UTC-midnight .000Z) - and a
-// UTC midnight rendered in local time displays a day early. Old carto always serves
-// midnight EASTERN, so both midnight forms are normalized to the local calendar date
-// to keep every displayed date identical to direct carto / prod. Whether that stored
-// calendar date itself is right is a separate question - bead vue3-atlas-qt1.
-const MIDNIGHT_UTC = /^(\d{4}-\d{2}-\d{2})T00:00:00(\.000)?Z$/;
+// databridge serializes every timestamp as the table's LOCAL clock reading - sometimes
+// bare ('2026-09-10T16:47:51'), sometimes with a false UTC label ('...T16:47:51.000Z') -
+// while old carto converts properly ('2026-09-10T20:47:51Z' for the same row, verified
+// on violations CF-2026-123303 and the splits election_date). Trusting the false Z
+// shifted times 4-5 hours and rolled dates back a day, so every form is read as local
+// time and relabeled to real UTC, reproducing old carto's values exactly.
+const LOCAL_CLOCK_TIMESTAMP = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.\d{3})?Z?$/;
 function normalizeTimestamps(properties) {
   for (const key of Object.keys(properties)) {
     const value = properties[key];
     if (typeof value !== 'string') {
       continue;
     }
-    const midnightUtc = value.match(MIDNIGHT_UTC);
-    if (midnightUtc) {
-      properties[key] = new Date(`${midnightUtc[1]}T00:00:00`).toISOString().replace('.000Z', 'Z');
-    } else if (NAIVE_TIMESTAMP.test(value)) {
-      properties[key] = new Date(value).toISOString().replace('.000Z', 'Z');
-    } else if (MILLIS_TIMESTAMP.test(value)) {
-      properties[key] = value.replace(MILLIS_TIMESTAMP, '$1Z');
+    const clock = value.match(LOCAL_CLOCK_TIMESTAMP);
+    if (clock) {
+      properties[key] = new Date(clock[1]).toISOString().replace('.000Z', 'Z');
     }
   }
   return properties;
