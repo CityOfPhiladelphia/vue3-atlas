@@ -176,8 +176,11 @@ export const useVotingStore = defineStore("VotingStore", {
         } else if (feature.properties.political_division) {
           precinct = feature.properties.political_division;
         }
+        // AIS zero-pads precincts ('0528') but the splits table stores them unpadded
+        // ('528'), so wards 1-9 matched nothing - query both forms
+        const unpadded = String(parseInt(precinct, 10));
         if (API_SOURCES.electionSplit !== 'arcgis') {
-          const data = await fetchRowsWithFallback('electionSplit', `SELECT * FROM splits WHERE precinct = '${precinct}'`);
+          const data = await fetchRowsWithFallback('electionSplit', `SELECT * FROM splits WHERE precinct IN ('${precinct}', '${unpadded}')`);
           if (data) {
             this.electionSplit = data;
           } else {
@@ -188,7 +191,7 @@ export const useVotingStore = defineStore("VotingStore", {
           let baseUrl = 'https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/SPLITS/FeatureServer/0/query';
           let params = {
             'returnGeometry': false,
-            'where': `PRECINCT = '${precinct}'`,
+            'where': `PRECINCT IN ('${precinct}', '${unpadded}')`,
             'outSR': 4326,
             'outFields': '*',
             'inSr': 4326,
