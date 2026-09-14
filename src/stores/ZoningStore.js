@@ -438,12 +438,9 @@ export const useZoningStore = defineStore('ZoningStore', {
         if (API_SOURCES.rcos === 'databridge') {
           const coords = feature.geometry.coordinates;
           data = await fetchDatabridgeGeoJSON(`select ${RCO_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from zoning_rco where ST_Contains(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${coords[0]}, ${coords[1]}), 4326), 2272))`);
-          if (!data) {
-            if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillRcos - databridge query did not return features');
-            this.loadingRcos = false;
-            return;
-          }
-        } else {
+          if (!data) console.warn('fillRcos - databridge request failed, falling back to direct arcgis');
+        }
+        if (!data) {
           let url = '//services.arcgis.com/fLeGjb7u4uXqeF9q/arcgis/rest/services/Zoning_RCO/FeatureServer/0/query';
 
           let params = {

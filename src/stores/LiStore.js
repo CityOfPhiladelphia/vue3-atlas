@@ -161,11 +161,10 @@ export const useLiStore = defineStore('LiStore', {
                 geometry: { rings: f.geometry ? (f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates.flat() : f.geometry.coordinates) : [] },
               })),
             };
-          } else {
-            if (import.meta.env.VITE_DEBUG == 'true') console.warn('liBuildingFootprints - databridge query did not return features')
+            this.loadingLiBuildingFootprints = false;
+            return;
           }
-          this.loadingLiBuildingFootprints = false;
-          return;
+          console.warn('liBuildingFootprints - databridge request failed, falling back to direct arcgis');
         }
         const params = {
           where: where,
@@ -313,11 +312,9 @@ export const useLiStore = defineStore('LiStore', {
         let data;
         if (API_SOURCES.buildingCerts === 'databridge') {
           data = await fetchDatabridgeRows(sql);
-          if (!data) {
-            if (import.meta.env.VITE_DEBUG == 'true') console.warn('liBuildingCerts - databridge query did not return rows')
-            return;
-          }
-        } else {
+          if (!data) console.warn('liBuildingCerts - databridge request failed, falling back to direct carto');
+        }
+        if (!data) {
           const response = await fetch(baseUrl + sql);
           if (!response.ok) {
             if (import.meta.env.VITE_DEBUG == 'true') console.warn('liBuildingCerts - await resolved but HTTP status was not successful')
@@ -694,12 +691,9 @@ export const useLiStore = defineStore('LiStore', {
         let data;
         if (API_SOURCES.inspections === 'databridge') {
           data = await fetchDatabridgeRows(sql);
-          if (!data) {
-            this.loadingLiInspections = false;
-            if (import.meta.env.VITE_DEBUG == 'true') console.warn('liInspections - databridge query did not return rows')
-            return;
-          }
-        } else {
+          if (!data) console.warn('liInspections - databridge request failed, falling back to direct carto');
+        }
+        if (!data) {
           const response = await fetch(baseUrl + sql);
           if (!response.ok) {
             this.loadingLiInspections = false;
@@ -821,12 +815,9 @@ export const useLiStore = defineStore('LiStore', {
         let data;
         if (API_SOURCES.violations === 'databridge') {
           data = await fetchDatabridgeRows(sql);
-          if (!data) {
-            this.loadingLiViolations = false;
-            if (import.meta.env.VITE_DEBUG == 'true') console.warn('liViolations - databridge query did not return rows')
-            return;
-          }
-        } else {
+          if (!data) console.warn('liViolations - databridge request failed, falling back to direct carto');
+        }
+        if (!data) {
           const response = await fetch(baseUrl + sql);
           if (!response.ok) {
             this.loadingLiViolations = false;
@@ -1141,12 +1132,9 @@ export const useLiStore = defineStore('LiStore', {
         let data;
         if (API_SOURCES.appeals === 'databridge') {
           data = await fetchDatabridgeRows(query);
-          if (!data) {
-            this.loadingLiAppeals = false;
-            if (import.meta.env.VITE_DEBUG == 'true') console.warn('liAppeals - databridge query did not return rows')
-            return;
-          }
-        } else {
+          if (!data) console.warn('liAppeals - databridge request failed, falling back to direct carto');
+        }
+        if (!data) {
           const url = baseUrl += query;
           console.log('fillLiAppealsCarto fetching url:', url);
           const response = await fetch(url);

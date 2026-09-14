@@ -460,10 +460,9 @@ export const useDorStore = defineStore("DorStore", {
               if (data) {
                 // consumers read regmaps.data.features, mirroring the axios response wrapper
                 this.regmaps = { data: data };
-              } else {
-                if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillRegmaps - databridge query did not return features');
+                return resolve();
               }
-              return resolve();
+              console.warn('fillRegmaps - databridge request failed, falling back to direct arcgis');
             }
             const response = await axios.get(url, { params })
             if (response.status === 200) {

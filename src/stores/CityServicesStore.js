@@ -91,18 +91,21 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
     async fillAllCatchments() {
       try {
         if (API_SOURCES.schoolCatchments === 'databridge') {
+          let allLevels = true;
           for (const level of ['es', 'ms', 'hs']) {
             const data = await fetchDatabridgeGeoJSON(`select ${CATCHMENT_DATABRIDGE_COLS[level]}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from schooldist_catchments_${level}`);
             if (data) {
               this[`${level}Catchments`] = data;
-              this.setLoadingData(false);
             } else {
-              if (import.meta.env.VITE_DEBUG == 'true') console.warn(`nearbyCatchments - databridge ${level} query did not return features`);
-              this.setLoadingData(false);
-              this.setDataError(true);
+              allLevels = false;
+              break;
             }
           }
-          return;
+          if (allLevels) {
+            this.setLoadingData(false);
+            return;
+          }
+          console.warn('nearbyCatchments - databridge request failed, falling back to direct arcgis');
         }
         const params = {
           where: '1=1',
@@ -161,12 +164,9 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
           if (data) {
             this.allPoliceStations = data;
             this.setLoadingData(false);
-          } else {
-            if (import.meta.env.VITE_DEBUG == 'true') console.warn('allPoliceStations - databridge query did not return features');
-            this.setLoadingData(false);
-            this.setDataError(true);
+            return;
           }
-          return;
+          console.warn('allPoliceStations - databridge request failed, falling back to direct arcgis');
         }
         const response = await axios.get('https://services.arcgis.com/fLeGjb7u4uXqeF9q/arcgis/rest/services/Police_Stations/FeatureServer/0/query?', { params });
         if (response.status === 200) {
@@ -191,12 +191,9 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
           if (data) {
             this.allSchools = data;
             this.setLoadingData(false);
-          } else {
-            if (import.meta.env.VITE_DEBUG == 'true') console.warn('allSchools - databridge query did not return features');
-            this.setLoadingData(false);
-            this.setDataError(true);
+            return;
           }
-          return;
+          console.warn('allSchools - databridge request failed, falling back to direct arcgis');
         }
         const params = {
           where: '1=1',
@@ -234,7 +231,9 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
           // EPSG:2272 whose units are feet, so ST_DWithin takes the distance directly
           const coords = GeocodeStore.aisData.features[0].geometry.coordinates;
           data = await fetchDatabridgeGeoJSON(`select ${SCHOOLS_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from schools where upper(type_specific) IN ('DISTRICT', 'CHARTER') and ST_DWithin(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${coords[0]}, ${coords[1]}), 4326), 2272), 5820)`);
-        } else {
+          if (!data) console.warn('nearbySchools - databridge request failed, falling back to direct arcgis');
+        }
+        if (!data) {
           const url = 'https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/Schools/FeatureServer/0/query?';
           const params = {
             'returnGeometry': true,
@@ -303,7 +302,9 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
           // shape is native EPSG:2272 whose units are feet
           const coords = GeocodeStore.aisData.features[0].geometry.coordinates;
           data = await fetchDatabridgeGeoJSON(`select ${FIRE_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from fire_dept_facilities where firesta_ is not null and ST_DWithin(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${coords[0]}, ${coords[1]}), 4326), 2272), 5820)`);
-        } else {
+          if (!data) console.warn('nearbyFireStations - databridge request failed, falling back to direct arcgis');
+        }
+        if (!data) {
           const url = 'https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/Fire_Dept_Facilities/FeatureServer/0/query?';
           const params = {
             'returnGeometry': true,

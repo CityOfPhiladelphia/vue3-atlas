@@ -60,9 +60,14 @@ export const useParcelsStore = defineStore('ParcelsStore', {
             if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillPwdParcelData - await resolved but HTTP status was not successful');
           }
         } else {
-          const data = API_SOURCES.pwdParcels === 'databridge'
-            ? await fetchDatabridgeGeoJSON(`select ${PWD_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from pwd_parcels_3857 where parcelid = '${pwdParcelNumber}'`)
-            : await fetchCartoParcels(`select * from pwd_parcels where parcelid = '${pwdParcelNumber}'`);
+          let data = null;
+          if (API_SOURCES.pwdParcels === 'databridge') {
+            data = await fetchDatabridgeGeoJSON(`select ${PWD_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from pwd_parcels_3857 where parcelid = '${pwdParcelNumber}'`);
+            if (!data) console.warn('fillPwdParcelData - databridge request failed, falling back to direct carto');
+          }
+          if (!data) {
+            data = await fetchCartoParcels(`select * from pwd_parcels where parcelid = '${pwdParcelNumber}'`);
+          }
           if (data) {
             this.pwd = data;
           } else {
@@ -127,9 +132,13 @@ export const useParcelsStore = defineStore('ParcelsStore', {
           if (import.meta.env.VITE_DEBUG == 'true') console.log('response', response);
           originalJson = response.data;
         } else {
-          originalJson = API_SOURCES.dorParcels === 'databridge'
-            ? await fetchDatabridgeGeoJSON(`select ${DOR_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from dor_parcel_3857 where ${whereClause}`)
-            : await fetchCartoParcels(`select * from dor_parcel where ${whereClause}`);
+          if (API_SOURCES.dorParcels === 'databridge') {
+            originalJson = await fetchDatabridgeGeoJSON(`select ${DOR_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from dor_parcel_3857 where ${whereClause}`);
+            if (!originalJson) console.warn('fillDorParcelData - databridge request failed, falling back to direct carto');
+          }
+          if (!originalJson) {
+            originalJson = await fetchCartoParcels(`select * from dor_parcel where ${whereClause}`);
+          }
           if (!originalJson) {
             if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillDorParcelData - query did not return features');
             return;
@@ -166,13 +175,17 @@ export const useParcelsStore = defineStore('ParcelsStore', {
             if (import.meta.env.VITE_DEBUG == 'true') console.warn('checkParcelDataByLngLat - await resolved but HTTP status was not successful')
           }
           responseData = response.data;
-        } else if (API_SOURCES[parcelLayer === 'pwd' ? 'pwdParcels' : 'dorParcels'] === 'databridge') {
-          const table = parcelLayer === 'pwd' ? 'pwd_parcels_3857' : 'dor_parcel_3857';
-          const cols = parcelLayer === 'pwd' ? PWD_DATABRIDGE_COLS : DOR_DATABRIDGE_COLS;
-          responseData = await fetchDatabridgeGeoJSON(`select ${cols}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from ${table} where ST_Contains(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326), 3857))`) || {};
         } else {
-          const cartoTable = parcelLayer === 'pwd' ? 'pwd_parcels' : 'dor_parcel';
-          responseData = await fetchCartoParcels(`select * from ${cartoTable} where ST_Contains(the_geom, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326))`) || {};
+          if (API_SOURCES[parcelLayer === 'pwd' ? 'pwdParcels' : 'dorParcels'] === 'databridge') {
+            const table = parcelLayer === 'pwd' ? 'pwd_parcels_3857' : 'dor_parcel_3857';
+            const cols = parcelLayer === 'pwd' ? PWD_DATABRIDGE_COLS : DOR_DATABRIDGE_COLS;
+            responseData = await fetchDatabridgeGeoJSON(`select ${cols}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from ${table} where ST_Contains(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326), 3857))`);
+            if (!responseData) console.warn('checkParcelDataByLngLat - databridge request failed, falling back to direct carto');
+          }
+          if (!responseData) {
+            const cartoTable = parcelLayer === 'pwd' ? 'pwd_parcels' : 'dor_parcel';
+            responseData = await fetchCartoParcels(`select * from ${cartoTable} where ST_Contains(the_geom, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326))`) || {};
+          }
         }
         // a failed query can return 200 with an { error } body and no features
         if (responseData.features && responseData.features.length > 0) {

@@ -38,12 +38,13 @@ export const useOpaStore = defineStore('OpaStore', {
         const data = await fetchDatabridgeRows(`select * from opa_properties_public where parcel_number = '${OpaNum}'`);
         if (data) {
           this.opaData = data;
-        } else {
-          if (import.meta.env.VITE_DEBUG == 'true') console.warn('opaData - databridge query did not return features')
+          return;
         }
       } catch {
-        if (import.meta.env.VITE_DEBUG == 'true') console.error('opaData - await never resolved, failed to fetch address data')
+        // fall through to carto below
       }
+      console.warn('opaData - databridge request failed, falling back to direct carto');
+      await this._fillOpaDataCarto();
     },
     async _fillOpaDataArcGIS() {
       try {

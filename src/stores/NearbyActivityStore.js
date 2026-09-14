@@ -342,7 +342,9 @@ export const useNearbyActivityStore = defineStore('NearbyActivityStore', {
           // (this store's fillBufferForAddress call uses the 750ft default); shape is
           // native EPSG:2272 whose units are feet, so ST_DWithin takes 750 directly
           data = await fetchDatabridgeGeoJSON(`select ${VACANT_POINTS_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from vacant_indicators_points where ST_DWithin(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${coordinates[0]}, ${coordinates[1]}), 4326), 2272), 750)`);
-        } else {
+          if (!data) console.warn('nearbyVacantIndicatorPoints - databridge request failed, falling back to direct arcgis');
+        }
+        if (!data) {
           const response = await axios.get(url, { params });
           if (response.status !== 200) {
             if (import.meta.env.VITE_DEBUG == 'true') console.warn('nearbyVacantIndicatorPoints - await resolved but HTTP status was not successful');

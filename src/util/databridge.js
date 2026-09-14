@@ -61,27 +61,41 @@ export async function fetchRowsWithFallback(sourceKey, sql) {
 }
 
 // fetches from databridge-api and flattens the envelope to the Carto rows shape:
-// { rows: [...] } - for attribute queries with no geometry
+// { rows: [...] } - for attribute queries with no geometry. Returns null on any
+// failure (bad response OR network/gateway error) so call sites can fall through
+// to their carto branch without a try/catch of their own
 export async function fetchDatabridgeRows(sql) {
   const params = { sql };
   // the proxy identifies callers by origin, which localhost is not registered as
   if (import.meta.env.VITE_DEBUG == 'true') {
     params.client_id = import.meta.env.VITE_AIS_CLIENTID_ATLAS;
   }
-  const response = await axios(DATABRIDGE_URL, { params });
+  let response;
+  try {
+    response = await axios(DATABRIDGE_URL, { params });
+  } catch {
+    return null;
+  }
   if (response.status !== 200 || !response.data.data || !response.data.data.features) {
     return null;
   }
   return { rows: response.data.data.features.map((f) => normalizeTimestamps(f.properties)) };
 }
 
+// returns null on any failure (bad response OR network/gateway error) so call sites
+// can fall through to their carto/arcgis branch without a try/catch of their own
 export async function fetchDatabridgeGeoJSON(sql) {
   const params = { sql };
   // the proxy identifies callers by origin, which localhost is not registered as
   if (import.meta.env.VITE_DEBUG == 'true') {
     params.client_id = import.meta.env.VITE_AIS_CLIENTID_ATLAS;
   }
-  const response = await axios(DATABRIDGE_URL, { params });
+  let response;
+  try {
+    response = await axios(DATABRIDGE_URL, { params });
+  } catch {
+    return null;
+  }
   if (response.status !== 200 || !response.data.data || !response.data.data.features) {
     return null;
   }
