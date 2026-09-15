@@ -11,7 +11,9 @@ describe.skipIf(!clientId)('AIS autocomplete API integration', () => {
     const query = '1234 mar';
     const url = `${AIS_AUTOCOMPLETE_URL}?q=${encodeURIComponent(query)}&simple=true&client_id=${clientId}`;
 
-    const response = await fetch(url);
+    // the gateway 401s any request with no Origin header at all, and node's fetch
+    // sends none - send one like a dev browser does
+    const response = await fetch(url, { headers: { Origin: 'http://localhost:5173' } });
     expect(response.ok).toBe(true);
 
     const data = await response.json();

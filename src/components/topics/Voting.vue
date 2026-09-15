@@ -8,6 +8,7 @@ const { nth, phoneNumber, titleCase } = useTransforms();
 import { useVotingStore } from '@/stores/VotingStore';
 import { computed, getCurrentInstance } from 'vue';
 const VotingStore = useVotingStore();
+import { API_SOURCES } from '@/config/apiSources.js';
 
 import VerticalTable from '@/components/VerticalTable.vue';
 
@@ -40,21 +41,22 @@ let fieldNames = {
   'email': 'email',
   'next_election': 'next_election',
 };
-if (import.meta.env.VITE_VOTING_DATA_SOURCE === 'arcgis') {
+// AGO serves the voting fields uppercase; the voting apiSources flags move together,
+// so one of them stands in for the group here
+if (API_SOURCES.electedOfficials === 'arcgis') {
   for (let field of Object.keys(fieldNames)) {
     fieldNames[field] = fieldNames[field].toUpperCase();
   }
 }
 
 const electedOfficials = computed(() => {
-  if (import.meta.env.VITE_VOTING_DATA_SOURCE === 'carto') {
+  if (API_SOURCES.electedOfficials !== 'arcgis') {
     if (!VotingStore.electedOfficials.rows || !VotingStore.electedOfficials.rows.length) return null;
     return VotingStore.electedOfficials.rows;
-  } else if (import.meta.env.VITE_VOTING_DATA_SOURCE === 'arcgis') {
+  } else {
     if (!VotingStore.electedOfficials.features || !VotingStore.electedOfficials.features.length) return null;
     return VotingStore.electedOfficials.features.map((feature) => feature.properties);
   }
-  return null;
 });
 
 const council = computed(() => {
@@ -68,11 +70,11 @@ const council = computed(() => {
 });
 
 const electionSplit = computed(() => {
-  if (import.meta.env.VITE_VOTING_DATA_SOURCE === 'carto') {
+  if (API_SOURCES.electionSplit !== 'arcgis') {
     if (VotingStore.electionSplit.rows && VotingStore.electionSplit.rows[0]) {
       return VotingStore.electionSplit.rows[0];
     }
-  } else if (import.meta.env.VITE_VOTING_DATA_SOURCE === 'arcgis') {
+  } else {
     if (VotingStore.electionSplit.features && VotingStore.electionSplit.features[0]) {
       return VotingStore.electionSplit.features[0].properties;
     }
@@ -113,11 +115,11 @@ const term = computed(() => {
 });
 
 const pollingPlacesData = computed(() => {
-  if (import.meta.env.VITE_VOTING_DATA_SOURCE === 'carto') {
+  if (API_SOURCES.pollingPlaces !== 'arcgis') {
     if (VotingStore.pollingPlaces.rows) {
       return VotingStore.pollingPlaces.rows[0];
     }
-  } else if (import.meta.env.VITE_VOTING_DATA_SOURCE === 'arcgis') {
+  } else {
     if (VotingStore.pollingPlaces.features) {
       return VotingStore.pollingPlaces.features[0].properties;
     }

@@ -30,6 +30,7 @@ import { useLiStore } from '@/stores/LiStore.js'
 const LiStore = useLiStore();
 import { useVotingStore } from '@/stores/VotingStore.js'
 const VotingStore = useVotingStore();
+import { API_SOURCES } from '@/config/apiSources.js';
 import { useNearbyActivityStore } from '@/stores/NearbyActivityStore';
 const NearbyActivityStore = useNearbyActivityStore();
 import { useCityServicesStore } from '@/stores/CityServicesStore';
@@ -743,27 +744,25 @@ watch(
 
 // for Voting topic, watch voting division and polling place for changing map center and zoom
 const votingDivision = computed(() => {
-  if (import.meta.env.VITE_VOTING_DATA_SOURCE == 'carto') {
+  if (API_SOURCES.politicalDivisions !== 'arcgis') {
     if (VotingStore.divisions.rows) {
       return JSON.parse(VotingStore.divisions.rows[0].st_asgeojson);
     } else {
       return [[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]];
     }
-  } else if (import.meta.env.VITE_VOTING_DATA_SOURCE == 'arcgis') {
+  } else {
     if (VotingStore.divisions.features) {
       return VotingStore.divisions.features[0].geometry.coordinates[0];
     } else {
       return [[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]];
     }
-  } else {
-    return [[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]];
   }
 });
 const pollingPlaceCoordinates = computed(() => {
-  if (import.meta.env.VITE_VOTING_DATA_SOURCE == 'carto' && VotingStore.pollingPlaces.rows) {
+  if (API_SOURCES.pollingPlaces !== 'arcgis' && VotingStore.pollingPlaces.rows) {
     return [VotingStore.pollingPlaces.rows[0].lng, VotingStore.pollingPlaces.rows[0].lat];
   }
-  if (import.meta.env.VITE_VOTING_DATA_SOURCE == 'arcgis' && VotingStore.pollingPlaces.features) {
+  if (API_SOURCES.pollingPlaces === 'arcgis' && VotingStore.pollingPlaces.features) {
     return VotingStore.pollingPlaces.features[0].geometry.coordinates;
   }
   return [];
