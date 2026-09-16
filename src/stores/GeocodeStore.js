@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import { fetchAisSearch } from '@/util/ais.js';
 
 export const useGeocodeStore = defineStore("GeocodeStore", {
   state: () => {
@@ -12,10 +13,10 @@ export const useGeocodeStore = defineStore("GeocodeStore", {
     async checkAisData(parameter) {
       try {
         if (import.meta.env.VITE_DEBUG == 'true') console.log('checkAisData is running, parameter:', parameter);
-        const response = await fetch(`https://api.phila.gov/ais/v1/search/${encodeURIComponent(parameter)}?include_units=false`)
-        if (response.ok) {
+        const data = await fetchAisSearch(parameter);
+        if (data) {
           if (import.meta.env.VITE_DEBUG == 'true') console.log('check AIS - await resolved and HTTP status is successful')
-          this.aisDataChecked = await response.json()
+          this.aisDataChecked = data
         } else {
           if (import.meta.env.VITE_DEBUG == 'true') console.log('check AIS - await resolved but HTTP status was not successful')
           this.aisDataChecked = {}
@@ -27,10 +28,10 @@ export const useGeocodeStore = defineStore("GeocodeStore", {
     async fillAisData(address) {
       try {
         if (import.meta.env.VITE_DEBUG == 'true') console.log('Address - fillAisData is running, address:', address)
-        const response = await fetch(`https://api.phila.gov/ais/v1/search/${encodeURIComponent(address)}?include_units=false`)
-        if (response.ok) {
+        const data = await fetchAisSearch(address);
+        if (data) {
           if (import.meta.env.VITE_DEBUG == 'true') console.log('Address - await resolved and HTTP status is successful')
-          this.aisData = await response.json()
+          this.aisData = data
         } else {
           if (import.meta.env.VITE_DEBUG == 'true') console.log('Address - await resolved but HTTP status was not successful')
           this.aisData = {}
