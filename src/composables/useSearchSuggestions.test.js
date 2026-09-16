@@ -1,27 +1,24 @@
 import { describe, it, expect } from 'vitest';
 
 const AIS_AUTOCOMPLETE_URL =
-  'https://haydr3k097.execute-api.us-east-1.amazonaws.com/queryAis/autocomplete';
-const clientId = import.meta.env.VITE_AIS_CLIENTID_ATLAS;
+  'https://api-prod.phila.gov/ais-autocomplete/v1/autocomplete';
+const clientId = import.meta.env.VITE_GATEWAY_CLIENT_ID;
 
-// a node test run sends no origin, so the proxy can only identify it by client id
 describe.skipIf(!clientId)('AIS autocomplete API integration', () => {
 
   it('returns address suggestions for a typed prefix', async () => {
     const query = '1234 mar';
-    const url = `${AIS_AUTOCOMPLETE_URL}?q=${encodeURIComponent(query)}&simple=true&client_id=${clientId}`;
+    const url = `${AIS_AUTOCOMPLETE_URL}?q=${encodeURIComponent(query)}&client_id=${clientId}`;
 
-    // the gateway 401s any request with no Origin header at all, and node's fetch
-    // sends none - send one like a dev browser does
-    const response = await fetch(url, { headers: { Origin: 'http://localhost:5173' } });
+    const response = await fetch(url);
     expect(response.ok).toBe(true);
 
     const data = await response.json();
 
-    expect(Array.isArray(data)).toBe(true);
+    expect(typeof data.count).toBe('number');
 
-    if (data.length > 0) {
-      expect(typeof data[0]).toBe('string');
+    if (data.count > 0) {
+      expect(typeof data.results.addresses[0].address).toBe('string');
     }
   });
 
