@@ -1,9 +1,12 @@
 import axios from 'axios';
 import { API_SOURCES } from '@/config/apiSources.js';
 
-export const DATABRIDGE_URL = 'https://haydr3k097.execute-api.us-east-1.amazonaws.com/queryDatabridge/databridge';
+export const DATABRIDGE_URL = 'https://api-prod.phila.gov/databridge-api/v1/get';
+// the app's client id for the phila.gov API gateway - one id covers databridge,
+// AIS search, and AIS autocomplete
+const GATEWAY_CLIENT_ID = import.meta.env.VITE_GATEWAY_CLIENT_ID;
 
-// fetches from databridge-api (via the maps-api-proxy lambda), reshaped to a GeoJSON
+// fetches from databridge-api (via the MuleSoft gateway), reshaped to a GeoJSON
 // FeatureCollection matching the ArcGIS response shape: the envelope is data.features[].properties
 // with the geometry as a geom property (select ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom),
 // feature.id stamped from objectid, single-poly MultiPolygons unwrapped
@@ -36,7 +39,7 @@ function normalizeTimestamps(properties) {
 
 // fetches rows for a dataset through its configured source: databridge first (per the
 // named apiSources switch), falling back LOUDLY to direct carto when databridge fails -
-// proxy hiccups degrade instead of emptying topics, without silently masking outages
+// gateway hiccups degrade instead of emptying topics, without silently masking outages
 // sql is one string when the same statement runs on both transports, or
 // { databridge, carto } when their geometry columns force different statements
 export async function fetchRowsWithFallback(sourceKey, sql) {
@@ -65,11 +68,7 @@ export async function fetchRowsWithFallback(sourceKey, sql) {
 // failure (bad response OR network/gateway error) so call sites can fall through
 // to their carto branch without a try/catch of their own
 export async function fetchDatabridgeRows(sql) {
-  const params = { sql };
-  // the proxy identifies callers by origin, which localhost is not registered as
-  if (import.meta.env.VITE_DEBUG == 'true') {
-    params.client_id = import.meta.env.VITE_AIS_CLIENTID_ATLAS;
-  }
+  const params = { sql, client_id: GATEWAY_CLIENT_ID };
   let response;
   try {
     response = await axios(DATABRIDGE_URL, { params });
@@ -85,11 +84,7 @@ export async function fetchDatabridgeRows(sql) {
 // returns null on any failure (bad response OR network/gateway error) so call sites
 // can fall through to their carto/arcgis branch without a try/catch of their own
 export async function fetchDatabridgeGeoJSON(sql) {
-  const params = { sql };
-  // the proxy identifies callers by origin, which localhost is not registered as
-  if (import.meta.env.VITE_DEBUG == 'true') {
-    params.client_id = import.meta.env.VITE_AIS_CLIENTID_ATLAS;
-  }
+  const params = { sql, client_id: GATEWAY_CLIENT_ID };
   let response;
   try {
     response = await axios(DATABRIDGE_URL, { params });

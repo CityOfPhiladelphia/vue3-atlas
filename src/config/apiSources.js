@@ -1,24 +1,19 @@
 // Configuration for switching between Carto and ArcGIS data sources
 // Change individual values to 'carto' or 'arcgis' as needed
-// 'databridge' routes through the maps-api-proxy queryDatabridge lambda (prod gateway; URL in src/util/databridge.js)
+// 'databridge' calls databridge-api on the MuleSoft gateway (URL in src/util/databridge.js)
 
-// MASTER SWITCH: set false to move EVERY call off maps-api-proxy at once (incident
-// rollback when the whole lambda/gateway chain is down). Each 'databridge' dataset
+// MASTER SWITCH: set false to move EVERY call off databridge at once (incident
+// rollback when the gateway/databridge chain is down). Each 'databridge' dataset
 // drops to a direct branch - carto, or AGO where that's the dataset's only direct
-// branch - and ais drops to direct. The per-dataset values below still control
-// routing individually while this is true.
-export const USE_PROXY = true;
+// branch. The per-dataset values below still control routing individually while
+// this is true.
+export const USE_DATABRIDGE = true;
 
-const PROXY_SOURCES = {
-  // AIS geocoding (GeocodeStore, CondosStore; autocomplete is already on the proxy):
-  // 'proxy' routes through the maps-api-proxy queryAis lambda with a loud direct
-  // fallback; 'direct' skips the proxy chain entirely - the rollback if it's down
-  ais: 'proxy',
-
+const DATABRIDGE_SOURCES = {
   // OpaStore
   opaData: 'databridge',
 
-  // LiStore - the databridge branches send the same SQL as carto through the lambda
+  // LiStore - the databridge branches send the same SQL as carto to databridge-api
   buildingCertSummary: 'databridge',
   buildingCerts: 'databridge',
   violations: 'databridge',
@@ -92,11 +87,11 @@ const PROXY_SOURCES = {
   dorParcels: 'databridge',
 };
 
-export const API_SOURCES = USE_PROXY
-  ? PROXY_SOURCES
+export const API_SOURCES = USE_DATABRIDGE
+  ? DATABRIDGE_SOURCES
   : Object.fromEntries(
-    Object.entries(PROXY_SOURCES).map(([key, value]) => [
+    Object.entries(DATABRIDGE_SOURCES).map(([key, value]) => [
       key,
-      value === 'databridge' ? 'carto' : value === 'proxy' ? 'direct' : value,
+      value === 'databridge' ? 'carto' : value,
     ])
   );
