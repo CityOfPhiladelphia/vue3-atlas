@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { useGeocodeStore } from '@/stores/GeocodeStore.js'
 import { API_SOURCES } from '@/config/apiSources.js';
+import { fetchDatabridgeRows } from '@/util/databridge.js';
 
 import useTransforms from '@/composables/useTransforms';
 const { titleCase, prettyNumber, currency, date } = useTransforms();
@@ -23,7 +24,27 @@ export const useOpaStore = defineStore('OpaStore', {
       if (API_SOURCES.opaData === 'arcgis') {
         return this._fillOpaDataArcGIS();
       }
+      if (API_SOURCES.opaData === 'databridge') {
+        return this._fillOpaDataDatabridge();
+      }
       return this._fillOpaDataCarto();
+    },
+    async _fillOpaDataDatabridge() {
+      try {
+        const GeocodeStore = useGeocodeStore();
+        const OpaNum = GeocodeStore.aisData.features[0].properties.opa_account_num;
+        // attribute-only lookup, so select * needs no transformed geom column and keeps
+        // the columns identical to the carto branch (shape arrives as an unused point)
+        const data = await fetchDatabridgeRows(`select * from opa_properties_public where parcel_number = '${OpaNum}'`);
+        if (data) {
+          this.opaData = data;
+          return;
+        }
+      } catch {
+        // fall through to carto below
+      }
+      console.warn('opaData - databridge request failed, falling back to direct carto');
+      await this._fillOpaDataCarto();
     },
     async _fillOpaDataArcGIS() {
       try {

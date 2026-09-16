@@ -2,6 +2,10 @@
 
 import { ref, computed, onBeforeMount } from 'vue';
 
+import useTableSearch from '@/composables/useTableSearch';
+import useRemoteTableUi from '@/composables/useRemoteTableUi';
+import PaginationWithSearch from '@/components/pagination/PaginationWithSearch.vue';
+
 import useTransforms from '@/composables/useTransforms';
 const { date, integer, prettyNumber } = useTransforms();
 
@@ -20,8 +24,6 @@ const MapStore = useMapStore();
 import CollectionSummary from '@/components/CollectionSummary.vue';
 import VerticalTable from '@/components/VerticalTable.vue';
 
-import TextFilter from '@/components/TextFilter.vue';
-const textSearch = ref('');
 
 let selectedParcelId = computed(() => { return MainStore.selectedParcelId });
 const selectedParcel = computed(() => {
@@ -31,41 +33,96 @@ const selectedParcel = computed(() => {
     return null;
   }
 });
+const selectedDocEntry = computed(() => {
+  return selectedParcelId.value ? DorStore.dorDocuments[selectedParcelId.value] : null;
+});
+const docsRemote = computed(() => !!(selectedDocEntry.value && selectedDocEntry.value.remote));
+let docsUi;
+const { searchTerm: docsSearchTerm, searchEnabled: docsSearchThreshold, filterRows: filterDocRows } = useTableSearch({
+  fields: [ 'grantors', 'grantees', 'unit_num' ],
+  // the documents table has always offered search regardless of size - keep that
+  minRows: 0,
+  onSearch: async (term) => {
+    if (!docsRemote.value) return;
+    await DorStore.setDocsSearch(selectedParcelId.value, term);
+    docsUi.currentPage.value = 1;
+    docsUi.load();
+  },
+});
+docsUi = useRemoteTableUi({
+  isRemote: () => docsRemote.value,
+  resetKey: () => `${selectedParcelId.value}|${selectedDocEntry.value ? selectedDocEntry.value.baseSql : ''}`,
+  fetchUiPage: (page, perPage) => DorStore.docsUiPage(selectedParcelId.value, page, perPage),
+  setSort: (field, type) => DorStore.setDocsSort(selectedParcelId.value, field, type),
+  onReset: () => { if (docsSearchTerm.value) docsSearchTerm.value = ''; },
+});
+
 const selectedDocs = computed(() => {
-  if (selectedParcelId.value && DorStore.dorDocuments[selectedParcelId.value]) {
-    // if (import.meta.env.VITE_DEBUG == 'true') console.log('selectedParcelId.value:', selectedParcelId.value);
-    let data = [];
-    for (let feature of DorStore.dorDocuments[selectedParcelId.value].features) {
-      if (feature.attributes.grantors != null && feature.attributes.grantors.toLowerCase().includes(textSearch.value.toLowerCase())
-        || feature.attributes.grantees != null && feature.attributes.grantees.toLowerCase().includes(textSearch.value.toLowerCase())
-        || feature.attributes.unit_num != null && feature.attributes.unit_num.toLowerCase().includes(textSearch.value.toLowerCase())
-      ){
-        data.push({
-          ...feature.attributes,
-        });
-      }
-    }
+  if (docsRemote.value) {
+    return docsUi.rows.value;
+  }
+  if (selectedDocEntry.value && selectedDocEntry.value.features) {
+    let data = selectedDocEntry.value.features.map((feature) => ({ ...feature.attributes }));
     data.sort((a, b) => new Date(b.display_date) - new Date(a.display_date));
-    return data;
+    return filterDocRows(data);
   } else {
     return null;
   }
 });
 const selectedDocsLength = computed(() => {
+  if (docsRemote.value) {
+    return selectedDocEntry.value.total || 0;
+  }
   return selectedDocs.value ? selectedDocs.value.length : 0;
+});
+const docsUnfilteredTotal = computed(() => docsRemote.value
+  ? (selectedDocEntry.value.grandTotal || 0)
+  : (selectedDocEntry.value && selectedDocEntry.value.features ? selectedDocEntry.value.features.length : 0));
+const docsSearchEnabled = computed(() => docsSearchThreshold(docsUnfilteredTotal.value));
+
+const selectedCondoEntry = computed(() => {
+  return selectedParcelId.value ? DorStore.dorCondos[selectedParcelId.value] : null;
+});
+const condosRemote = computed(() => !!(selectedCondoEntry.value && selectedCondoEntry.value.remote));
+let condosUi;
+const { searchTerm: condosSearchTerm, searchEnabled: condosSearchThreshold, filterRows: filterCondoRows } = useTableSearch({
+  fields: [ 'condo_parcel', 'condo_name', 'unit_number' ],
+  onSearch: async (term) => {
+    if (!condosRemote.value) return;
+    await DorStore.setCondosSearch(selectedParcelId.value, term);
+    condosUi.currentPage.value = 1;
+    condosUi.load();
+  },
+});
+condosUi = useRemoteTableUi({
+  isRemote: () => condosRemote.value,
+  resetKey: () => `${selectedParcelId.value}|${selectedCondoEntry.value ? selectedCondoEntry.value.baseSql : ''}`,
+  fetchUiPage: (page, perPage) => DorStore.condosUiPage(selectedParcelId.value, page, perPage),
+  setSort: (field, type) => DorStore.setCondosSort(selectedParcelId.value, field, type),
+  onReset: () => { if (condosSearchTerm.value) condosSearchTerm.value = ''; },
 });
 
 const selectedCondos = computed(() => {
+  if (condosRemote.value) {
+    return condosUi.rows.value;
+  }
   if (selectedParcelId.value && DorStore.dorCondos[selectedParcelId.value]) {
-    return DorStore.dorCondos[selectedParcelId.value].rows;
+    return filterCondoRows(DorStore.dorCondos[selectedParcelId.value].rows);
   } else {
     return null;
   }
 });
 
 const selectedCondosLength = computed(() => {
+  if (condosRemote.value) {
+    return selectedCondoEntry.value.total || 0;
+  }
   return selectedCondos.value ? selectedCondos.value.length : 0;
 });
+const condosUnfilteredTotal = computed(() => condosRemote.value
+  ? (selectedCondoEntry.value.grandTotal || 0)
+  : (selectedCondoEntry.value && selectedCondoEntry.value.rows ? selectedCondoEntry.value.rows.length : 0));
+const condosSearchEnabled = computed(() => condosSearchThreshold(condosUnfilteredTotal.value));
 
 const regmaps = computed(() => {
   if (!DorStore.regmaps.data) {
@@ -101,11 +158,7 @@ const selectedRegmap = computed(() => {
 });
 
 const deededCondosExist = computed(() => {
-  let flag = false;
-  if (DorStore.dorCondos[selectedParcelId.value] && DorStore.dorCondos[selectedParcelId.value].rows && DorStore.dorCondos[selectedParcelId.value].rows.length > 0) {
-    flag = true;
-  }
-  return flag;
+  return condosUnfilteredTotal.value > 0;
 });
 
 const getAddress = (address) => {
@@ -258,16 +311,23 @@ const dorDocsTableData = computed(() => {
           Deeded Condominiums ({{ selectedCondosLength }})
         </h2>
         <vue-good-table
+          id="deeded-condos"
+          :mode="condosRemote ? 'remote' : ''"
           :columns="condosTableData.columns"
           :rows="condosTableData.rows"
-          :pagination-options="paginationOptions(condosTableData.rows.length)"
+          :total-rows="condosRemote ? selectedCondosLength : undefined"
+          :pagination-options="paginationOptions(condosUnfilteredTotal)"
           style-class="table"
-        >
+          @page-change="condosUi.onPageChange"
+          @per-page-change="condosUi.onPerPageChange"
+          @sort-change="condosUi.onSortChange"
+>
           <template #pagination-top="props">
-            <custom-pagination-labels
-              :mode="'pages'"
+            <pagination-with-search
+              v-model="condosSearchTerm"
+              :search-enabled="condosSearchEnabled"
+              placeholder="Search Condominiums"
               :total="props.total"
-              :per-page="5"
               @page-changed="props.pageChanged"
               @per-page-changed="props.perPageChanged"
             />
@@ -297,20 +357,19 @@ const dorDocsTableData = computed(() => {
             spin
           /><span v-else>({{ selectedDocsLength }})</span>
         </h2>
-        <TextFilter
-          v-model="textSearch"
-          class="dor-docs-filter"
-          :search-label="'Search Documents'"
-          :placeholder="'Search Documents'"
-        />
         <div class="horizontal-table">
           <vue-good-table
             id="dor-documents"
+            :mode="docsRemote ? 'remote' : ''"
             :columns="dorDocsTableData.columns"
             :rows="dorDocsTableData.rows"
+            :total-rows="docsRemote ? selectedDocsLength : undefined"
             style-class="table"
-            :pagination-options="paginationOptions(dorDocsTableData.rows.length)"
-          >
+            :pagination-options="paginationOptions(docsUnfilteredTotal)"
+            @page-change="docsUi.onPageChange"
+            @per-page-change="docsUi.onPerPageChange"
+            @sort-change="docsUi.onSortChange"
+>
             <template #emptystate>
               <div v-if="DorStore.loadingDorData">
                 Loading DOR Documents... <font-awesome-icon
@@ -323,10 +382,11 @@ const dorDocsTableData = computed(() => {
               </div>
             </template>
             <template #pagination-top="props">
-              <custom-pagination-labels
-                :mode="'pages'"
+              <pagination-with-search
+                v-model="docsSearchTerm"
+                :search-enabled="docsSearchEnabled"
+                placeholder="Search Documents"
                 :total="props.total"
-                :per-page="5"
                 @page-changed="props.pageChanged"
                 @per-page-changed="props.perPageChanged"
               />
@@ -367,10 +427,6 @@ const dorDocsTableData = computed(() => {
 </template>
 
 <style>
-
-.dor-docs-filter {
-  margin-left: -4px !important;
-}
 
 .dor-parcel-select {
   color: #444444;

@@ -1,7 +1,9 @@
 import { ref, toValue, watch } from 'vue';
 
+// AIS autocomplete on the phila.gov API gateway, identified by the app's client id
 const AIS_AUTOCOMPLETE_URL =
-  'https://haydr3k097.execute-api.us-east-1.amazonaws.com/queryAis/autocomplete';
+  'https://api-prod.phila.gov/ais-autocomplete/v1/autocomplete';
+const GATEWAY_CLIENT_ID = import.meta.env.VITE_GATEWAY_CLIENT_ID;
 
 export function useSearchSuggestions(search) {
   const searchSuggestions = ref([]);
@@ -14,15 +16,9 @@ export function useSearchSuggestions(search) {
       return;
     }
 
-    // the proxy identifies callers by origin, which localhost is not registered as
-    const clientId =
-      import.meta.env.VITE_DEBUG == 'true'
-        ? `&client_id=${import.meta.env.VITE_AIS_CLIENTID_ATLAS}`
-        : '';
-
     try {
       const response = await fetch(
-        `${AIS_AUTOCOMPLETE_URL}?q=${encodeURIComponent(stringValue)}&simple=true${clientId}`
+        `${AIS_AUTOCOMPLETE_URL}?q=${encodeURIComponent(stringValue)}&client_id=${GATEWAY_CLIENT_ID}`
       );
       if (!response.ok) {
         searchSuggestionsError.value = {
@@ -31,7 +27,10 @@ export function useSearchSuggestions(search) {
         };
         return;
       }
-      searchSuggestions.value = await response.json();
+      const suggestions = await response.json();
+      searchSuggestions.value = suggestions.count
+        ? Array.from(suggestions.results.addresses, (suggestion) => suggestion.address)
+        : [];
     } catch (err) {
       searchSuggestionsError.value = err;
     }
