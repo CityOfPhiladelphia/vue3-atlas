@@ -63,6 +63,44 @@ export async function fetchRowsWithFallback(sourceKey, sql) {
   return response.json();
 }
 
+// fetches rows for a dataset with databridge's table-style query (table/fields/where/limit
+// params instead of raw sql - CityGeo's preferred form), falling back LOUDLY to direct
+// carto with SQL derived from the same parts, so both transports share one source of
+// truth. where takes a raw SQL WHERE clause; attribute queries only - the parts must
+// not reference geometry columns (carto's is the_geom, databridge's shape)
+export async function fetchTableWithFallback(sourceKey, { table, fields, where, limit }) {
+  if (API_SOURCES[sourceKey] === 'databridge') {
+    const params = { table, client_id: GATEWAY_CLIENT_ID };
+    if (fields) {
+      params.fields = fields;
+    }
+    if (where) {
+      params.where = where;
+    }
+    if (limit) {
+      params.limit = limit;
+    }
+    let response = null;
+    try {
+      response = await axios(DATABRIDGE_URL, { params });
+    } catch {
+      // fall through to carto below
+    }
+    if (response && response.status === 200 && response.data.data && response.data.data.features) {
+      return { rows: response.data.data.features.map((f) => normalizeTimestamps(f.properties)) };
+    }
+    console.warn(`${sourceKey} - databridge request failed, falling back to direct carto`);
+  }
+  const cartoSql = `SELECT ${fields || '*'} FROM ${table}`
+    + (where ? ` WHERE ${where}` : '')
+    + (limit ? ` LIMIT ${limit}` : '');
+  const response = await fetch('https://phl.carto.com/api/v2/sql?q=' + encodeURIComponent(cartoSql));
+  if (!response.ok) {
+    return null;
+  }
+  return response.json();
+}
+
 // fetches from databridge-api and flattens the envelope to the Carto rows shape:
 // { rows: [...] } - for attribute queries with no geometry. Returns null on any
 // failure (bad response OR network/gateway error) so call sites can fall through
