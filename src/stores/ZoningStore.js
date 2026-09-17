@@ -6,7 +6,7 @@ import { useGeocodeStore } from '@/stores/GeocodeStore.js'
 
 import useTransforms from '@/composables/useTransforms';
 import { API_SOURCES } from '@/config/apiSources.js';
-import { fetchDatabridgeGeoJSON, fetchRowsWithFallback } from '@/util/databridge.js';
+import { fetchDatabridgeGeoJSON, fetchRowsWithFallback, fetchTableWithFallback } from '@/util/databridge.js';
 const { rcoPrimaryContact, phoneNumber, date } = useTransforms();
 
 // databridge has no select *: shape must be transformed to 4326 explicitly, so columns are listed
@@ -392,20 +392,29 @@ export const useZoningStore = defineStore('ZoningStore', {
         const zoningQuery = `applicationtype in ('Zoning Board of Adjustment', 'RB_ZBA') AND applicationtype is not null`
         const opaQuery = feature.properties.opa_account_num ? ` AND opa_account_num IN ('${ feature.properties.opa_account_num}')` : ``;
 
-        const query = `SELECT * FROM APPEALS WHERE (address = '${ streetaddress }' AND ${zoningQuery} \
+        // the old HANSEN-arm UNION ECLIPSE-arm on the same table is identical to
+        // (arm) OR (arm) - each old arm wrapped verbatim in parens to preserve its
+        // AND/OR precedence; set-equality proven by EXCEPT in both directions
+        const hansenArm = `(address = '${ streetaddress }' AND ${zoningQuery} \
           OR addressobjectid IN ('${ addressId }') AND ${zoningQuery} \
           OR parcel_id_num IN ('${ pwd_parcel_id }') AND ${zoningQuery}) \
           ${ opaQuery } AND ${zoningQuery} \
-          AND systemofrecord IN ('HANSEN') \
-          UNION SELECT * FROM APPEALS WHERE (${eclipseQuery} AND ${zoningQuery}  \
+          AND systemofrecord IN ('HANSEN')`;
+        const eclipseArm = `(${eclipseQuery} AND ${zoningQuery}  \
           OR parcel_id_num IN ('${ pwd_parcel_id }') AND ${zoningQuery}) \
           ${ opaQuery } AND ${zoningQuery} \
-          AND systemofrecord IN ('ECLIPSE') \
-          ORDER BY scheduleddate DESC`;
+          AND systemofrecord IN ('ECLIPSE')`;
 
-        const data = await fetchRowsWithFallback('zoningAppeals', query);
+        const data = await fetchTableWithFallback('zoningAppeals', { table: 'appeals', where: `(${hansenArm}) OR (${eclipseArm})` });
         if (data) {
           console.log('data:', data);
+          // replaces the old ORDER BY scheduleddate DESC (nulls first, like postgres)
+          data.rows.sort((a, b) => {
+            if (a.scheduleddate === b.scheduleddate) return 0;
+            if (a.scheduleddate === null) return -1;
+            if (b.scheduleddate === null) return 1;
+            return a.scheduleddate < b.scheduleddate ? 1 : -1;
+          });
           data.rows.forEach((row) => {
             console.log('in loop, row:', row);
             let address = row.address;
