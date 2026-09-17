@@ -1,4 +1,4 @@
-import axios from 'axios';
+﻿import axios from 'axios';
 import { API_SOURCES } from '@/config/apiSources.js';
 
 export const DATABRIDGE_URL = 'https://api-prod.phila.gov/databridge-api/v1/get';
@@ -77,7 +77,8 @@ export async function fetchTableWithFallback(sourceKey, { table, fields, where, 
   if (API_SOURCES[sourceKey] === 'databridge') {
     const params = { table, client_id: GATEWAY_CLIENT_ID };
     if (fields) {
-      params.fields = fields;
+      // the fields param wants bare commas - a 'col1, col2' list reads ' col2' as a column name
+      params.fields = fields.replace(/\s/g, '');
     }
     if (where) {
       params.where = where;
@@ -132,6 +133,46 @@ export async function fetchDatabridgeRows(sql) {
     return null;
   }
   return { rows: response.data.data.features.map((f) => normalizeTimestamps(f.properties)) };
+}
+
+// fetches a table-style query as a GeoJSON FeatureCollection - the table response
+// carries geometry natively in 4326, replacing select ST_AsGeoJSON(ST_Transform(...)).
+// Same contract as fetchDatabridgeGeoJSON: null on any failure so call sites fall
+// through to their arcgis/carto branch; feature.id stamped from objectid,
+// single-poly MultiPolygons unwrapped
+export async function fetchTableGeoJSON({ table, fields, where, limit, maxAge }) {
+  const params = { table, client_id: GATEWAY_CLIENT_ID };
+  if (fields) {
+    // the fields param wants bare commas - a 'col1, col2' list reads ' col2' as a column name
+    params.fields = fields.replace(/\s/g, '');
+  }
+  if (where) {
+    params.where = where;
+  }
+  if (limit) {
+    params.limit = limit;
+  }
+  if (maxAge !== undefined) {
+    params.max_age = maxAge;
+  }
+  let response;
+  try {
+    response = await axios(DATABRIDGE_URL, { params });
+  } catch {
+    return null;
+  }
+  if (response.status !== 200 || !response.data.data || !response.data.data.features) {
+    return null;
+  }
+  const features = response.data.data.features.map((f) => {
+    const properties = normalizeTimestamps(f.properties);
+    let geometry = f.geometry;
+    if (geometry && geometry.type === 'MultiPolygon' && geometry.coordinates.length === 1) {
+      geometry = { type: 'Polygon', coordinates: geometry.coordinates[0] };
+    }
+    return { type: 'Feature', id: properties.objectid, properties: properties, geometry: geometry };
+  });
+  return { type: 'FeatureCollection', features: features };
 }
 
 // returns null on any failure (bad response OR network/gateway error) so call sites

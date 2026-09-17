@@ -244,7 +244,14 @@ const nearbySchoolsCompareFn = (a, b) =>
   || a.properties.school_name_label.localeCompare(b.properties.school_name_label);
 const nearbySchools = computed(() => {
   if (!CityServicesStore.nearbySchools) return CityServicesStore.nearbySchools;
-  return [ ...CityServicesStore.nearbySchools ].sort(nearbySchoolsCompareFn);
+  // the designated schools have their own cards and markers - exclude whichever have
+  // resolved; this recomputes when they do, so a late match still drops out of the list
+  const designatedIds = [elementarySchool.value, middleSchool.value, highSchool.value]
+    .filter((school) => school && school.id)
+    .map((school) => school.id);
+  return CityServicesStore.nearbySchools
+    .filter((school) => !designatedIds.includes(school.id))
+    .sort(nearbySchoolsCompareFn);
 })
 
 const nearbySchoolsGeojson = computed(() => {
@@ -252,14 +259,37 @@ const nearbySchoolsGeojson = computed(() => {
   return nearbySchools.value.map(item => point(item.geometry.coordinates, { id: item.id, type: 'nearbySchools' }));
 })
 
-watch(() => nearbySchoolsGeojson.value, (newGeojson) => {
-  if (import.meta.env.VITE_DEBUG == 'true') console.log('watch nearbySchoolsGeojson.value, newGeojson:', newGeojson);
+// on a deep link the schools data can land before Map.vue has added the cityServices
+// source - checking only map.getSource (the method) then threw on the missing source,
+// killing the watcher and leaving the map dotless; retry on sourcedata until it exists
+const setCityServicesData = (feat) => {
   const map = MapStore.map;
+  if (map && map.getSource && map.getSource('cityServices')) {
+    map.getSource('cityServices').setData(feat);
+    return true;
+  }
+  return false;
+};
+
+// watches the data AND the map: on a deep link either can arrive last - the data can
+// beat the map's creation (MapStore.setMap) and the map can beat its cityServices
+// source (added later in Map.vue's setup, covered by the sourcedata retry). immediate,
+// like the designation watches above, because the data can predate this component
+watch([() => nearbySchoolsGeojson.value, () => MapStore.map], ([newGeojson, map]) => {
+  if (import.meta.env.VITE_DEBUG == 'true') console.log('watch nearbySchoolsGeojson/map, newGeojson:', newGeojson, 'map ready:', !!(map && map.getSource));
+  if (!newGeojson || !map || !map.getSource) return;
   const feat = featureCollection(newGeojson);
-  if (map.getSource) map.getSource('cityServices').setData(feat);
+  if (!setCityServicesData(feat)) {
+    const retry = () => {
+      if (setCityServicesData(feat)) {
+        map.off('sourcedata', retry);
+      }
+    };
+    map.on('sourcedata', retry);
+  }
   const bounds = bbox(buffer(feat, 2000, {units: 'feet'}));
   map.fitBounds(bounds);
-});
+}, { immediate: true });
 
 const hoveredStateId = computed(() => { return MainStore.hoveredStateId; });
 const hoveredSchoolId = computed(() => { return MainStore.hoveredSchoolId; });

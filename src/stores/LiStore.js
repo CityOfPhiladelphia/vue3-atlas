@@ -152,6 +152,8 @@ export const useLiStore = defineStore('LiStore', {
         }
         // if (import.meta.env.VITE_DEBUG == 'true') console.log('where:', where);
         if (API_SOURCES.liBuildingFootprints === 'databridge') {
+          // stays on sql=: the table-style catalog has no schema for the _3857 tables
+          // ("Schema not found", verified 2026-09-17) - ask CityGeo to register them
           const result = await fetchDatabridgeGeoJSON(`select ${FOOTPRINTS_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from building_footprints_3857 where ${where}`);
           if (result) {
             // reshape to the ArcGIS pjson format LI.vue reads: attributes + geometry.rings

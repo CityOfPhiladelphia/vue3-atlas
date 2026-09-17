@@ -12,7 +12,7 @@ import slugify from 'slugify';
 
 import useTransforms from '@/composables/useTransforms';
 import { API_SOURCES } from '@/config/apiSources.js';
-import { fetchDatabridgeGeoJSON, fetchRowsWithFallback, fetchTableWithFallback } from '@/util/databridge.js';
+import { fetchRowsWithFallback, fetchTableWithFallback, fetchTableGeoJSON } from '@/util/databridge.js';
 const { phoneNumber } = useTransforms();
 
 // databridge has no select *: shape must be transformed to 4326 explicitly, so columns are listed
@@ -93,7 +93,7 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
         if (API_SOURCES.schoolCatchments === 'databridge') {
           let allLevels = true;
           for (const level of ['es', 'ms', 'hs']) {
-            const data = await fetchDatabridgeGeoJSON(`select ${CATCHMENT_DATABRIDGE_COLS[level]}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from schooldist_catchments_${level}`);
+            const data = await fetchTableGeoJSON({ table: `schooldist_catchments_${level}`, fields: CATCHMENT_DATABRIDGE_COLS[level] });
             if (data) {
               this[`${level}Catchments`] = data;
             } else {
@@ -160,7 +160,7 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
       }
       try {
         if (API_SOURCES.policeStations === 'databridge') {
-          const data = await fetchDatabridgeGeoJSON(`select ${POLICE_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from police_stations`);
+          const data = await fetchTableGeoJSON({ table: 'police_stations', fields: POLICE_DATABRIDGE_COLS });
           if (data) {
             this.allPoliceStations = data;
             this.setLoadingData(false);
@@ -187,7 +187,7 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
     async fillAllSchools() {
       try {
         if (API_SOURCES.schools === 'databridge') {
-          const data = await fetchDatabridgeGeoJSON(`select ${SCHOOLS_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from schools`);
+          const data = await fetchTableGeoJSON({ table: 'schools', fields: SCHOOLS_DATABRIDGE_COLS });
           if (data) {
             this.allSchools = data;
             this.setLoadingData(false);
@@ -230,7 +230,7 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
           // 5820ft (see the fillBufferForAddress call in fetchData). shape is native
           // EPSG:2272 whose units are feet, so ST_DWithin takes the distance directly
           const coords = GeocodeStore.aisData.features[0].geometry.coordinates;
-          data = await fetchDatabridgeGeoJSON(`select ${SCHOOLS_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from schools where upper(type_specific) IN ('DISTRICT', 'CHARTER') and ST_DWithin(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${coords[0]}, ${coords[1]}), 4326), 2272), 5820)`);
+          data = await fetchTableGeoJSON({ table: 'schools', fields: SCHOOLS_DATABRIDGE_COLS, where: `upper(type_specific) IN ('DISTRICT', 'CHARTER') and ST_DWithin(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${coords[0]}, ${coords[1]}), 4326), 2272), 5820)` });
           if (!data) console.warn('nearbySchools - databridge request failed, falling back to direct arcgis');
         }
         if (!data) {
@@ -253,14 +253,14 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
           }
           data = response.data;
         }
-        if (import.meta.env.VITE_DEBUG) console.log('this.elementarySchool:', this.elementarySchool, 'this.middleSchool:', this.middleSchool, 'this.highSchool:', this.highSchool);
-        const designatedSchools = [this.elementarySchool.id, this.middleSchool.id, this.highSchool.id];
-
+        // the designated schools are filtered out reactively in NearbySchools.vue's
+        // computed - they resolve there from allSchools + catchments, possibly after
+        // this fetch runs, so filtering here raced and missed them
         let features = (data || {}).features;
         const feature = GeocodeStore.aisData.features[0];
         const from = point(feature.geometry.coordinates);
 
-        features = features.filter(feature => !designatedSchools.includes(feature.id)).map(feature => {
+        features = features.map(feature => {
           const featureCoords = feature.geometry.coordinates;
           let dist;
           if (Array.isArray(featureCoords[0])) {
@@ -301,7 +301,7 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
           // same 5820ft city-services buffer semantics as the buffer-contains query below;
           // shape is native EPSG:2272 whose units are feet
           const coords = GeocodeStore.aisData.features[0].geometry.coordinates;
-          data = await fetchDatabridgeGeoJSON(`select ${FIRE_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from fire_dept_facilities where firesta_ is not null and ST_DWithin(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${coords[0]}, ${coords[1]}), 4326), 2272), 5820)`);
+          data = await fetchTableGeoJSON({ table: 'fire_dept_facilities', fields: FIRE_DATABRIDGE_COLS, where: `firesta_ is not null and ST_DWithin(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${coords[0]}, ${coords[1]}), 4326), 2272), 5820)` });
           if (!data) console.warn('nearbyFireStations - databridge request failed, falling back to direct arcgis');
         }
         if (!data) {

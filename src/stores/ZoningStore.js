@@ -6,7 +6,7 @@ import { useGeocodeStore } from '@/stores/GeocodeStore.js'
 
 import useTransforms from '@/composables/useTransforms';
 import { API_SOURCES } from '@/config/apiSources.js';
-import { fetchDatabridgeGeoJSON, fetchRowsWithFallback, fetchTableWithFallback } from '@/util/databridge.js';
+import { fetchRowsWithFallback, fetchTableWithFallback, fetchTableGeoJSON } from '@/util/databridge.js';
 const { rcoPrimaryContact, phoneNumber, date } = useTransforms();
 
 // databridge has no select *: shape must be transformed to 4326 explicitly, so columns are listed
@@ -462,7 +462,7 @@ export const useZoningStore = defineStore('ZoningStore', {
         let data;
         if (API_SOURCES.rcos === 'databridge') {
           const coords = feature.geometry.coordinates;
-          data = await fetchDatabridgeGeoJSON(`select ${RCO_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from zoning_rco where ST_Contains(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${coords[0]}, ${coords[1]}), 4326), 2272))`);
+          data = await fetchTableGeoJSON({ table: 'zoning_rco', fields: RCO_DATABRIDGE_COLS, where: `ST_Contains(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${coords[0]}, ${coords[1]}), 4326), 2272))` });
           if (!data) console.warn('fillRcos - databridge request failed, falling back to direct arcgis');
         }
         if (!data) {
