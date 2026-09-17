@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { useGeocodeStore } from '@/stores/GeocodeStore.js'
 import { API_SOURCES } from '@/config/apiSources.js';
-import { fetchDatabridgeGeoJSON, fetchDatabridgeRows, fetchRowsWithFallback } from '@/util/databridge.js';
+import { fetchDatabridgeGeoJSON, fetchDatabridgeRows, fetchRowsWithFallback, fetchTableWithFallback } from '@/util/databridge.js';
 import { buildSearchWhere, buildOrderBy, buildCountSql, buildPageSql, REMOTE_THRESHOLD, REMOTE_SERVER_PAGE } from '@/util/remoteTable.js';
 
 import useTransforms from '@/composables/useTransforms';
@@ -241,8 +241,7 @@ export const useLiStore = defineStore('LiStore', {
         } else {
           bin = '';
         }
-        const sql = `SELECT * FROM building_cert_summary WHERE structure_id IN ('${bin}')`;
-        const data = await this._fetchLiSql('buildingCertSummary', sql);
+        const data = await fetchTableWithFallback('buildingCertSummary', { table: 'building_cert_summary', where: `structure_id IN ('${bin}')` });
         if (data) {
           this.liBuildingCertSummary = data;
         } else {
@@ -294,7 +293,6 @@ export const useLiStore = defineStore('LiStore', {
       try {
         const GeocodeStore = useGeocodeStore();
         const feature = GeocodeStore.aisData.features[0].properties.bin.split('|');
-        let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
         let bin = "";
         if (feature.length) {
           for (let i=0;i<feature.length;i++) {
@@ -308,19 +306,10 @@ export const useLiStore = defineStore('LiStore', {
         } else {
           bin = '';
         }
-        const sql = `SELECT * FROM building_certs WHERE bin IN ('${bin}')`;
-        let data;
-        if (API_SOURCES.buildingCerts === 'databridge') {
-          data = await fetchDatabridgeRows(sql);
-          if (!data) console.warn('liBuildingCerts - databridge request failed, falling back to direct carto');
-        }
+        const data = await fetchTableWithFallback('buildingCerts', { table: 'building_certs', where: `bin IN ('${bin}')` });
         if (!data) {
-          const response = await fetch(baseUrl + sql);
-          if (!response.ok) {
-            if (import.meta.env.VITE_DEBUG == 'true') console.warn('liBuildingCerts - await resolved but HTTP status was not successful')
-            return;
-          }
-          data = await response.json();
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('liBuildingCerts - await resolved but HTTP status was not successful')
+          return;
         }
         {
           data.rows.forEach((item) => {
@@ -545,6 +534,9 @@ export const useLiStore = defineStore('LiStore', {
       try {
         const GeocodeStore = useGeocodeStore();
         const feature = GeocodeStore.aisData.features[0];
+        // stays on sql=: the table-style where can't express the ANY cast (PostgREST
+        // "Unsupported operator"), and Carto V3's table mode requires an objectid
+        // column this table lacks - verified 2026-09-17
         const sql = `select * from ais_zoning_documents where doc_id = ANY('{ ${feature.properties.zoning_document_ids} }'::text[])`;
         const data = await this._fetchLiSql('aisZoningDocs', sql);
         if (data) {
@@ -564,9 +556,9 @@ export const useLiStore = defineStore('LiStore', {
       try {
         const GeocodeStore = useGeocodeStore();
         const feature = GeocodeStore.aisData.features[0];
-        let query = null;
+        let where = null;
         if (feature.properties.eclipse_location_id === null || feature.properties.eclipse_location_id === '') {
-          query = 'select * from li_zoning_docs where address_objectid in (' + null + ')';
+          where = 'address_objectid in (' + null + ')';
         } else {
           const eclipseLocId = feature.properties.eclipse_location_id.split('|');
           let str = "'";
@@ -576,9 +568,9 @@ export const useLiStore = defineStore('LiStore', {
             str += "', '";
           }
           str = str.slice(0, str.length - 3);
-          query = `select * from li_zoning_docs where address_objectid in (${ str })`;
+          where = `address_objectid in (${ str })`;
         }
-        const data = await this._fetchLiSql('eclipseZoningDocs', query);
+        const data = await fetchTableWithFallback('eclipseZoningDocs', { table: 'li_zoning_docs', where });
         if (data) {
           let addedData = this.addDataToZoningDocs(data);
           this.liEclipseZoningDocs = addedData;
