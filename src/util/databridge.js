@@ -1,4 +1,4 @@
-﻿import axios from 'axios';
+import axios from 'axios';
 import { API_SOURCES } from '@/config/apiSources.js';
 
 export const DATABRIDGE_URL = 'https://api-prod.phila.gov/databridge-api/v1/get';
@@ -73,7 +73,7 @@ export async function fetchRowsWithFallback(sourceKey, sql) {
 // without it, spatially-routed results can serve up to a year stale after a data fix.
 // withGeometry attaches each feature's GeoJSON geometry (already in 4326) to its row -
 // the table response carries it natively, replacing ST_X/ST_Y/ST_AsGeoJSON selects
-export async function fetchTableWithFallback(sourceKey, { table, fields, where, limit, maxAge, cartoSql, withGeometry }) {
+export async function fetchTableWithFallback(sourceKey, { table, fields, where, limit, maxAge, cartoSql, withGeometry, service }) {
   if (API_SOURCES[sourceKey] === 'databridge') {
     const params = { table, client_id: GATEWAY_CLIENT_ID };
     if (fields) {
@@ -88,6 +88,12 @@ export async function fetchTableWithFallback(sourceKey, { table, fields, where, 
     }
     if (maxAge !== undefined) {
       params.max_age = maxAge;
+    }
+    if (service) {
+      // spatial wheres only run on the carto backend; pinning skips the PostgREST
+      // attempt, which on some tables (public_cases_fc) burns the upstream timeout
+      // instead of failing fast
+      params.service = service;
     }
     let response = null;
     try {
@@ -140,7 +146,7 @@ export async function fetchDatabridgeRows(sql) {
 // Same contract as fetchDatabridgeGeoJSON: null on any failure so call sites fall
 // through to their arcgis/carto branch; feature.id stamped from objectid,
 // single-poly MultiPolygons unwrapped
-export async function fetchTableGeoJSON({ table, fields, where, limit, maxAge }) {
+export async function fetchTableGeoJSON({ table, fields, where, limit, maxAge, service }) {
   const params = { table, client_id: GATEWAY_CLIENT_ID };
   if (fields) {
     // the fields param wants bare commas - a 'col1, col2' list reads ' col2' as a column name
@@ -154,6 +160,11 @@ export async function fetchTableGeoJSON({ table, fields, where, limit, maxAge })
   }
   if (maxAge !== undefined) {
     params.max_age = maxAge;
+  }
+  if (service) {
+    // spatial wheres only run on the carto backend; pinning skips the PostgREST
+    // attempt, which on some tables burns the upstream timeout instead of failing fast
+    params.service = service;
   }
   let response;
   try {

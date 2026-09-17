@@ -230,7 +230,7 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
           // 5820ft (see the fillBufferForAddress call in fetchData). shape is native
           // EPSG:2272 whose units are feet, so ST_DWithin takes the distance directly
           const coords = GeocodeStore.aisData.features[0].geometry.coordinates;
-          data = await fetchTableGeoJSON({ table: 'schools', fields: SCHOOLS_DATABRIDGE_COLS, where: `upper(type_specific) IN ('DISTRICT', 'CHARTER') and ST_DWithin(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${coords[0]}, ${coords[1]}), 4326), 2272), 5820)` });
+          data = await fetchTableGeoJSON({ table: 'schools', fields: SCHOOLS_DATABRIDGE_COLS, where: `upper(type_specific) IN ('DISTRICT', 'CHARTER') and ST_DWithin(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${coords[0]}, ${coords[1]}), 4326), 2272), 5820)`, service: 'carto' });
           if (!data) console.warn('nearbySchools - databridge request failed, falling back to direct arcgis');
         }
         if (!data) {
@@ -301,7 +301,7 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
           // same 5820ft city-services buffer semantics as the buffer-contains query below;
           // shape is native EPSG:2272 whose units are feet
           const coords = GeocodeStore.aisData.features[0].geometry.coordinates;
-          data = await fetchTableGeoJSON({ table: 'fire_dept_facilities', fields: FIRE_DATABRIDGE_COLS, where: `firesta_ is not null and ST_DWithin(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${coords[0]}, ${coords[1]}), 4326), 2272), 5820)` });
+          data = await fetchTableGeoJSON({ table: 'fire_dept_facilities', fields: FIRE_DATABRIDGE_COLS, where: `firesta_ is not null and ST_DWithin(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${coords[0]}, ${coords[1]}), 4326), 2272), 5820)`, service: 'carto' });
           if (!data) console.warn('nearbyFireStations - databridge request failed, falling back to direct arcgis');
         }
         if (!data) {
