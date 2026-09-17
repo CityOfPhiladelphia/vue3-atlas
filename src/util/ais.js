@@ -22,6 +22,11 @@ export async function fetchAisSearch(query, flags = {}) {
   const encoded = encodeURIComponent(query);
   const params = buildFlags(flags);
   params.set('client_id', GATEWAY_CLIENT_ID);
+  // partitions the gateway's response cache by origin: ais-v1 echoes the request
+  // Origin into Access-Control-Allow-Origin, but its cache ignores the Vary: Origin
+  // it declares - an entry cached for one origin CORS-blocks every other origin for
+  // the cache TTL (~1h). remove when the gateway CORS policy is origin-independent
+  params.set('cache_origin', location.hostname);
   const response = await fetch(`${AIS_URL}/search/${encoded}?${params}`);
   if (!response.ok) {
     return null;
