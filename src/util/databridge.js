@@ -66,9 +66,12 @@ export async function fetchRowsWithFallback(sourceKey, sql) {
 // fetches rows for a dataset with databridge's table-style query (table/fields/where/limit
 // params instead of raw sql - CityGeo's preferred form), falling back LOUDLY to direct
 // carto with SQL derived from the same parts, so both transports share one source of
-// truth. where takes a raw SQL WHERE clause; attribute queries only - the parts must
-// not reference geometry columns (carto's is the_geom, databridge's shape)
-export async function fetchTableWithFallback(sourceKey, { table, fields, where, limit }) {
+// truth. where takes a raw SQL WHERE clause. When the where references geometry
+// columns (carto's is the_geom, databridge's shape) the derived fallback can't work -
+// pass cartoSql with the transport-specific carto statement instead.
+// maxAge is forwarded as max_age, bounding how stale a cached Carto V3 result may be -
+// without it, spatially-routed results can serve up to a year stale after a data fix
+export async function fetchTableWithFallback(sourceKey, { table, fields, where, limit, maxAge, cartoSql }) {
   if (API_SOURCES[sourceKey] === 'databridge') {
     const params = { table, client_id: GATEWAY_CLIENT_ID };
     if (fields) {
@@ -79,6 +82,9 @@ export async function fetchTableWithFallback(sourceKey, { table, fields, where, 
     }
     if (limit) {
       params.limit = limit;
+    }
+    if (maxAge !== undefined) {
+      params.max_age = maxAge;
     }
     let response = null;
     try {
@@ -91,10 +97,11 @@ export async function fetchTableWithFallback(sourceKey, { table, fields, where, 
     }
     console.warn(`${sourceKey} - databridge request failed, falling back to direct carto`);
   }
-  const cartoSql = `SELECT ${fields || '*'} FROM ${table}`
+  const fallbackSql = cartoSql
+    || `SELECT ${fields || '*'} FROM ${table}`
     + (where ? ` WHERE ${where}` : '')
     + (limit ? ` LIMIT ${limit}` : '');
-  const response = await fetch('https://phl.carto.com/api/v2/sql?q=' + encodeURIComponent(cartoSql));
+  const response = await fetch('https://phl.carto.com/api/v2/sql?q=' + encodeURIComponent(fallbackSql));
   if (!response.ok) {
     return null;
   }

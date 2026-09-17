@@ -141,12 +141,28 @@ export const useZoningStore = defineStore('ZoningStore', {
             zp_contains AS \
               ( SELECT all_proposed_zoning.* FROM all_proposed_zoning, parcel WHERE st_contains(all_proposed_zoning." + geom + ", parcel." + geom + ")) \
             SELECT * from zp_overlaps UNION SELECT * from zp_contains ORDER BY enacted_date desc nulls last";
-          const data = await fetchRowsWithFallback('proposedZoning', {
-            databridge: sqlFor('', 'shape'),
-            carto: sqlFor('phl.', 'the_geom'),
+          // the databridge side asks the carto CTE's question - which proposed-zoning
+          // polygons contain this parcel or cover more than 5% of it - as a table-style
+          // EXISTS (set-equality proven by EXCEPT across seven mapregs). table= reaches
+          // Carto V3 with working freshness; sql= results are cached by query text with
+          // max_age unhonored, which served a zoning correction a day stale-and-counting
+          // (zid 1181, 2026-09-17) and would have for up to a year
+          const where = `EXISTS (SELECT 1 FROM dor_parcel p WHERE p.mapreg = '${mapreg}' AND (st_contains(proposedzoning_imp_public.shape, p.shape) OR (st_overlaps(p.shape, proposedzoning_imp_public.shape) AND ST_Area(ST_Intersection(p.shape, proposedzoning_imp_public.shape)) / ST_Area(p.shape) > 0.05)))`;
+          const data = await fetchTableWithFallback('proposedZoning', {
+            table: 'proposedzoning_imp_public',
+            where,
+            maxAge: 3600,
+            cartoSql: sqlFor('phl.', 'the_geom'),
           });
           if (data) {
             if (import.meta.env.VITE_DEBUG == 'true') console.log('data:', data);
+            // replaces the sql ORDER BY enacted_date desc nulls last
+            data.rows.sort((a, b) => {
+              if (a.enacted_date === b.enacted_date) return 0;
+              if (a.enacted_date === null) return 1;
+              if (b.enacted_date === null) return -1;
+              return a.enacted_date < b.enacted_date ? 1 : -1;
+            });
             data.rows.forEach(item => {
               if (import.meta.env.VITE_DEBUG == 'true') console.log('item:', item);
               item.bill_number_link = `<a target='_blank' href='${item.bill_url_updated}'>${item.bill_number_txt} <i class='fas fa-external-link'></i></a>`;
