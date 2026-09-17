@@ -746,7 +746,10 @@ watch(
 const votingDivision = computed(() => {
   if (API_SOURCES.politicalDivisions !== 'arcgis') {
     if (VotingStore.divisions.rows) {
-      return JSON.parse(VotingStore.divisions.rows[0].st_asgeojson);
+      const row = VotingStore.divisions.rows[0];
+      // table-style rows carry the geometry object; carto fallback rows carry the
+      // st_asgeojson string
+      return row.geometry || JSON.parse(row.st_asgeojson);
     } else {
       return [[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]];
     }

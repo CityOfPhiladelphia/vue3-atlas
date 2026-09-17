@@ -41,11 +41,14 @@ export const useVotingStore = defineStore("VotingStore", {
         const feature = GeocodeStore.aisData.features[0];
         if (API_SOURCES.politicalDivisions !== 'arcgis') {
           const addressPoint = `ST_SetSRID(ST_Point(${feature.geometry.coordinates[0]}, ${feature.geometry.coordinates[1]}), 4326)`;
-          const data = await fetchRowsWithFallback('politicalDivisions', {
-            // the unaliased carto ST_AsGeoJSON lands in a column named st_asgeojson, which
-            // Map.vue reads - the databridge alias must match it
-            databridge: `SELECT *, ST_AsGeoJSON(ST_Transform(shape, 4326)) as st_asgeojson FROM political_divisions WHERE ST_Intersects(shape, ST_Transform(${addressPoint}, 2272))`,
-            carto: `SELECT *, ST_AsGeoJSON(the_geom) FROM political_divisions WHERE ST_Intersects(the_geom, ${addressPoint})`,
+          const data = await fetchTableWithFallback('politicalDivisions', {
+            table: 'political_divisions',
+            where: `ST_Intersects(shape, ST_Transform(${addressPoint}, 2272))`,
+            withGeometry: true,
+            service: 'carto',
+            // the unaliased carto ST_AsGeoJSON lands in a column named st_asgeojson,
+            // which Map.vue reads on the fallback path (table rows carry geometry)
+            cartoSql: `SELECT *, ST_AsGeoJSON(the_geom) FROM political_divisions WHERE ST_Intersects(the_geom, ${addressPoint})`,
           });
           if (data) {
             this.divisions = data;
