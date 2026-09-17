@@ -63,6 +63,51 @@ export async function fetchRowsWithFallback(sourceKey, sql) {
   return response.json();
 }
 
+// fetches rows for a dataset with databridge's table-style query (table/fields/where/limit
+// params instead of raw sql - CityGeo's preferred form), falling back LOUDLY to direct
+// carto with SQL derived from the same parts, so both transports share one source of
+// truth. where takes a raw SQL WHERE clause. When the where references geometry
+// columns (carto's is the_geom, databridge's shape) the derived fallback can't work -
+// pass cartoSql with the transport-specific carto statement instead.
+// maxAge is forwarded as max_age, bounding how stale a cached Carto V3 result may be -
+// without it, spatially-routed results can serve up to a year stale after a data fix
+export async function fetchTableWithFallback(sourceKey, { table, fields, where, limit, maxAge, cartoSql }) {
+  if (API_SOURCES[sourceKey] === 'databridge') {
+    const params = { table, client_id: GATEWAY_CLIENT_ID };
+    if (fields) {
+      params.fields = fields;
+    }
+    if (where) {
+      params.where = where;
+    }
+    if (limit) {
+      params.limit = limit;
+    }
+    if (maxAge !== undefined) {
+      params.max_age = maxAge;
+    }
+    let response = null;
+    try {
+      response = await axios(DATABRIDGE_URL, { params });
+    } catch {
+      // fall through to carto below
+    }
+    if (response && response.status === 200 && response.data.data && response.data.data.features) {
+      return { rows: response.data.data.features.map((f) => normalizeTimestamps(f.properties)) };
+    }
+    console.warn(`${sourceKey} - databridge request failed, falling back to direct carto`);
+  }
+  const fallbackSql = cartoSql
+    || `SELECT ${fields || '*'} FROM ${table}`
+    + (where ? ` WHERE ${where}` : '')
+    + (limit ? ` LIMIT ${limit}` : '');
+  const response = await fetch('https://phl.carto.com/api/v2/sql?q=' + encodeURIComponent(fallbackSql));
+  if (!response.ok) {
+    return null;
+  }
+  return response.json();
+}
+
 // fetches from databridge-api and flattens the envelope to the Carto rows shape:
 // { rows: [...] } - for attribute queries with no geometry. Returns null on any
 // failure (bad response OR network/gateway error) so call sites can fall through

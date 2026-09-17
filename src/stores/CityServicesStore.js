@@ -12,7 +12,7 @@ import slugify from 'slugify';
 
 import useTransforms from '@/composables/useTransforms';
 import { API_SOURCES } from '@/config/apiSources.js';
-import { fetchDatabridgeGeoJSON, fetchRowsWithFallback } from '@/util/databridge.js';
+import { fetchDatabridgeGeoJSON, fetchRowsWithFallback, fetchTableWithFallback } from '@/util/databridge.js';
 const { phoneNumber } = useTransforms();
 
 // databridge has no select *: shape must be transformed to 4326 explicitly, so columns are listed
@@ -372,7 +372,7 @@ export const useCityServicesStore = defineStore('CityServicesStore', {
       try {
         // the AGO layer this used to fetch was retired when the table was published
         // to carto/databridge (2026-09-10), so the fallback here is direct carto
-        const data = await fetchRowsWithFallback('parksRecLocationTypes', 'select * from ppr_location_types_atlas');
+        const data = await fetchTableWithFallback('parksRecLocationTypes', { table: 'ppr_location_types_atlas' });
         if (data) {
           this.allParksRecLocationTypes = data.rows;
         } else {

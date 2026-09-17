@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { useGeocodeStore } from '@/stores/GeocodeStore.js'
 import { API_SOURCES } from '@/config/apiSources.js';
-import { fetchDatabridgeGeoJSON, fetchDatabridgeRows, fetchRowsWithFallback } from '@/util/databridge.js';
+import { fetchDatabridgeGeoJSON, fetchDatabridgeRows, fetchRowsWithFallback, fetchTableWithFallback } from '@/util/databridge.js';
 import { buildSearchWhere, buildOrderBy, buildCountSql, buildPageSql, REMOTE_THRESHOLD, REMOTE_SERVER_PAGE } from '@/util/remoteTable.js';
 
 import useTransforms from '@/composables/useTransforms';
@@ -241,8 +241,7 @@ export const useLiStore = defineStore('LiStore', {
         } else {
           bin = '';
         }
-        const sql = `SELECT * FROM building_cert_summary WHERE structure_id IN ('${bin}')`;
-        const data = await this._fetchLiSql('buildingCertSummary', sql);
+        const data = await fetchTableWithFallback('buildingCertSummary', { table: 'building_cert_summary', where: `structure_id IN ('${bin}')` });
         if (data) {
           this.liBuildingCertSummary = data;
         } else {
@@ -294,7 +293,6 @@ export const useLiStore = defineStore('LiStore', {
       try {
         const GeocodeStore = useGeocodeStore();
         const feature = GeocodeStore.aisData.features[0].properties.bin.split('|');
-        let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
         let bin = "";
         if (feature.length) {
           for (let i=0;i<feature.length;i++) {
@@ -308,19 +306,10 @@ export const useLiStore = defineStore('LiStore', {
         } else {
           bin = '';
         }
-        const sql = `SELECT * FROM building_certs WHERE bin IN ('${bin}')`;
-        let data;
-        if (API_SOURCES.buildingCerts === 'databridge') {
-          data = await fetchDatabridgeRows(sql);
-          if (!data) console.warn('liBuildingCerts - databridge request failed, falling back to direct carto');
-        }
+        const data = await fetchTableWithFallback('buildingCerts', { table: 'building_certs', where: `bin IN ('${bin}')` });
         if (!data) {
-          const response = await fetch(baseUrl + sql);
-          if (!response.ok) {
-            if (import.meta.env.VITE_DEBUG == 'true') console.warn('liBuildingCerts - await resolved but HTTP status was not successful')
-            return;
-          }
-          data = await response.json();
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('liBuildingCerts - await resolved but HTTP status was not successful')
+          return;
         }
         {
           data.rows.forEach((item) => {
@@ -545,6 +534,9 @@ export const useLiStore = defineStore('LiStore', {
       try {
         const GeocodeStore = useGeocodeStore();
         const feature = GeocodeStore.aisData.features[0];
+        // stays on sql=: the table-style where can't express the ANY cast (PostgREST
+        // "Unsupported operator"), and Carto V3's table mode requires an objectid
+        // column this table lacks - verified 2026-09-17
         const sql = `select * from ais_zoning_documents where doc_id = ANY('{ ${feature.properties.zoning_document_ids} }'::text[])`;
         const data = await this._fetchLiSql('aisZoningDocs', sql);
         if (data) {
@@ -564,9 +556,9 @@ export const useLiStore = defineStore('LiStore', {
       try {
         const GeocodeStore = useGeocodeStore();
         const feature = GeocodeStore.aisData.features[0];
-        let query = null;
+        let where = null;
         if (feature.properties.eclipse_location_id === null || feature.properties.eclipse_location_id === '') {
-          query = 'select * from li_zoning_docs where address_objectid in (' + null + ')';
+          where = 'address_objectid in (' + null + ')';
         } else {
           const eclipseLocId = feature.properties.eclipse_location_id.split('|');
           let str = "'";
@@ -576,9 +568,9 @@ export const useLiStore = defineStore('LiStore', {
             str += "', '";
           }
           str = str.slice(0, str.length - 3);
-          query = `select * from li_zoning_docs where address_objectid in (${ str })`;
+          where = `address_objectid in (${ str })`;
         }
-        const data = await this._fetchLiSql('eclipseZoningDocs', query);
+        const data = await fetchTableWithFallback('eclipseZoningDocs', { table: 'li_zoning_docs', where });
         if (data) {
           let addedData = this.addDataToZoningDocs(data);
           this.liEclipseZoningDocs = addedData;
@@ -676,31 +668,24 @@ export const useLiStore = defineStore('LiStore', {
       try {
         const GeocodeStore = useGeocodeStore();
         const feature = GeocodeStore.aisData.features[0];
-        let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
         const eclipse_location_id = feature.properties.eclipse_location_id.replace(/\|/g, "', '");
         const streetaddress = feature.properties.street_address;
         const opaQuery = feature.properties.opa_account_num ? ` OR opa_account_num IN ('${ feature.properties.opa_account_num}')` : ``;
         const pwd_parcel_id = feature.properties.pwd_parcel_id;
         const addressId = feature.properties.li_address_key.replace(/\|/g, "', '");
 
-        const sql = `SELECT * FROM case_investigations WHERE (address = '${ streetaddress }' or addressobjectid IN ('${ addressId }')) \
-            AND systemofrecord IN ('HANSEN') ${ opaQuery } UNION SELECT * FROM case_investigations WHERE \
-            addressobjectid IN ('${ eclipse_location_id }') OR parcel_id_num IN ( '${ pwd_parcel_id }' ) \
+        // the old HANSEN-arm UNION ECLIPSE-arm on the same table is identical to
+        // (arm) OR (arm) - each old arm wrapped verbatim in parens to preserve its
+        // AND/OR precedence; set-equality proven by EXCEPT in both directions
+        const hansenArm = `(address = '${ streetaddress }' or addressobjectid IN ('${ addressId }')) \
+            AND systemofrecord IN ('HANSEN') ${ opaQuery }`;
+        const eclipseArm = `addressobjectid IN ('${ eclipse_location_id }') OR parcel_id_num IN ( '${ pwd_parcel_id }' ) \
             AND systemofrecord IN ('ECLIPSE') ${ opaQuery }`;
-
-        let data;
-        if (API_SOURCES.inspections === 'databridge') {
-          data = await fetchDatabridgeRows(sql);
-          if (!data) console.warn('liInspections - databridge request failed, falling back to direct carto');
-        }
+        const data = await fetchTableWithFallback('inspections', { table: 'case_investigations', where: `(${hansenArm}) OR (${eclipseArm})` });
         if (!data) {
-          const response = await fetch(baseUrl + sql);
-          if (!response.ok) {
-            this.loadingLiInspections = false;
-            if (import.meta.env.VITE_DEBUG == 'true') console.warn('liInspections - await resolved but HTTP status was not successful')
-            return;
-          }
-          data = await response.json();
+          this.loadingLiInspections = false;
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('liInspections - await resolved but HTTP status was not successful')
+          return;
         }
         {
           data.rows.forEach((item) => {
@@ -794,39 +779,38 @@ export const useLiStore = defineStore('LiStore', {
       try {
         const GeocodeStore = useGeocodeStore();
         const feature = GeocodeStore.aisData.features[0];
-        let baseUrl = 'https://phl.carto.com/api/v2/sql?q=';
         const eclipse_location_id = feature.properties.eclipse_location_id.replace(/\|/g, "', '");
         const streetaddress = feature.properties.street_address;
         const opaQuery = feature.properties.opa_account_num ? ` OR opa_account_num IN ('${ feature.properties.opa_account_num}')` : ``;
         const pwd_parcel_id = feature.properties.pwd_parcel_id;
         const addressId = feature.properties.li_address_key.replace(/\|/g, "', '");
 
-        const sql = `SELECT * FROM VIOLATIONS WHERE ( address = '${ streetaddress }' \
+        // the old HANSEN-arm UNION ECLIPSE-arm on the same table is identical to
+        // (arm) OR (arm) - each old arm wrapped verbatim in parens to preserve its
+        // AND/OR precedence; set-equality proven by EXCEPT in both directions
+        const hansenArm = `( address = '${ streetaddress }' \
           OR addressobjectid IN ('${ addressId }') \
           OR parcel_id_num IN ( '${ pwd_parcel_id }' ) ) \
           ${ opaQuery } \
-          AND systemofrecord IN ('HANSEN') \
-          UNION SELECT * FROM VIOLATIONS WHERE ( addressobjectid IN ('${ eclipse_location_id }') \
+          AND systemofrecord IN ('HANSEN')`;
+        const eclipseArm = `( addressobjectid IN ('${ eclipse_location_id }') \
           OR parcel_id_num IN ( '${ pwd_parcel_id }' ) ) \
           ${ opaQuery } \
-          AND systemofrecord IN ('ECLIPSE') \
-          ORDER BY casenumber DESC`;
-
-        let data;
-        if (API_SOURCES.violations === 'databridge') {
-          data = await fetchDatabridgeRows(sql);
-          if (!data) console.warn('liViolations - databridge request failed, falling back to direct carto');
-        }
+          AND systemofrecord IN ('ECLIPSE')`;
+        const data = await fetchTableWithFallback('violations', { table: 'violations', where: `(${hansenArm}) OR (${eclipseArm})` });
         if (!data) {
-          const response = await fetch(baseUrl + sql);
-          if (!response.ok) {
-            this.loadingLiViolations = false;
-            if (import.meta.env.VITE_DEBUG == 'true') console.warn('liViolations - await resolved but HTTP status was not successful')
-            return;
-          }
-          data = await response.json();
+          this.loadingLiViolations = false;
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('liViolations - await resolved but HTTP status was not successful')
+          return;
         }
         {
+          // replaces the old ORDER BY casenumber DESC (nulls first, like postgres)
+          data.rows.sort((a, b) => {
+            if (a.casenumber === b.casenumber) return 0;
+            if (a.casenumber === null) return -1;
+            if (b.casenumber === null) return 1;
+            return a.casenumber < b.casenumber ? 1 : -1;
+          });
           data.rows.forEach((item) => {
             let address = item.address;
             if (item.unit_num && item.unit_num != null) {
