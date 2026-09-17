@@ -70,8 +70,10 @@ export async function fetchRowsWithFallback(sourceKey, sql) {
 // columns (carto's is the_geom, databridge's shape) the derived fallback can't work -
 // pass cartoSql with the transport-specific carto statement instead.
 // maxAge is forwarded as max_age, bounding how stale a cached Carto V3 result may be -
-// without it, spatially-routed results can serve up to a year stale after a data fix
-export async function fetchTableWithFallback(sourceKey, { table, fields, where, limit, maxAge, cartoSql }) {
+// without it, spatially-routed results can serve up to a year stale after a data fix.
+// withGeometry attaches each feature's GeoJSON geometry (already in 4326) to its row -
+// the table response carries it natively, replacing ST_X/ST_Y/ST_AsGeoJSON selects
+export async function fetchTableWithFallback(sourceKey, { table, fields, where, limit, maxAge, cartoSql, withGeometry }) {
   if (API_SOURCES[sourceKey] === 'databridge') {
     const params = { table, client_id: GATEWAY_CLIENT_ID };
     if (fields) {
@@ -93,7 +95,13 @@ export async function fetchTableWithFallback(sourceKey, { table, fields, where, 
       // fall through to carto below
     }
     if (response && response.status === 200 && response.data.data && response.data.data.features) {
-      return { rows: response.data.data.features.map((f) => normalizeTimestamps(f.properties)) };
+      return { rows: response.data.data.features.map((f) => {
+        const row = normalizeTimestamps(f.properties);
+        if (withGeometry) {
+          row.geometry = f.geometry;
+        }
+        return row;
+      }) };
     }
     console.warn(`${sourceKey} - databridge request failed, falling back to direct carto`);
   }
