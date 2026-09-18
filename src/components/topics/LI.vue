@@ -1103,19 +1103,21 @@ const leadUnitInspectionsTableData = computed(() => {
           
         </div>
       </div>
-      <h2 class="subtitle mb-3 is-5">
-        Lead Certification Inspections
-        <font-awesome-icon
-          v-if="LiStore.loadingLeadUnitInspections"
-          icon="fa-solid fa-spinner"
-          spin
-        />
-        <span v-else>({{ leadUnitInspectionsLength }})</span>
-      </h2>
-      <div
-        v-if="leadUnitInspectionsTableData"
-        class="horizontal-table mt-2"
-      >
+      <!-- shown (even with no results) exactly when the lead certs table above shows -->
+      <template v-if="LiStore.leadCertifications.rows && LiStore.leadCertifications.rows.length">
+        <h2 class="subtitle mb-3 is-5">
+          Lead Certification Inspections
+          <font-awesome-icon
+            v-if="LiStore.loadingLeadUnitInspections"
+            icon="fa-solid fa-spinner"
+            spin
+          />
+          <span v-else>({{ leadUnitInspectionsLength }})</span>
+        </h2>
+        <div
+          v-if="leadUnitInspectionsTableData"
+          class="horizontal-table mt-2"
+        >
         <vue-good-table
           id="lead-unit-inspections"
           :columns="leadUnitInspectionsTableData.columns"
@@ -1145,7 +1147,8 @@ const leadUnitInspectionsTableData = computed(() => {
             />
           </template>
         </vue-good-table>
-      </div>
+        </div>
+      </template>
     </div>
 
   </section>
