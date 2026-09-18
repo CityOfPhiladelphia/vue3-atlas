@@ -70,12 +70,15 @@ export async function fetchRowsWithFallback(sourceKey, sql) {
 // columns (carto's is the_geom, databridge's shape) the derived fallback can't work -
 // pass cartoSql with the transport-specific carto statement instead.
 // maxAge is forwarded as max_age, bounding how stale a cached Carto V3 result may be -
-// without it, spatially-routed results can serve up to a year stale after a data fix
-export async function fetchTableWithFallback(sourceKey, { table, fields, where, limit, maxAge, cartoSql }) {
+// without it, spatially-routed results can serve up to a year stale after a data fix.
+// withGeometry attaches each feature's GeoJSON geometry (already in 4326) to its row -
+// the table response carries it natively, replacing ST_X/ST_Y/ST_AsGeoJSON selects
+export async function fetchTableWithFallback(sourceKey, { table, fields, where, limit, maxAge, cartoSql, withGeometry, service }) {
   if (API_SOURCES[sourceKey] === 'databridge') {
     const params = { table, client_id: GATEWAY_CLIENT_ID };
     if (fields) {
-      params.fields = fields;
+      // the fields param wants bare commas - a 'col1, col2' list reads ' col2' as a column name
+      params.fields = fields.replace(/\s/g, '');
     }
     if (where) {
       params.where = where;
@@ -86,6 +89,12 @@ export async function fetchTableWithFallback(sourceKey, { table, fields, where, 
     if (maxAge !== undefined) {
       params.max_age = maxAge;
     }
+    if (service) {
+      // spatial wheres only run on the carto backend; pinning skips the PostgREST
+      // attempt, which on some tables (public_cases_fc) burns the upstream timeout
+      // instead of failing fast
+      params.service = service;
+    }
     let response = null;
     try {
       response = await axios(DATABRIDGE_URL, { params });
@@ -93,7 +102,13 @@ export async function fetchTableWithFallback(sourceKey, { table, fields, where, 
       // fall through to carto below
     }
     if (response && response.status === 200 && response.data.data && response.data.data.features) {
-      return { rows: response.data.data.features.map((f) => normalizeTimestamps(f.properties)) };
+      return { rows: response.data.data.features.map((f) => {
+        const row = normalizeTimestamps(f.properties);
+        if (withGeometry) {
+          row.geometry = f.geometry;
+        }
+        return row;
+      }) };
     }
     console.warn(`${sourceKey} - databridge request failed, falling back to direct carto`);
   }
@@ -124,6 +139,105 @@ export async function fetchDatabridgeRows(sql) {
     return null;
   }
   return { rows: response.data.data.features.map((f) => normalizeTimestamps(f.properties)) };
+}
+
+// fetches EVERY row of a table-style query, however many: walks the API's keyset
+// pagination (append AND objectid > <last id seen>, the same mechanism its own next
+// links use - pages come back objectid-ascending, proven gap- and duplicate-free)
+// until a short page ends the set. This is what replaced remote server-paging: the
+// row cap only limits single responses, so the complete set arrives in a few pages
+// and sorts/searches/pages client-side. Falls back LOUDLY to carto, where cartoSql
+// (usually the old uncapped statement) returns the same complete set in one response.
+export async function fetchTableAllRows(sourceKey, { table, fields, where, maxAge, service, cartoSql, pageSize = 999 }) {
+  if (API_SOURCES[sourceKey] === 'databridge') {
+    const rows = [];
+    let lastId = null;
+    let failed = false;
+    for (;;) {
+      const pageWhere = lastId === null ? where : `(${where}) AND objectid > ${lastId}`;
+      const params = { table, where: pageWhere, limit: pageSize, client_id: GATEWAY_CLIENT_ID };
+      if (fields) {
+        params.fields = fields.replace(/\s/g, '');
+      }
+      if (maxAge !== undefined) {
+        params.max_age = maxAge;
+      }
+      if (service) {
+        params.service = service;
+      }
+      let response = null;
+      try {
+        response = await axios(DATABRIDGE_URL, { params });
+      } catch {
+        // fall through to carto below
+      }
+      if (!response || response.status !== 200 || !response.data.data || !response.data.data.features) {
+        failed = true;
+        break;
+      }
+      const features = response.data.data.features;
+      features.forEach((f) => rows.push(normalizeTimestamps(f.properties)));
+      if (features.length < pageSize) {
+        return { rows };
+      }
+      lastId = features[features.length - 1].properties.objectid;
+    }
+    if (failed) {
+      console.warn(`${sourceKey} - databridge request failed, falling back to direct carto`);
+    }
+  }
+  const fallbackSql = cartoSql
+    || `SELECT ${fields || '*'} FROM ${table}` + (where ? ` WHERE ${where}` : '');
+  const response = await fetch('https://phl.carto.com/api/v2/sql?q=' + encodeURIComponent(fallbackSql));
+  if (!response.ok) {
+    return null;
+  }
+  return response.json();
+}
+
+// fetches a table-style query as a GeoJSON FeatureCollection - the table response
+// carries geometry natively in 4326, replacing select ST_AsGeoJSON(ST_Transform(...)).
+// Same contract as fetchDatabridgeGeoJSON: null on any failure so call sites fall
+// through to their arcgis/carto branch; feature.id stamped from objectid,
+// single-poly MultiPolygons unwrapped
+export async function fetchTableGeoJSON({ table, fields, where, limit, maxAge, service }) {
+  const params = { table, client_id: GATEWAY_CLIENT_ID };
+  if (fields) {
+    // the fields param wants bare commas - a 'col1, col2' list reads ' col2' as a column name
+    params.fields = fields.replace(/\s/g, '');
+  }
+  if (where) {
+    params.where = where;
+  }
+  if (limit) {
+    params.limit = limit;
+  }
+  if (maxAge !== undefined) {
+    params.max_age = maxAge;
+  }
+  if (service) {
+    // spatial wheres only run on the carto backend; pinning skips the PostgREST
+    // attempt, which on some tables burns the upstream timeout instead of failing fast
+    params.service = service;
+  }
+  let response;
+  try {
+    response = await axios(DATABRIDGE_URL, { params });
+  } catch {
+    return null;
+  }
+  if (response.status !== 200 || !response.data.data || !response.data.data.features) {
+    return null;
+  }
+  const features = response.data.data.features.map((f) => {
+    const properties = normalizeTimestamps(f.properties);
+    let geometry = f.geometry;
+    if (geometry && geometry.type === 'MultiPolygon' && geometry.coordinates.length === 1) {
+      geometry = { type: 'Polygon', coordinates: geometry.coordinates[0] };
+    }
+    return { type: 'Feature', id: properties.objectid, properties: properties, geometry: geometry };
+  });
+  return { type: 'FeatureCollection', features: features };
 }
 
 // returns null on any failure (bad response OR network/gateway error) so call sites

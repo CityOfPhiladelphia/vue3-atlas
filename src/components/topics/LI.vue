@@ -14,7 +14,9 @@ const MainStore = useMainStore();
 import { useLiStore } from '@/stores/LiStore';
 const LiStore = useLiStore();
 import { useMapStore } from '@/stores/MapStore';
+import useMapSource from '@/composables/useMapSource';
 const MapStore = useMapStore();
+const { setSourceData } = useMapSource();
 
 import VerticalTable from '../VerticalTable.vue';
 
@@ -40,8 +42,7 @@ const liBuildingFootprintsLength = computed(() => {
 watch (liBuildingFootprints,
   async (newLiBuildingFootprints) => {
     if (import.meta.env.VITE_DEBUG == 'true') console.log('watch newLiBuildingFootprints.features:', newLiBuildingFootprints.features);
-    const map = MapStore.map;
-    await map.getSource('liBuildingFootprints').setData(featureCollection([]));
+    setSourceData('liBuildingFootprints', featureCollection([]));
     if (newLiBuildingFootprints.features) {
       setLiBuildingFootprints(newLiBuildingFootprints);
     }
@@ -57,11 +58,7 @@ const setLiBuildingFootprints = async(footprints) => {
     features.push(polygon([item.geometry.rings[0]], { id: item.attributes.bin, type: 'liBuildingFootprints' }));
   }
   let geojson = featureCollection(features);
-  // if (import.meta.env.VITE_DEBUG == 'true') console.log('geojson:', geojson, 'map.getSource("liBuildingFootprints"):', map.getSource('liBuildingFootprints'), 'map.getLayer("liBuildingFootprints"):', map.getLayer('liBuildingFootprints'));
-  const map = MapStore.map;
-  if (map.getSource) {
-    await map.getSource('liBuildingFootprints').setData(geojson)
-  }
+  setSourceData('liBuildingFootprints', geojson);
 };
 
 const selectedLiBuildingNumber = computed(() => LiStore.selectedLiBuildingNumber);
