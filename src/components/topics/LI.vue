@@ -2,7 +2,7 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { polygon, featureCollection } from '@turf/helpers';
 
-import { addYears, format, isPast } from 'date-fns';
+import { format, isPast } from 'date-fns';
 
 import CustomPaginationLabels from '@/components/pagination/CustomPaginationLabels.vue';
 import PaginationWithSearch from '@/components/pagination/PaginationWithSearch.vue';
@@ -210,11 +210,7 @@ const leadUnitInspectionsCompareFn = (a, b) => new Date(b.inspectiondate) - new 
 const leadUnitInspections = computed(() => {
   if (!LiStore.leadUnitInspections.rows) return null;
   const rows = [ ...LiStore.leadUnitInspections.rows ].sort(leadUnitInspectionsCompareFn);
-  return filterLeadUnitInspectionRows(rows).map(item => {
-    // calculated until lhhp_lead_unit_inspections provides an expiration date field
-    item.expirationdate = item.inspectiondate ? format(addYears(item.inspectiondate, 4), 'MM/dd/yyyy') : null;
-    return item;
-  });
+  return filterLeadUnitInspectionRows(rows);
 });
 const leadUnitInspectionsLength = computed(() => leadUnitInspections.value && leadUnitInspections.value.length ? leadUnitInspections.value.length : 0);
 const leadUnitInspectionsUnfilteredTotal = computed(() => LiStore.leadUnitInspections.rows ? LiStore.leadUnitInspections.rows.length : 0);
@@ -599,7 +595,7 @@ const leadUnitInspectionsTableData = computed(() => {
         label: 'Exp. date',
         field: 'expirationdate',
         type: 'date',
-        dateInputFormat: 'MM/dd/yyyy',
+        dateInputFormat: "yyyy-MM-dd'T'HH:mm:ssX",
         dateOutputFormat: 'MM/dd/yyyy',
       },
       {
