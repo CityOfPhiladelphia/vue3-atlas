@@ -165,7 +165,8 @@ export const useLiStore = defineStore('LiStore', {
         const feature = GeocodeStore.aisData.features[0];
         const opa_account_num = feature.properties.opa_account_num;
         const baseUrl = `https://phl.carto.com/api/v2/sql?q=`;
-        const url = baseUrl + `SELECT * FROM lhhp_lead_unit_inspections WHERE opaaccountnumber IN ('${opa_account_num}')`;
+        // const url = baseUrl + `SELECT * FROM lhhp_lead_unit_inspections WHERE opaaccountnumber IN ('${opa_account_num}')`;
+        const url = baseUrl + `SELECT * FROM lhhp_lead_units_for_atlas WHERE opaaccountnumber IN ('${opa_account_num}')`;
         const response = await axios.get(url);
         const data = await response.data;
         this.leadUnitInspections = { rows: data.rows };
