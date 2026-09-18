@@ -9,7 +9,7 @@ import distance from '@turf/distance';
 import explode from '@turf/explode';
 import nearest from '@turf/nearest-point';
 import { API_SOURCES } from '@/config/apiSources.js';
-import { fetchDatabridgeGeoJSON, fetchRowsWithFallback } from '@/util/databridge.js';
+import { fetchTableWithFallback, fetchTableGeoJSON } from '@/util/databridge.js';
 
 // databridge has no select *: shape must be transformed to 4326 explicitly, so columns are listed
 const VACANT_POINTS_DATABRIDGE_COLS = 'objectid, land_rank, build_rank, vacant_rank, date_update, councildistrict, zoningbasedistrict, zipcode, vacant_flag, address, owner1, owner2, bldg_desc, opa_id, lniaddresskey';
@@ -43,50 +43,25 @@ const NEARBY_GEOM = {
   databridge: { expr: 'ST_Transform(shape, 4326)', column: 'shape' },
 };
 
-// this was the fetch function from @phila/vue-datafetch http-client.js
-const fetchNearby = (feature, dataSource, source = 'carto') => {
-  const params = evaluateParams(feature, dataSource);
+// builds the WHERE shared by both query styles: the radius predicate against the given
+// geometry expression, plus the dataSource's date cutoff and extra conditions
+const buildNearbyWhere = (feature, dataSource, geomExpr) => {
   const options = dataSource.options;
-  // const srid = options.srid || 4326;
-  const table = options.table;
-  // TODO generalize these options into something like a `sql` param that
-  // returns a sql statement
   const dateMinNum = options.dateMinNum || null;
   const dateMinType = options.dateMinType || null;
-  // if (import.meta.env.VITE_DEBUG == 'true') console.log('dateMinType:', dateMinType);
   const dateField = options.dateField || null;
   const distances = options.distances || 250;
-  if (import.meta.env.VITE_DEBUG == 'true') console.log('fetchNearby options:', options, 'distances:', distances);
   const extraWhere = options.where || null;
 
-  const groupby = options.groupby || null;
-
-  const geom = NEARBY_GEOM[source];
-
-  const distQuery = "(ST_Distance(" + geom.expr + "::geography, ST_SetSRID(ST_Point("
+  const distQuery = "(ST_Distance(" + geomExpr + "::geography, ST_SetSRID(ST_Point("
                   + feature.geometry.coordinates[0]
                   + "," + feature.geometry.coordinates[1]
                   + "),4326)::geography))";
 
-  const latQuery = "ST_Y(" + geom.expr + ")";
-  const lngQuery = "ST_X(" + geom.expr + ")";
+  let where = distQuery + " < " + distances;
 
-  let select;
-  
-  if (!groupby) {
-    select = '*';
-  } else {
-    select = groupby + ', ' + geom.column;
-  }
-  // if (calculateDistance) {
-  select = select + ", " + distQuery + 'as distance,' + latQuery + 'as lat, ' + lngQuery + 'as lng';
-  // }
-
-  params['q'] = "select " + select + " from " + table + " where " + distQuery + " < " + distances;
-
-  let subFn;
   if (dateMinNum) {
-    // let subFn, addFn;
+    let subFn;
     switch (dateMinType) {
     case 'hour':
       subFn = subHours;
@@ -104,14 +79,39 @@ const fetchNearby = (feature, dataSource, source = 'carto') => {
       subFn = subYears;
       break;
     }
-
-    // let test = format(subFn(new Date(), dateMinNum), 'YYYY-MM-DD');
-    params['q'] = params['q'] + " and " + dateField + " > '" + format(subFn(new Date(), dateMinNum), 'yyyy-MM-dd') + "'";
+    where = where + " and " + dateField + " > '" + format(subFn(new Date(), dateMinNum), 'yyyy-MM-dd') + "'";
   }
 
   if (extraWhere) {
-    params['q'] = params['q'] + " and " + extraWhere;
+    where = where + " and " + extraWhere;
   }
+
+  return { distQuery, where };
+}
+
+// this was the fetch function from @phila/vue-datafetch http-client.js; it now builds
+// only the carto fallback statement
+const fetchNearby = (feature, dataSource, source = 'carto') => {
+  const params = evaluateParams(feature, dataSource);
+  const options = dataSource.options;
+  const table = options.table;
+  const groupby = options.groupby || null;
+  const geom = NEARBY_GEOM[source];
+  const { distQuery, where } = buildNearbyWhere(feature, dataSource, geom.expr);
+
+  const latQuery = "ST_Y(" + geom.expr + ")";
+  const lngQuery = "ST_X(" + geom.expr + ")";
+
+  let select;
+
+  if (!groupby) {
+    select = '*';
+  } else {
+    select = groupby + ', ' + geom.column;
+  }
+  select = select + ", " + distQuery + 'as distance,' + latQuery + 'as lat, ' + lngQuery + 'as lng';
+
+  params['q'] = "select " + select + " from " + table + " where " + where;
 
   if (groupby) {
     params['q'] = params['q'] + " group by " + groupby + ", " + geom.column;
@@ -119,12 +119,32 @@ const fetchNearby = (feature, dataSource, source = 'carto') => {
   return params
 }
 
-// the sql pair for fetchRowsWithFallback: the two transports need different geometry sql
-const nearbySqlPair = (feature, dataSource) => {
+// the table-style query for fetchTableWithFallback: the same table and predicates,
+// with the carto statement kept as the explicit fallback (its geometry column
+// differs); distance/lat/lng for table rows are derived by addNearbyDerived
+const nearbyTableQuery = (feature, dataSource) => {
+  const { where } = buildNearbyWhere(feature, dataSource, NEARBY_GEOM.databridge.expr);
   return {
-    databridge: fetchNearby(feature, dataSource, 'databridge').q,
-    carto: fetchNearby(feature, dataSource).q,
+    table: dataSource.options.table,
+    where,
+    withGeometry: true,
+    service: 'carto',
+    cartoSql: fetchNearby(feature, dataSource).q,
   };
+}
+
+// fills in distance (meters, matching the sql ST_Distance::geography), lat, and lng
+// for table-path rows, which carry geometry instead of computed columns; carto
+// fallback rows already have all three from the sql
+const addNearbyDerived = (rows, feature) => {
+  const from = point(feature.geometry.coordinates);
+  rows.forEach((row) => {
+    if (row.distance === undefined && row.geometry) {
+      row.lng = row.geometry.coordinates[0];
+      row.lat = row.geometry.coordinates[1];
+      row.distance = distance(from, point(row.geometry.coordinates), { units: 'kilometers' }) * 1000;
+    }
+  });
 }
 
   
@@ -230,8 +250,9 @@ export const useNearbyActivityStore = defineStore('NearbyActivityStore', {
             dateField: 'requested_datetime',
           },
         };
-        const data = await fetchRowsWithFallback('nearby311', nearbySqlPair(feature, dataSource));
+        const data = await fetchTableWithFallback('nearby311', nearbyTableQuery(feature, dataSource));
         if (data) {
+          addNearbyDerived(data.rows, feature);
           data.rows.forEach(row => {
             row.distance_ft = (row.distance * 3.28084).toFixed(0) + ' ft';
             if (row.media_url) {
@@ -266,9 +287,10 @@ export const useNearbyActivityStore = defineStore('NearbyActivityStore', {
             dateField: 'dispatch_date',
           },
         };
-        const data = await fetchRowsWithFallback('nearbyCrimeIncidents', nearbySqlPair(feature, dataSource));
+        const data = await fetchTableWithFallback('nearbyCrimeIncidents', nearbyTableQuery(feature, dataSource));
         if (data) {
           if (import.meta.env.VITE_DEBUG) console.log('nearbyCrimeIncidents data:', data);
+          addNearbyDerived(data.rows, feature);
           data.rows.forEach(row => {
             row.distance_ft = (row.distance * 3.28084).toFixed(0) + ' ft';
           });
@@ -296,8 +318,9 @@ export const useNearbyActivityStore = defineStore('NearbyActivityStore', {
             where: "(appealtype like '%ZBA%' OR appealtype = 'Zoning Board of Adjustment')",
           },
         };
-        const data = await fetchRowsWithFallback('nearbyZoningAppeals', nearbySqlPair(feature, dataSource));
+        const data = await fetchTableWithFallback('nearbyZoningAppeals', nearbyTableQuery(feature, dataSource));
         if (data) {
+          addNearbyDerived(data.rows, feature);
           data.rows.forEach(row => {
             row.distance_ft = (row.distance * 3.28084).toFixed(0) + ' ft';
             row.link = `<a target="blank" href="https://li.phila.gov/zba-appeals-calendar/appeal?from=2-6-2000&to=4-6-2050&region=all&Id=${row.appealnumber}">${row.appealnumber}</a>`;
@@ -341,7 +364,7 @@ export const useNearbyActivityStore = defineStore('NearbyActivityStore', {
           // same 750ft-around-the-address semantics as the buffer-contains query above
           // (this store's fillBufferForAddress call uses the 750ft default); shape is
           // native EPSG:2272 whose units are feet, so ST_DWithin takes 750 directly
-          data = await fetchDatabridgeGeoJSON(`select ${VACANT_POINTS_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from vacant_indicators_points where ST_DWithin(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${coordinates[0]}, ${coordinates[1]}), 4326), 2272), 750)`);
+          data = await fetchTableGeoJSON({ table: 'vacant_indicators_points', fields: VACANT_POINTS_DATABRIDGE_COLS, where: `ST_DWithin(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${coordinates[0]}, ${coordinates[1]}), 4326), 2272), 750)`, service: 'carto' });
           if (!data) console.warn('nearbyVacantIndicatorPoints - databridge request failed, falling back to direct arcgis');
         }
         if (!data) {
@@ -402,8 +425,9 @@ export const useNearbyActivityStore = defineStore('NearbyActivityStore', {
             dateField: 'permitissuedate',
           },
         };
-        const data = await fetchRowsWithFallback('nearbyConstructionPermits', nearbySqlPair(feature, dataSource));
+        const data = await fetchTableWithFallback('nearbyConstructionPermits', nearbyTableQuery(feature, dataSource));
         if (data) {
+          addNearbyDerived(data.rows, feature);
           data.rows.forEach(row => {
             row.distance_ft = (row.distance * 3.28084).toFixed(0) + ' ft';
           });
@@ -432,8 +456,9 @@ export const useNearbyActivityStore = defineStore('NearbyActivityStore', {
             dateField: 'permitissuedate',
           },
         };
-        const data = await fetchRowsWithFallback('nearbyDemolitionPermits', nearbySqlPair(feature, dataSource));
+        const data = await fetchTableWithFallback('nearbyDemolitionPermits', nearbyTableQuery(feature, dataSource));
         if (data) {
+          addNearbyDerived(data.rows, feature);
           data.rows.forEach(row => {
             row.distance_ft = (row.distance * 3.28084).toFixed(0) + ' ft';
           });
@@ -462,8 +487,22 @@ export const useNearbyActivityStore = defineStore('NearbyActivityStore', {
             groupby: 'casenumber, casecreateddate, caseprioritydesc, casestatus, address',
           },
         };
-        const data = await fetchRowsWithFallback('nearbyUnsafeBuildings', nearbySqlPair(feature, dataSource));
+        const data = await fetchTableWithFallback('nearbyUnsafeBuildings', nearbyTableQuery(feature, dataSource));
         if (data) {
+          addNearbyDerived(data.rows, feature);
+          // replaces the sql GROUP BY (which included the geometry column): collapse
+          // duplicate case rows - one per violation on the case; the grouped carto
+          // fallback rows have no duplicates, so this is a no-op there
+          const seen = new Set();
+          data.rows = data.rows.filter(row => {
+            const key = [row.casenumber, row.casecreateddate, row.caseprioritydesc, row.casestatus, row.address,
+              JSON.stringify(row.geometry && row.geometry.coordinates)].join('|');
+            if (seen.has(key)) {
+              return false;
+            }
+            seen.add(key);
+            return true;
+          });
           data.rows.forEach(row => {
             row.distance_ft = (row.distance * 3.28084).toFixed(0) + ' ft';
             row.link = `<a target='_blank' href='https://li.phila.gov/property-history/search/violation-detail?address=${row.address}&Id=${row.casenumber}'>${row.casestatus}</a>`;

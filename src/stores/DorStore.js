@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { useParcelsStore } from './ParcelsStore';
 import { useGeocodeStore } from './GeocodeStore';
 import { API_SOURCES } from '@/config/apiSources.js';
-import { fetchDatabridgeGeoJSON, fetchRowsWithFallback } from '@/util/databridge.js';
+import { fetchRowsWithFallback, fetchTableGeoJSON, fetchTableAllRows } from '@/util/databridge.js';
 import { buildSearchWhere, buildOrderBy, buildCountSql, buildPageSql, REMOTE_THRESHOLD, REMOTE_SERVER_PAGE } from '@/util/remoteTable.js';
 
 // databridge has no select *: shape must be transformed to 4326 explicitly, so columns are listed
@@ -147,27 +147,27 @@ export const useDorStore = defineStore("DorStore", {
       if (!parcels) return;
       for (const feature of parcels) {
         try {
-          const baseSql = `select * from condominium where mapref = '${ feature.properties.mapreg }' and status in ('1','3')`;
-          const countData = await fetchRowsWithFallback('dorCondos', buildCountSql(baseSql, ''));
-          const total = countData && countData.rows && countData.rows.length ? Number(countData.rows[0].n) : null;
-
-          if (total !== null && total > REMOTE_THRESHOLD) {
-            this.dorCondos[feature.properties.objectid] = {
-              remote: true,
-              baseSql: baseSql,
-              total: total,
-              grandTotal: total,
-              pages: {},
-              search: '',
-              sort: null,
-              rows: [],
-            };
-            await this.fetchCondosServerPage(feature.properties.objectid, 0);
-            continue;
-          }
-
-          const data = await fetchRowsWithFallback('dorCondos', baseSql);
+          const condosWhere = `mapref = '${ feature.properties.mapreg }' and status in ('1','3')`;
+          // keyset-walks the complete regime (Naval Square: 1,003 active units in two
+          // pages), so condos always render through the ordinary client-side table -
+          // the remote server-paging apparatus is no longer used
+          const data = await fetchTableAllRows('dorCondos', {
+            table: 'condominium',
+            where: condosWhere,
+            cartoSql: `select * from condominium where ${condosWhere}`,
+          });
           if (data) {
+            // units read naturally in ascending order (the remote mode's default sort);
+            // condounit compares numerically when both values parse, like the sql column
+            data.rows.sort((a, b) => {
+              if (a.condounit === b.condounit) return 0;
+              if (a.condounit === null) return 1;
+              if (b.condounit === null) return -1;
+              const an = Number(a.condounit);
+              const bn = Number(b.condounit);
+              if (!Number.isNaN(an) && !Number.isNaN(bn)) return an - bn;
+              return a.condounit < b.condounit ? -1 : 1;
+            });
             this._decorateCondoRows(data.rows);
             this.dorCondos[feature.properties.objectid] = data;
           } else {
@@ -454,10 +454,17 @@ export const useDorStore = defineStore("DorStore", {
               // mastermapindex is a plain (non-_3857) table, so its tile grid sits the
               // datum offset (~1ft here) away from the corrected parcel envelope - a
               // sheet the envelope barely clips can miss (verified: 019N02 at 2001 Beach
-              // St missed by 1.4ft). Expanding 3ft absorbs the offset; order by recmap
-              // keeps the buttons in a stable sorted order
-              const data = await fetchDatabridgeGeoJSON(`select ${REGMAPS_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from mastermapindex where ST_Intersects(shape, ST_Expand(ST_Transform(ST_MakeEnvelope(${bounds.coordinates[0][0][0]}, ${bounds.coordinates[0][0][1]}, ${bounds.coordinates[0][2][0]}, ${bounds.coordinates[0][2][1]}, 4326), 2272), 3)) order by recmap`);
+              // St missed by 1.4ft). Expanding 3ft absorbs the offset
+              const data = await fetchTableGeoJSON({ table: 'mastermapindex', fields: REGMAPS_DATABRIDGE_COLS, where: `ST_Intersects(shape, ST_Expand(ST_Transform(ST_MakeEnvelope(${bounds.coordinates[0][0][0]}, ${bounds.coordinates[0][0][1]}, ${bounds.coordinates[0][2][0]}, ${bounds.coordinates[0][2][1]}, 4326), 2272), 3))`, service: 'carto' });
               if (data) {
+                // replaces the sql order by recmap, which keeps the buttons in a
+                // stable sorted order
+                data.features.sort((a, b) => {
+                  if (a.properties.recmap === b.properties.recmap) return 0;
+                  if (a.properties.recmap === null) return 1;
+                  if (b.properties.recmap === null) return -1;
+                  return a.properties.recmap < b.properties.recmap ? -1 : 1;
+                });
                 // consumers read regmaps.data.features, mirroring the axios response wrapper
                 this.regmaps = { data: data };
                 return resolve();
@@ -580,30 +587,39 @@ export const useDorStore = defineStore("DorStore", {
               let theWhere = where(feature);
 
               if (API_SOURCES.dorDocuments === 'databridge') {
-                const baseSql = `select distinct ${DOCS_BASE_COLS} from rtt_summary where ${theWhere}`;
-                const countData = await fetchRowsWithFallback('dorDocuments', buildCountSql(baseSql, ''));
-                const total = countData && countData.rows && countData.rows.length ? Number(countData.rows[0].n) : null;
-
-                if (total !== null && total > REMOTE_THRESHOLD) {
-                  this.dorDocuments[feature.properties.objectid] = {
-                    remote: true,
-                    baseSql: baseSql,
-                    total: total,
-                    grandTotal: total,
-                    pages: {},
-                    search: '',
-                    sort: null,
-                    features: [],
-                  };
-                  await this.fetchDocsServerPage(feature.properties.objectid, 0);
-                  continue;
-                }
-
-                const data = await fetchRowsWithFallback('dorDocuments', baseSql);
+                // keyset-walks the complete raw set (objectid included for the walk),
+                // then applies the old query's DISTINCT client-side - table-style has
+                // no distinct. Documents always render through the ordinary client-side
+                // table; the remote server-paging apparatus is no longer used
+                const data = await fetchTableAllRows('dorDocuments', {
+                  table: 'rtt_summary',
+                  fields: `${DOCS_BASE_COLS}, objectid`,
+                  where: theWhere,
+                  cartoSql: `select distinct ${DOCS_BASE_COLS} from rtt_summary where ${theWhere}`,
+                });
                 if (data && data.rows) {
-                  this._decorateDocRows(data.rows);
+                  const seen = new Set();
+                  const rows = data.rows.filter((row) => {
+                    const key = [row.document_id, row.display_date, row.document_type, row.grantors, row.grantees, row.unit_num].join('|');
+                    if (seen.has(key)) {
+                      return false;
+                    }
+                    seen.add(key);
+                    return true;
+                  });
+                  // the remote mode's default order: newest first, document_id tiebreak
+                  rows.sort((a, b) => {
+                    if (a.display_date !== b.display_date) {
+                      if (a.display_date === null) return 1;
+                      if (b.display_date === null) return -1;
+                      return a.display_date < b.display_date ? 1 : -1;
+                    }
+                    if (a.document_id === b.document_id) return 0;
+                    return a.document_id < b.document_id ? -1 : 1;
+                  });
+                  this._decorateDocRows(rows);
                   this.dorDocuments[feature.properties.objectid] = {
-                    features: data.rows.map((row) => ({ attributes: row })),
+                    features: rows.map((row) => ({ attributes: row })),
                   };
                 } else {
                   if (import.meta.env.VITE_DEBUG == 'true') console.warn('dorDocs - query did not return rows')

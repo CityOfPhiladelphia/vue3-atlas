@@ -8,7 +8,9 @@ const NearbyActivityStore = useNearbyActivityStore();
 import { useMainStore } from '@/stores/MainStore';
 const MainStore = useMainStore();
 import { useMapStore } from '@/stores/MapStore';
+import useMapSource from '@/composables/useMapSource';
 const MapStore = useMapStore();
+const { setSourceData, clearSourceData } = useMapSource();
 
 import useScrolling from '@/composables/useScrolling';
 const { handleRowClick, handleRowMouseover, handleRowMouseleave } = useScrolling();
@@ -43,7 +45,7 @@ const nearbyVacantIndicatorPointsGeojson = computed(() => {
 watch (() => nearbyVacantIndicatorPointsGeojson.value, (newGeojson) => {
   if (import.meta.env.VITE_DEBUG == 'true') console.log('watch nearbyVacantIndicatorPointsGeojson.value, newGeojson:', newGeojson);
   const map = MapStore.map;
-  if (map.getSource) map.getSource('nearbyActivity').setData(featureCollection(newGeojson));
+  setSourceData('nearbyActivity', featureCollection(newGeojson));
   if (import.meta.env.VITE_DEBUG) console.log('newGeojson:', newGeojson, 'newGeojson.length:', newGeojson.length);
   if (newGeojson.length > 0) {
     const bounds = bbox(buffer(featureCollection(newGeojson), 1000, {units: 'feet'}));
@@ -56,7 +58,7 @@ const hoveredStateId = computed(() => { return MainStore.hoveredStateId; });
 onMounted(() => {
   const map = MapStore.map;
   if (!NearbyActivityStore.loadingData && nearbyVacantIndicatorPointsGeojson.value.length > 0) {
-    map.getSource('nearbyActivity').setData(featureCollection(nearbyVacantIndicatorPointsGeojson.value));
+    setSourceData('nearbyActivity', featureCollection(nearbyVacantIndicatorPointsGeojson.value));
     if (import.meta.env.VITE_DEBUG) console.log('nearbyVacantIndicatorPointsGeojson.value:', nearbyVacantIndicatorPointsGeojson.value, 'nearbyVacantIndicatorPointsGeojson.value.length:', nearbyVacantIndicatorPointsGeojson.value.length);
     if (nearbyVacantIndicatorPointsGeojson.value.length > 0) {
       const bounds = bbox(buffer(featureCollection(nearbyVacantIndicatorPointsGeojson.value), 1000, {units: 'feet'}));
@@ -66,7 +68,7 @@ onMounted(() => {
 });
 onBeforeUnmount(() => {
   const map = MapStore.map;
-  if (map.getSource('nearbyActivity')) { map.getSource('nearbyActivity').setData(featureCollection([point([0,0])])) }
+  clearSourceData('nearbyActivity', featureCollection([point([0,0])]));
 });
 
 const nearbyVacantIndicatorsTableData = computed(() => {

@@ -12,7 +12,9 @@ const GeocodeStore = useGeocodeStore();
 import { useCityServicesStore } from '@/stores/CityServicesStore';
 const CityServicesStore = useCityServicesStore();
 import { useMapStore } from '@/stores/MapStore';
+import useMapSource from '@/composables/useMapSource';
 const MapStore = useMapStore();
+const { setSourceData } = useMapSource();
 import { useMainStore } from '@/stores/MainStore';
 const MainStore = useMainStore();
 
@@ -244,7 +246,14 @@ const nearbySchoolsCompareFn = (a, b) =>
   || a.properties.school_name_label.localeCompare(b.properties.school_name_label);
 const nearbySchools = computed(() => {
   if (!CityServicesStore.nearbySchools) return CityServicesStore.nearbySchools;
-  return [ ...CityServicesStore.nearbySchools ].sort(nearbySchoolsCompareFn);
+  // the designated schools have their own cards and markers - exclude whichever have
+  // resolved; this recomputes when they do, so a late match still drops out of the list
+  const designatedIds = [elementarySchool.value, middleSchool.value, highSchool.value]
+    .filter((school) => school && school.id)
+    .map((school) => school.id);
+  return CityServicesStore.nearbySchools
+    .filter((school) => !designatedIds.includes(school.id))
+    .sort(nearbySchoolsCompareFn);
 })
 
 const nearbySchoolsGeojson = computed(() => {
@@ -252,14 +261,17 @@ const nearbySchoolsGeojson = computed(() => {
   return nearbySchools.value.map(item => point(item.geometry.coordinates, { id: item.id, type: 'nearbySchools' }));
 })
 
+// immediate: on a deep link the data can predate this component, and a change-only
+// watch never fires; setSourceData waits out the map and source arriving late
 watch(() => nearbySchoolsGeojson.value, (newGeojson) => {
   if (import.meta.env.VITE_DEBUG == 'true') console.log('watch nearbySchoolsGeojson.value, newGeojson:', newGeojson);
-  const map = MapStore.map;
+  if (!newGeojson) return;
   const feat = featureCollection(newGeojson);
-  if (map.getSource) map.getSource('cityServices').setData(feat);
+  setSourceData('cityServices', feat);
+  const map = MapStore.map;
   const bounds = bbox(buffer(feat, 2000, {units: 'feet'}));
-  map.fitBounds(bounds);
-});
+  if (map && map.fitBounds) map.fitBounds(bounds);
+}, { immediate: true });
 
 const hoveredStateId = computed(() => { return MainStore.hoveredStateId; });
 const hoveredSchoolId = computed(() => { return MainStore.hoveredSchoolId; });
@@ -327,11 +339,9 @@ const handleCellMouseleave = () => {
 
 // in order to be able to switch off the topic and come back
 onMounted(() => {
-  const map = MapStore.map;
-  if (map.getSource) {
-    // if (import.meta.env.VITE_DEBUG) console.log("NearbySchools.vue onMounted is running, map.getSource('schoolMarkers'):", map.getSource('schoolMarkers'));
+  if (CityServicesStore.elementarySchool && CityServicesStore.middleSchool && CityServicesStore.highSchool) {
     const feat = featureCollection([CityServicesStore.elementarySchool, CityServicesStore.middleSchool, CityServicesStore.highSchool]);
-    map.getSource('schoolMarkers').setData(feat);
+    setSourceData('schoolMarkers', feat);
   }
 })
 
