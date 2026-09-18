@@ -12,7 +12,9 @@ const GeocodeStore = useGeocodeStore();
 import { useCityServicesStore } from '@/stores/CityServicesStore';
 const CityServicesStore = useCityServicesStore();
 import { useMapStore } from '@/stores/MapStore';
+import useMapSource from '@/composables/useMapSource';
 const MapStore = useMapStore();
+const { setSourceData } = useMapSource();
 import { useMainStore } from '@/stores/MainStore';
 const MainStore = useMainStore();
 
@@ -37,17 +39,20 @@ const nearbyFireStationsGeojson = computed(() => {
   return nearbyFireStations.value.map(item => point(item.geometry.coordinates, { id: item.id, type: 'nearbyFireStations' }));
 });
 
+// immediate: on a deep link the data can predate this component, and a change-only
+// watch never fires (same load-order race as NearbySchools.vue)
 watch(() => nearbyFireStationsGeojson.value, (newGeojson) => {
+  if (!newGeojson || !MapStore.currentAddressCoords || !MapStore.currentAddressCoords.length) return;
   const currentAddress = point(MapStore.currentAddressCoords);
   if (import.meta.env.VITE_DEBUG == 'true') console.log('watch nearbyFireStationsGeojson.value, newGeojson:', newGeojson, 'policeStation.value', policeStation.value, 'currentAddress:', currentAddress);
   const map = MapStore.map;
   const feat = featureCollection(newGeojson);
   if (import.meta.env.VITE_DEBUG) console.log('watch nearbyFireStationsGeojson.value, feat:', feat);
-  if (map.getSource) map.getSource('cityServices').setData(feat);
+  setSourceData('cityServices', feat);
   const feat2 = featureCollection([policeStation.value, currentAddress, ...newGeojson]);
   const bounds = bbox(buffer(feat2, 2000, {units: 'feet'}));
-  map.fitBounds(bounds);
-});
+  if (map && map.fitBounds) map.fitBounds(bounds);
+}, { immediate: true });
 
 const nearbyFireStationsTableData = computed(() => {
   return {
@@ -149,11 +154,8 @@ const handleCellMouseleave = () => {
 
 // in order to be able to switch off the topic and come back
 onMounted(() => {
-  const map = MapStore.map;
-  if (map.getSource) {
-    // if (import.meta.env.VITE_DEBUG) console.log("NearbySchools.vue onMounted is running, map.getSource('schoolMarkers'):", map.getSource('schoolMarkers'));
-    // CityServicesStore.policeStation;
-    map.getSource('policeStationMarker').setData(CityServicesStore.policeStation);
+  if (CityServicesStore.policeStation) {
+    setSourceData('policeStationMarker', CityServicesStore.policeStation);
   }
 })
 

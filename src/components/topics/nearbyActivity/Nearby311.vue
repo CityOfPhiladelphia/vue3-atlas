@@ -7,7 +7,9 @@ const NearbyActivityStore = useNearbyActivityStore();
 import { useMainStore } from '@/stores/MainStore';
 const MainStore = useMainStore();
 import { useMapStore } from '@/stores/MapStore';
+import useMapSource from '@/composables/useMapSource';
 const MapStore = useMapStore();
+const { setSourceData, clearSourceData } = useMapSource();
 
 import useTransforms from '@/composables/useTransforms';
 const { timeReverseFn } = useTransforms();
@@ -54,7 +56,7 @@ const nearby311Geojson = computed(() => {
 watch (() => nearby311Geojson.value, async(newGeojson) => {
   if (import.meta.env.VITE_DEBUG) console.log('watch nearby311.value, newGeojson:', newGeojson);
   const map = MapStore.map;
-  if (map.getSource) map.getSource('nearbyActivity').setData(featureCollection(newGeojson));
+  setSourceData('nearbyActivity', featureCollection(newGeojson));
   if (import.meta.env.VITE_DEBUG) console.log('newGeojson:', newGeojson);
   if (newGeojson.length) {
     const bounds = bbox(buffer(featureCollection(newGeojson), 1000, {units: 'feet'}));
@@ -67,7 +69,7 @@ const hoveredStateId = computed(() => { return MainStore.hoveredStateId; });
 onMounted(() => {
   const map = MapStore.map;
   if (!NearbyActivityStore.loadingData && nearby311Geojson.value.length > 0) {
-    map.getSource('nearbyActivity').setData(featureCollection(nearby311Geojson.value));
+    setSourceData('nearbyActivity', featureCollection(nearby311Geojson.value));
     if (nearby311Geojson.value.length > 0) {
       const bounds = bbox(buffer(featureCollection(nearby311Geojson.value), 1000, {units: 'feet'}));
       if (map.fitBounds) map.fitBounds(bounds);
@@ -76,7 +78,7 @@ onMounted(() => {
 });
 onBeforeUnmount(() => {
   const map = MapStore.map;
-  if (map.getSource('nearbyActivity')) { map.getSource('nearbyActivity').setData(featureCollection([point([0,0])])) }
+  clearSourceData('nearbyActivity', featureCollection([point([0,0])]));
 });
 
 const nearby311TableData = computed(() => {

@@ -8,7 +8,9 @@ import buffer from '@turf/buffer';
 import { useCityServicesStore } from '@/stores/CityServicesStore';
 const CityServicesStore = useCityServicesStore();
 import { useMapStore } from '@/stores/MapStore';
+import useMapSource from '@/composables/useMapSource';
 const MapStore = useMapStore();
+const { setSourceData } = useMapSource();
 import { useMainStore } from '@/stores/MainStore';
 const MainStore = useMainStore();
 
@@ -27,17 +29,20 @@ const nearbyRecreationFacilitiesGeojson = computed(() => {
   return nearbyRecreationFacilities.value.map(item => point([item.lng, item.lat], { id: item.id, type: 'nearbyRecreationFacilities' }));
 })
 
+// immediate: on a deep link the data can predate this component, and a change-only
+// watch never fires (same load-order race as NearbySchools.vue)
 watch(() => nearbyRecreationFacilitiesGeojson.value, (newGeojson) => {
+  if (!newGeojson || !MapStore.currentAddressCoords || !MapStore.currentAddressCoords.length) return;
   const currentAddress = point(MapStore.currentAddressCoords);
   if (import.meta.env.VITE_DEBUG == 'true') console.log('watch nearbyRecreationFacilities.value, newGeojson:', newGeojson, 'currentAddress:', currentAddress);
   const map = MapStore.map;
   const feat = featureCollection(newGeojson);
   if (import.meta.env.VITE_DEBUG) console.log('watch nearbyRecreationFacilities.value, feat:', feat);
-  if (map.getSource) map.getSource('cityServices').setData(feat);
+  setSourceData('cityServices', feat);
   const feat2 = featureCollection([currentAddress, ...newGeojson]);
   const bounds = bbox(buffer(feat2, 2000, {units: 'feet'}));
-  if (map.fitBounds) map.fitBounds(bounds);
-});
+  if (map && map.fitBounds) map.fitBounds(bounds);
+}, { immediate: true });
 
 const nearbyRecreationFacilitiesTableData = computed(() => {
   return {

@@ -19,7 +19,9 @@ import buffer from '@turf/buffer';
 
 // STORES
 import { useMapStore } from '@/stores/MapStore.js';
+import useMapSource from '@/composables/useMapSource';
 const MapStore = useMapStore();
+const { setSourceData } = useMapSource();
 import { useMainStore } from '@/stores/MainStore.js'
 const MainStore = useMainStore();
 import { useGeocodeStore } from '@/stores/GeocodeStore.js'
@@ -882,26 +884,25 @@ watch(
 
 const allSchools = computed(() => {
   const elemSchool = CityServicesStore.elementarySchool && CityServicesStore.elementarySchool.id ? CityServicesStore.elementarySchool.id : 0;
-  const midSchool = CityServicesStore.middleSchool && CityServicesStore.middleSchool.id ? CityServicesStore.elementarySchool.id : 0;
-  const highSchool = CityServicesStore.highSchool && CityServicesStore.highSchool.id ? CityServicesStore.elementarySchool.id : 0;
+  const midSchool = CityServicesStore.middleSchool && CityServicesStore.middleSchool.id ? CityServicesStore.middleSchool.id : 0;
+  const highSchool = CityServicesStore.highSchool && CityServicesStore.highSchool.id ? CityServicesStore.highSchool.id : 0;
   // if (import.meta.env.VITE_DEBUG) console.log('allSchools, elemSchool:', elemSchool, 'midSchool:', midSchool, 'highSchool:', highSchool);
   return elemSchool + midSchool + highSchool;
 });
 
 watch(() => allSchools.value, (newValue) => {
   if (import.meta.env.VITE_DEBUG) console.log('watch for adding school markers, newValue:', newValue);
-  setTimeout(() => {
-    const feat = featureCollection([CityServicesStore.elementarySchool, CityServicesStore.middleSchool, CityServicesStore.highSchool]);
-    map.getSource('schoolMarkers').setData(feat);
-  }, 1000);
+  if (!CityServicesStore.elementarySchool || !CityServicesStore.middleSchool || !CityServicesStore.highSchool) return;
+  const feat = featureCollection([CityServicesStore.elementarySchool, CityServicesStore.middleSchool, CityServicesStore.highSchool]);
+  setSourceData('schoolMarkers', feat);
 });
 
 watch(
   () => CityServicesStore.policeStation,
   (newValue) => {
     if (import.meta.env.VITE_DEBUG) console.log('Map.vue watch for adding police station markers, newValue:', newValue);
-    if (map.getSource('policeStationMarker')) {
-      map.getSource('policeStationMarker').setData(newValue);
+    if (newValue) {
+      setSourceData('policeStationMarker', newValue);
     }
   }
 )
@@ -916,6 +917,10 @@ watch(
       if (MainStore.currentTopic == 'nearby-activity') {
         if (import.meta.env.VITE_DEBUG == 'true') console.log('map.getStyle().sources.nearbyActivity.data.features', map.getStyle().sources.nearbyActivity.data.features, 'newHoveredStateId:', newHoveredStateId);
         const feature = map.getStyle().sources.nearbyActivity.data.features.filter(feature => feature.properties.id === newHoveredStateId)[0];
+        // a hover id with no matching feature (the source is empty or mid-update) must
+        // not splice: indexOf(undefined) is -1, which deletes the LAST feature and
+        // pushes undefined, poisoning the source for every later hover
+        if (!feature) return;
         const index = map.getStyle().sources.nearbyActivity.data.features.indexOf(feature);
         if (import.meta.env.VITE_DEBUG == 'true') console.log('feature:', feature, 'index:', index, 'map.getStyle().sources.nearbyActivity.data.features:', map.getStyle().sources.nearbyActivity.data.features.filter(feature => feature.properties.id === newHoveredStateId)[0]);
         map.getStyle().sources.nearbyActivity.data.features.splice(index, 1);
@@ -965,6 +970,9 @@ watch(
       } else if (MainStore.currentTopic == 'city-services') {
         // if (import.meta.env.VITE_DEBUG) console.log('map.getStyle().sources.cityServices.data.features:', map.getStyle().sources.cityServices.data.features);
         const feature = map.getStyle().sources.cityServices.data.features.filter(feature => feature.properties.id === newHoveredStateId)[0];
+        // a hover id with no matching feature must not splice - see the guard on the
+        // nearbyActivity branch above
+        if (!feature) return;
         const index = map.getStyle().sources.cityServices.data.features.indexOf(feature);
         map.getStyle().sources.cityServices.data.features.splice(index, 1);
         map.getStyle().sources.cityServices.data.features.push(feature);

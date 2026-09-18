@@ -7,7 +7,9 @@ const City311Store = useCity311Store();
 import { useMainStore } from '@/stores/MainStore';
 const MainStore = useMainStore();
 import { useMapStore } from '@/stores/MapStore';
+import useMapSource from '@/composables/useMapSource';
 const MapStore = useMapStore();
+const { setSourceData, clearSourceData } = useMapSource();
 
 
 import useTransforms from '@/composables/useTransforms';
@@ -53,7 +55,7 @@ const city311Geojson = computed(() => {
 })
 watch (() => city311Geojson.value, async(newGeojson) => {
   const map = MapStore.map;
-  if (map.getSource) map.getSource('nearbyActivity').setData(featureCollection(newGeojson));
+  setSourceData('nearbyActivity', featureCollection(newGeojson));
 });
 
 const hoveredStateId = computed(() => { return MainStore.hoveredStateId; });
@@ -72,11 +74,11 @@ watch(() => clickedMarkerId.value, (newClickedMarkerId) => {
 
 onMounted(() => {
   const map = MapStore.map;
-  if (!City311Store.loadingCity311 && city311Geojson.value.length > 0) { map.getSource('nearbyActivity').setData(featureCollection(city311Geojson.value)) }
+  if (!City311Store.loadingCity311 && city311Geojson.value.length > 0) { setSourceData('nearbyActivity', featureCollection(city311Geojson.value)) }
 });
 onBeforeUnmount(() => {
   const map = MapStore.map;
-  if (map.getSource('nearbyActivity')) { map.getSource('nearbyActivity').setData(featureCollection([point([0,0])])) }
+  clearSourceData('nearbyActivity', featureCollection([point([0,0])]));
 });
 
 const city311TableData = computed(() => {
