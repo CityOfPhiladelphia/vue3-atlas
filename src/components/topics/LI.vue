@@ -25,7 +25,6 @@ const GeocodeStore = useGeocodeStore();
 const { setSourceData } = useMapSource();
 
 import VerticalTable from '../VerticalTable.vue';
-import TextFilter from '@/components/TextFilter.vue';
 
 import useTransforms from '@/composables/useTransforms';
 const { prettyNumber } = useTransforms();
@@ -204,19 +203,22 @@ const liAppeals = computed(() => LiStore.liAppeals.rows ? [ ...LiStore.liAppeals
 const liAppealsLength = computed(() => liAppeals.value && liAppeals.value.length ? liAppeals.value.length : 0);
 
 // LEAD UNIT INSPECTIONS
-const leadUnitInspectionsSearch = ref('');
-const leadUnitInspectionsSearchFields = ['name', 'inspectionstatus', 'inspectiontype'];
-const leadUnitInspectionsFilterFn = (item) => leadUnitInspectionsSearchFields.some(field => item[field] != null && item[field].toLowerCase().includes(leadUnitInspectionsSearch.value.toLowerCase()));
+const { searchTerm: leadUnitInspectionsSearchTerm, searchEnabled: leadUnitInspectionsSearchThreshold, filterRows: filterLeadUnitInspectionRows } = useTableSearch({
+  fields: [ 'name', 'inspectionstatus', 'inspectiontype' ],
+});
 const leadUnitInspectionsCompareFn = (a, b) => new Date(b.inspectiondate) - new Date(a.inspectiondate) || a.name.localeCompare(b.name, undefined, { numeric: true });
 const leadUnitInspections = computed(() => {
   if (!LiStore.leadUnitInspections.rows) return null;
-  return LiStore.leadUnitInspections.rows.filter(leadUnitInspectionsFilterFn).sort(leadUnitInspectionsCompareFn).map(item => {
+  const rows = [ ...LiStore.leadUnitInspections.rows ].sort(leadUnitInspectionsCompareFn);
+  return filterLeadUnitInspectionRows(rows).map(item => {
     // calculated until lhhp_lead_unit_inspections provides an expiration date field
     item.expirationdate = item.inspectiondate ? format(addYears(item.inspectiondate, 4), 'MM/dd/yyyy') : null;
     return item;
   });
 });
 const leadUnitInspectionsLength = computed(() => leadUnitInspections.value && leadUnitInspections.value.length ? leadUnitInspections.value.length : 0);
+const leadUnitInspectionsUnfilteredTotal = computed(() => LiStore.leadUnitInspections.rows ? LiStore.leadUnitInspections.rows.length : 0);
+const leadUnitInspectionsSearchEnabled = computed(() => leadUnitInspectionsSearchThreshold(leadUnitInspectionsUnfilteredTotal.value));
 
 // TABLES
 
@@ -1114,12 +1116,6 @@ const leadUnitInspectionsTableData = computed(() => {
         />
         <span v-else>({{ leadUnitInspectionsLength }})</span>
       </h2>
-      <TextFilter
-        v-model="leadUnitInspectionsSearch"
-        class="lead-unit-inspections-filter"
-        :search-label="'Search Lead Certification Inspections'"
-        :placeholder="'Search Lead Certification Inspections'"
-      />
       <div
         v-if="leadUnitInspectionsTableData"
         class="horizontal-table mt-2"
@@ -1128,7 +1124,7 @@ const leadUnitInspectionsTableData = computed(() => {
           id="lead-unit-inspections"
           :columns="leadUnitInspectionsTableData.columns"
           :rows="leadUnitInspectionsTableData.rows"
-          :pagination-options="paginationOptions(leadUnitInspectionsTableData.rows.length)"
+          :pagination-options="paginationOptions(leadUnitInspectionsUnfilteredTotal)"
           style-class="table"
         >
           <template #emptystate>
@@ -1143,10 +1139,11 @@ const leadUnitInspectionsTableData = computed(() => {
             </div>
           </template>
           <template #pagination-top="props">
-            <custom-pagination-labels
-              :mode="'pages'"
+            <pagination-with-search
+              v-model="leadUnitInspectionsSearchTerm"
+              :search-enabled="leadUnitInspectionsSearchEnabled"
+              placeholder="Search Lead Certification Inspections"
               :total="props.total"
-              :per-page="5"
               @page-changed="props.pageChanged"
               @per-page-changed="props.perPageChanged"
             />
@@ -1159,10 +1156,6 @@ const leadUnitInspectionsTableData = computed(() => {
 </template>
 
 <style>
-
-.lead-unit-inspections-filter {
-  margin-left: -4px !important;
-}
 
 .condo-info {
   background-color: #f0f0f0;
