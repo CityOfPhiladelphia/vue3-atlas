@@ -3,7 +3,7 @@ import axios from 'axios';
 import { defineStore } from 'pinia';
 import { useGeocodeStore } from '@/stores/GeocodeStore.js'
 import { API_SOURCES } from '@/config/apiSources.js';
-import { fetchRowsWithFallback } from '@/util/databridge.js';
+import { fetchRowsWithFallback, fetchTableWithFallback } from '@/util/databridge.js';
 
 export const useVotingStore = defineStore("VotingStore", {
   state: () => {
@@ -41,11 +41,14 @@ export const useVotingStore = defineStore("VotingStore", {
         const feature = GeocodeStore.aisData.features[0];
         if (API_SOURCES.politicalDivisions !== 'arcgis') {
           const addressPoint = `ST_SetSRID(ST_Point(${feature.geometry.coordinates[0]}, ${feature.geometry.coordinates[1]}), 4326)`;
-          const data = await fetchRowsWithFallback('politicalDivisions', {
-            // the unaliased carto ST_AsGeoJSON lands in a column named st_asgeojson, which
-            // Map.vue reads - the databridge alias must match it
-            databridge: `SELECT *, ST_AsGeoJSON(ST_Transform(shape, 4326)) as st_asgeojson FROM political_divisions WHERE ST_Intersects(shape, ST_Transform(${addressPoint}, 2272))`,
-            carto: `SELECT *, ST_AsGeoJSON(the_geom) FROM political_divisions WHERE ST_Intersects(the_geom, ${addressPoint})`,
+          const data = await fetchTableWithFallback('politicalDivisions', {
+            table: 'political_divisions',
+            where: `ST_Intersects(shape, ST_Transform(${addressPoint}, 2272))`,
+            withGeometry: true,
+            service: 'carto',
+            // the unaliased carto ST_AsGeoJSON lands in a column named st_asgeojson,
+            // which Map.vue reads on the fallback path (table rows carry geometry)
+            cartoSql: `SELECT *, ST_AsGeoJSON(the_geom) FROM political_divisions WHERE ST_Intersects(the_geom, ${addressPoint})`,
           });
           if (data) {
             this.divisions = data;
@@ -88,11 +91,21 @@ export const useVotingStore = defineStore("VotingStore", {
           precinct = feature.properties.political_division;
         }
         if (API_SOURCES.pollingPlaces !== 'arcgis') {
-          const data = await fetchRowsWithFallback('pollingPlaces', {
-            databridge: `select ST_X(ST_Transform(shape, 4326)) as lng, ST_Y(ST_Transform(shape, 4326)) as lat, * from polling_places where precinct ='${precinct}'`,
-            carto: `select ST_X(the_geom) as lng, ST_Y(the_geom) as lat, * from polling_places where precinct ='${precinct}'`,
+          const data = await fetchTableWithFallback('pollingPlaces', {
+            table: 'polling_places',
+            where: `precinct ='${precinct}'`,
+            withGeometry: true,
+            cartoSql: `select ST_X(the_geom) as lng, ST_Y(the_geom) as lat, * from polling_places where precinct ='${precinct}'`,
           });
           if (data) {
+            // the carto fallback selects lng/lat columns; the table response carries
+            // the point geometry instead
+            data.rows.forEach((row) => {
+              if (row.lng === undefined && row.geometry) {
+                row.lng = row.geometry.coordinates[0];
+                row.lat = row.geometry.coordinates[1];
+              }
+            });
             this.pollingPlaces = data;
           } else {
             if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillPollingPlaces - await resolved but HTTP status was not successful');
@@ -129,7 +142,7 @@ export const useVotingStore = defineStore("VotingStore", {
       try {
         const feature = GeocodeStore.aisData.features[0];
         if (API_SOURCES.electedOfficials !== 'arcgis') {
-          const data = await fetchRowsWithFallback('electedOfficials', `SELECT * FROM elected_officials WHERE office = 'city_council' AND district = '${feature.properties.council_district_2024}'`);
+          const data = await fetchTableWithFallback('electedOfficials', { table: 'elected_officials', where: `office = 'city_council' AND district = '${feature.properties.council_district_2024}'` });
           if (data) {
             this.electedOfficials = data;
           } else {
@@ -180,7 +193,7 @@ export const useVotingStore = defineStore("VotingStore", {
         // ('528'), so wards 1-9 matched nothing - query both forms
         const unpadded = String(parseInt(precinct, 10));
         if (API_SOURCES.electionSplit !== 'arcgis') {
-          const data = await fetchRowsWithFallback('electionSplit', `SELECT * FROM splits WHERE precinct IN ('${precinct}', '${unpadded}')`);
+          const data = await fetchTableWithFallback('electionSplit', { table: 'splits', where: `precinct IN ('${precinct}', '${unpadded}')` });
           if (data) {
             this.electionSplit = data;
           } else {

@@ -7,7 +7,9 @@ const NearbyActivityStore = useNearbyActivityStore();
 import { useMainStore } from '@/stores/MainStore';
 const MainStore = useMainStore();
 import { useMapStore } from '@/stores/MapStore';
+import useMapSource from '@/composables/useMapSource';
 const MapStore = useMapStore();
+const { setSourceData, clearSourceData } = useMapSource();
 
 import useTransforms from '@/composables/useTransforms';
 const { timeReverseFn } = useTransforms();
@@ -52,7 +54,7 @@ const nearbyCrimeIncidentsGeojson = computed(() => {
 })
 watch (() => nearbyCrimeIncidentsGeojson.value, (newGeojson) => {
   const map = MapStore.map;
-  if (map.getSource) map.getSource('nearbyActivity').setData(featureCollection(newGeojson));
+  setSourceData('nearbyActivity', featureCollection(newGeojson));
   if (newGeojson.length > 0) {
     const bounds = bbox(buffer(featureCollection(newGeojson), 1000, {units: 'feet'}));
     if (map.fitBounds) map.fitBounds(bounds);
@@ -64,7 +66,7 @@ const hoveredStateId = computed(() => { return MainStore.hoveredStateId; });
 onMounted(() => {
   const map = MapStore.map;
   if (!NearbyActivityStore.loadingData && nearbyCrimeIncidentsGeojson.value.length > 0) {
-    map.getSource('nearbyActivity').setData(featureCollection(nearbyCrimeIncidentsGeojson.value));
+    setSourceData('nearbyActivity', featureCollection(nearbyCrimeIncidentsGeojson.value));
     if (nearbyCrimeIncidentsGeojson.value.length > 0) {
       const bounds = bbox(buffer(featureCollection(nearbyCrimeIncidentsGeojson.value), 1000, {units: 'feet'}));
       if (map.fitBounds) map.fitBounds(bounds);
@@ -73,7 +75,7 @@ onMounted(() => {
 });
 onBeforeUnmount(() => {
   const map = MapStore.map;
-  if (map.getSource('nearbyActivity')) { map.getSource('nearbyActivity').setData(featureCollection([point([0,0])])) }
+  clearSourceData('nearbyActivity', featureCollection([point([0,0])]));
 });
 
 const nearbyCrimeIncidentsTableData = computed(() => {
