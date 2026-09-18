@@ -141,6 +141,60 @@ export async function fetchDatabridgeRows(sql) {
   return { rows: response.data.data.features.map((f) => normalizeTimestamps(f.properties)) };
 }
 
+// fetches EVERY row of a table-style query, however many: walks the API's keyset
+// pagination (append AND objectid > <last id seen>, the same mechanism its own next
+// links use - pages come back objectid-ascending, proven gap- and duplicate-free)
+// until a short page ends the set. This is what replaced remote server-paging: the
+// row cap only limits single responses, so the complete set arrives in a few pages
+// and sorts/searches/pages client-side. Falls back LOUDLY to carto, where cartoSql
+// (usually the old uncapped statement) returns the same complete set in one response.
+export async function fetchTableAllRows(sourceKey, { table, fields, where, maxAge, service, cartoSql, pageSize = 999 }) {
+  if (API_SOURCES[sourceKey] === 'databridge') {
+    const rows = [];
+    let lastId = null;
+    let failed = false;
+    for (;;) {
+      const pageWhere = lastId === null ? where : `(${where}) AND objectid > ${lastId}`;
+      const params = { table, where: pageWhere, limit: pageSize, client_id: GATEWAY_CLIENT_ID };
+      if (fields) {
+        params.fields = fields.replace(/\s/g, '');
+      }
+      if (maxAge !== undefined) {
+        params.max_age = maxAge;
+      }
+      if (service) {
+        params.service = service;
+      }
+      let response = null;
+      try {
+        response = await axios(DATABRIDGE_URL, { params });
+      } catch {
+        // fall through to carto below
+      }
+      if (!response || response.status !== 200 || !response.data.data || !response.data.data.features) {
+        failed = true;
+        break;
+      }
+      const features = response.data.data.features;
+      features.forEach((f) => rows.push(normalizeTimestamps(f.properties)));
+      if (features.length < pageSize) {
+        return { rows };
+      }
+      lastId = features[features.length - 1].properties.objectid;
+    }
+    if (failed) {
+      console.warn(`${sourceKey} - databridge request failed, falling back to direct carto`);
+    }
+  }
+  const fallbackSql = cartoSql
+    || `SELECT ${fields || '*'} FROM ${table}` + (where ? ` WHERE ${where}` : '');
+  const response = await fetch('https://phl.carto.com/api/v2/sql?q=' + encodeURIComponent(fallbackSql));
+  if (!response.ok) {
+    return null;
+  }
+  return response.json();
+}
+
 // fetches a table-style query as a GeoJSON FeatureCollection - the table response
 // carries geometry natively in 4326, replacing select ST_AsGeoJSON(ST_Transform(...)).
 // Same contract as fetchDatabridgeGeoJSON: null on any failure so call sites fall

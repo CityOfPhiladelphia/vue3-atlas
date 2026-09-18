@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { useGeocodeStore } from '@/stores/GeocodeStore.js'
 import { API_SOURCES } from '@/config/apiSources.js';
-import { fetchDatabridgeGeoJSON, fetchDatabridgeRows, fetchRowsWithFallback, fetchTableWithFallback } from '@/util/databridge.js';
+import { fetchDatabridgeGeoJSON, fetchDatabridgeRows, fetchRowsWithFallback, fetchTableWithFallback, fetchTableAllRows } from '@/util/databridge.js';
 import { buildSearchWhere, buildOrderBy, buildCountSql, buildPageSql, REMOTE_THRESHOLD, REMOTE_SERVER_PAGE } from '@/util/remoteTable.js';
 
 import useTransforms from '@/composables/useTransforms';
@@ -400,34 +400,37 @@ export const useLiStore = defineStore('LiStore', {
         const pwd_parcel_id = feature.properties.pwd_parcel_id;
         const addressId = feature.properties.li_address_key.replace(/\|/g, "', '");
 
-        // the UNION query both modes count and page over; ORDER BY is applied per fetch
-        this.liPermitsBaseSql = `SELECT * FROM PERMITS WHERE address = '${ streetaddress }' or addressobjectid IN ('${ addressId }') \
-        AND systemofrecord IN ('HANSEN') ${ opaQuery } \
-        UNION SELECT * FROM PERMITS WHERE addressobjectid IN ('${ eclipse_location_id }') OR parcel_id_num IN ( '${ pwd_parcel_id }' ) \
+        // the old HANSEN-arm UNION ECLIPSE-arm on the same table is identical to
+        // (arm) OR (arm) - each old arm wrapped verbatim in parens to preserve its
+        // AND/OR precedence; set-equality proven by EXCEPT in both directions
+        const hansenArm = `address = '${ streetaddress }' or addressobjectid IN ('${ addressId }') \
+        AND systemofrecord IN ('HANSEN') ${ opaQuery }`;
+        const eclipseArm = `addressobjectid IN ('${ eclipse_location_id }') OR parcel_id_num IN ( '${ pwd_parcel_id }' ) \
         AND systemofrecord IN ('ECLIPSE')${ opaQuery }`;
 
-        const countData = await this._fetchLiSql('permits', buildCountSql(this.liPermitsBaseSql, ''));
-        const total = countData && countData.rows && countData.rows.length ? Number(countData.rows[0].n) : null;
-        this.liPermitsTotal = total;
-        this.liPermitsGrandTotal = total;
-
-        if (total !== null && total > REMOTE_THRESHOLD) {
-          this.liPermitsRemote = true;
-          this.liPermitsPages = {};
-          this.liPermitsSearch = '';
-          this.liPermitsSort = null;
-          await this.fetchPermitsServerPage(0);
-          this.loadingLiPermits = false;
-          return;
-        }
-
-        this.liPermitsRemote = false;
-        const data = await this._fetchLiSql('permits', `select * from (${this.liPermitsBaseSql}) permits_sub ORDER BY permittype`);
+        // keyset-walks the COMPLETE set however many rows (2001 BEACH ST: 2,227 in
+        // three pages), so permits always render through the ordinary client-side
+        // table - the remote server-paging apparatus is no longer used
+        const data = await fetchTableAllRows('permits', {
+          table: 'permits',
+          where: `(${hansenArm}) OR (${eclipseArm})`,
+          cartoSql: `select * from (SELECT * FROM PERMITS WHERE ${hansenArm} UNION SELECT * FROM PERMITS WHERE ${eclipseArm}) permits_sub ORDER BY permittype`,
+        });
         if (!data) {
           this.loadingLiPermits = false;
           if (import.meta.env.VITE_DEBUG == 'true') console.warn('permits - query did not return rows')
           return;
         }
+        // replaces the sql ORDER BY permittype (asc, nulls last like postgres)
+        data.rows.sort((a, b) => {
+          if (a.permittype === b.permittype) return 0;
+          if (a.permittype === null) return 1;
+          if (b.permittype === null) return -1;
+          return a.permittype < b.permittype ? -1 : 1;
+        });
+        this.liPermitsRemote = false;
+        this.liPermitsTotal = data.rows.length;
+        this.liPermitsGrandTotal = data.rows.length;
         this._decoratePermitRows(data.rows);
         this.liPermits = data;
         this.loadingLiPermits = false;
@@ -916,42 +919,43 @@ export const useLiStore = defineStore('LiStore', {
         const pwd_parcel_id = feature.properties.pwd_parcel_id;
         const addressId = feature.properties.li_address_key ? feature.properties.li_address_key.replace(/\|/g, "', '") : null;
 
-        // the query both modes count and page over; ORDER BY is applied per fetch
+        let licensesWhere;
         if (eclipse_location_id) {
-          this.liLicensesBaseSql = `SELECT * FROM BUSINESS_LICENSES WHERE ( addressobjectid IN ('${eclipse_location_id}') AND addressed_license = 'Yes' \
+          licensesWhere = `( addressobjectid IN ('${eclipse_location_id}') AND addressed_license = 'Yes' \
           OR address = '${streetaddress}' AND addressed_license = 'Yes' \
           OR addressobjectid IN (${addressId}) AND addressed_license = 'Yes' \
           OR parcel_id_num IN ('${ pwd_parcel_id }') AND addressed_license = 'Yes' ) \
           ${opaQuery }`;
         } else {
-          this.liLicensesBaseSql = `SELECT * FROM BUSINESS_LICENSES WHERE ( address = '${streetaddress}' AND addressed_license = 'Yes' \
+          licensesWhere = `( address = '${streetaddress}' AND addressed_license = 'Yes' \
           OR addressobjectid IN (${addressId}) AND addressed_license = 'Yes' \
           OR parcel_id_num IN ('${ pwd_parcel_id }') AND addressed_license = 'Yes' ) \
           ${opaQuery }`;
         }
 
-        const countData = await this._fetchLiSql('businessLicenses', buildCountSql(this.liLicensesBaseSql, ''));
-        const total = countData && countData.rows && countData.rows.length ? Number(countData.rows[0].n) : null;
-        this.liLicensesTotal = total;
-        this.liLicensesGrandTotal = total;
-
-        if (total !== null && total > REMOTE_THRESHOLD) {
-          this.liLicensesRemote = true;
-          this.liLicensesPages = {};
-          this.liLicensesSearch = '';
-          this.liLicensesSort = null;
-          await this.fetchLicensesServerPage(0);
-          this.loadingLiBusinessLicenses = false;
-          return;
-        }
-
-        this.liLicensesRemote = false;
-        const data = await this._fetchLiSql('businessLicenses', `select * from (${this.liLicensesBaseSql}) licenses_sub ORDER BY licensetype`);
+        // keyset-walks the complete set, so licenses always render through the
+        // ordinary client-side table - the remote server-paging apparatus is no
+        // longer used
+        const data = await fetchTableAllRows('businessLicenses', {
+          table: 'business_licenses',
+          where: licensesWhere,
+          cartoSql: `select * from (SELECT * FROM BUSINESS_LICENSES WHERE ${licensesWhere}) licenses_sub ORDER BY licensetype`,
+        });
         if (!data) {
           this.loadingLiBusinessLicenses = false;
           if (import.meta.env.VITE_DEBUG == 'true') console.warn('liBusinessLicenses - query did not return rows')
           return;
         }
+        // replaces the sql ORDER BY licensetype (asc, nulls last like postgres)
+        data.rows.sort((a, b) => {
+          if (a.licensetype === b.licensetype) return 0;
+          if (a.licensetype === null) return 1;
+          if (b.licensetype === null) return -1;
+          return a.licensetype < b.licensetype ? -1 : 1;
+        });
+        this.liLicensesRemote = false;
+        this.liLicensesTotal = data.rows.length;
+        this.liLicensesGrandTotal = data.rows.length;
         this._decorateLicenseRows(data.rows);
         this.liBusinessLicenses = data;
         this.loadingLiBusinessLicenses = false;
