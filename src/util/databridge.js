@@ -1,10 +1,9 @@
 import axios from 'axios';
 import { API_SOURCES } from '@/config/apiSources.js';
+// axios drops undefined params, so builds send no client_id
+import { GATEWAY_CLIENT_ID } from '@/util/gateway.js';
 
 export const DATABRIDGE_URL = 'https://api-prod.phila.gov/databridge-api/v1/get';
-// the app's client id for the phila.gov API gateway - one id covers databridge,
-// AIS search, and AIS autocomplete
-const GATEWAY_CLIENT_ID = import.meta.env.VITE_GATEWAY_CLIENT_ID;
 
 // fetches from databridge-api (via the MuleSoft gateway), reshaped to a GeoJSON
 // FeatureCollection matching the ArcGIS response shape: the envelope is data.features[].properties
