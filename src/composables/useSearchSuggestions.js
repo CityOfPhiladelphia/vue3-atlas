@@ -1,9 +1,10 @@
 import { ref, toValue, watch } from 'vue';
+import { GATEWAY_CLIENT_ID } from '@/util/gateway.js';
 
 // AIS autocomplete on the phila.gov API gateway, identified by the app's client id
 const AIS_AUTOCOMPLETE_URL =
   'https://api-prod.phila.gov/ais-autocomplete/v1/autocomplete';
-const GATEWAY_CLIENT_ID = import.meta.env.VITE_GATEWAY_CLIENT_ID;
+const CLIENT_ID_PARAM = GATEWAY_CLIENT_ID ? `&client_id=${GATEWAY_CLIENT_ID}` : '';
 
 export function useSearchSuggestions(search) {
   const searchSuggestions = ref([]);
@@ -18,7 +19,7 @@ export function useSearchSuggestions(search) {
 
     try {
       const response = await fetch(
-        `${AIS_AUTOCOMPLETE_URL}?q=${encodeURIComponent(stringValue)}&client_id=${GATEWAY_CLIENT_ID}`
+        `${AIS_AUTOCOMPLETE_URL}?q=${encodeURIComponent(stringValue)}${CLIENT_ID_PARAM}`
       );
       if (!response.ok) {
         searchSuggestionsError.value = {
