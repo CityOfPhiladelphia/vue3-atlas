@@ -515,13 +515,23 @@ export const useDorStore = defineStore("DorStore", {
                 address_remainder = address_low - address_floor,
                 addressHigh = props.address_high,
                 addressCeil = addressHigh || address_low;
-          
+
+              // the same-side-of-street numbers in the queried stretch. PostgREST only
+              // accepts a bare column on the left of a comparison, so the parity match
+              // is an IN list rather than a function of ADDRESS_LOW
+              var sameSideNumbers = [];
+              for (var n = address_floor; n <= addressCeil; n++) {
+                if (n % 2 === address_low % 2) {
+                  sameSideNumbers.push(n);
+                }
+              }
+
               // form where clause
               where = "(((ADDRESS_LOW >= " + address_low + " AND ADDRESS_LOW <= " + addressCeil + ")"
                         + " OR (ADDRESS_LOW >= " + address_floor + " AND ADDRESS_LOW <= " + addressCeil + " AND ADDRESS_HIGH >= " + address_remainder + " ))"
                         + " AND STREET_NAME = '" + geocode.street_name
                         + "' AND STREET_SUFFIX = '" + geocode.street_suffix
-                        + "' AND (MOD(ADDRESS_LOW,2) = MOD( " + address_low + ",2))";
+                        + "' AND ADDRESS_LOW IN (" + sameSideNumbers.join(', ') + ")";
           
           
           
@@ -534,7 +544,8 @@ export const useDorStore = defineStore("DorStore", {
               }
           
               if (geocode.address_low_suffix == '') {
-                where += " AND COALESCE(ADDRESS_LOW_SUFFIX, '') = ''";
+                // null or empty, spelled out: PostgREST rejects a function on the left
+                where += " AND (ADDRESS_LOW_SUFFIX IS NULL OR ADDRESS_LOW_SUFFIX = '')";
                 // where += " AND (ADDRESS_LOW_SUFFIX = '' OR ADDRESS_LOW_SUFFIX = null)";
               }
           
