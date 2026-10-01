@@ -151,7 +151,6 @@ const nearbyTableQuery = (feature, dataSource) => {
     table: dataSource.options.table,
     where: `${nearbyBoxFilter(feature, dataSource)} and ${where}`,
     withGeometry: true,
-    service: 'carto',
     cartoSql: fetchNearby(feature, dataSource).q,
   };
 }
@@ -387,7 +386,7 @@ export const useNearbyActivityStore = defineStore('NearbyActivityStore', {
           // same 750ft-around-the-address semantics as the buffer-contains query above
           // (this store's fillBufferForAddress call uses the 750ft default); shape is
           // native EPSG:2272 whose units are feet, so ST_DWithin takes 750 directly
-          data = await fetchTableGeoJSON({ table: 'vacant_indicators_points', fields: VACANT_POINTS_DATABRIDGE_COLS, where: `ST_DWithin(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${coordinates[0]}, ${coordinates[1]}), 4326), 2272), 750)`, service: 'carto' });
+          data = await fetchTableGeoJSON({ table: 'vacant_indicators_points', fields: VACANT_POINTS_DATABRIDGE_COLS, where: `ST_DWithin(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${coordinates[0]}, ${coordinates[1]}), 4326), 2272), 750)` });
           if (!data) console.warn('nearbyVacantIndicatorPoints - databridge request failed, falling back to direct arcgis');
         }
         if (!data) {

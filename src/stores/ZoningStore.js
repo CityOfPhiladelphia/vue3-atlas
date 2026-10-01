@@ -472,7 +472,7 @@ export const useZoningStore = defineStore('ZoningStore', {
           const where = rcoIds
             ? `lni_id IN (${rcoIds.split('|').join(', ')})`
             : `ST_Contains(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${coords[0]}, ${coords[1]}), 4326), 2272))`;
-          data = await fetchTableGeoJSON({ table: 'zoning_rco', fields: RCO_DATABRIDGE_COLS, where, service: rcoIds ? undefined : 'carto' });
+          data = await fetchTableGeoJSON({ table: 'zoning_rco', fields: RCO_DATABRIDGE_COLS, where });
           if (!data) console.warn('fillRcos - databridge request failed, falling back to direct arcgis');
         }
         if (!data) {

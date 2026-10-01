@@ -89,9 +89,8 @@ export async function fetchTableWithFallback(sourceKey, { table, fields, where, 
       params.max_age = maxAge;
     }
     if (service) {
-      // spatial wheres only run on the carto backend; pinning skips the PostgREST
-      // attempt, which on some tables (public_cases_fc) burns the upstream timeout
-      // instead of failing fast
+      // forces one backend; without it databridge tries PostgREST, then Carto,
+      // then AGO, so spatial wheres (Carto only) land on Carto on their own
       params.service = service;
     }
     let response = null;
@@ -215,8 +214,8 @@ export async function fetchTableGeoJSON({ table, fields, where, limit, maxAge, s
     params.max_age = maxAge;
   }
   if (service) {
-    // spatial wheres only run on the carto backend; pinning skips the PostgREST
-    // attempt, which on some tables burns the upstream timeout instead of failing fast
+    // forces one backend; without it databridge tries PostgREST, then Carto,
+    // then AGO, so spatial wheres (Carto only) land on Carto on their own
     params.service = service;
   }
   let response;
