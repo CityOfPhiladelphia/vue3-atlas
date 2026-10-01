@@ -5,7 +5,7 @@ import axios from 'axios';
 import useParcels from '@/composables/useParcels';
 import $config from '@/config';
 import { API_SOURCES } from '@/config/apiSources.js';
-import { fetchDatabridgeGeoJSON } from '@/util/databridge.js';
+import { fetchDatabridgeGeoJSON, fetchTableGeoJSON } from '@/util/databridge.js';
 const { processParcels } = useParcels();
 
 // databridge has no select *: shape must be transformed to 4326 explicitly, so columns are listed
@@ -62,6 +62,7 @@ export const useParcelsStore = defineStore('ParcelsStore', {
         } else {
           let data = null;
           if (API_SOURCES.pwdParcels === 'databridge') {
+            // stays on sql=: the table-style catalog has no schema for pwd_parcels_3857
             data = await fetchDatabridgeGeoJSON(`select ${PWD_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from pwd_parcels_3857 where parcelid = '${pwdParcelNumber}'`);
             if (!data) console.warn('fillPwdParcelData - databridge request failed, falling back to direct carto');
           }
@@ -133,7 +134,7 @@ export const useParcelsStore = defineStore('ParcelsStore', {
           originalJson = response.data;
         } else {
           if (API_SOURCES.dorParcels === 'databridge') {
-            originalJson = await fetchDatabridgeGeoJSON(`select ${DOR_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from dor_parcel_3857 where ${whereClause}`);
+            originalJson = await fetchTableGeoJSON({ table: 'dor_parcel_3857', fields: DOR_DATABRIDGE_COLS, where: whereClause });
             if (!originalJson) console.warn('fillDorParcelData - databridge request failed, falling back to direct carto');
           }
           if (!originalJson) {

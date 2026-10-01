@@ -462,7 +462,14 @@ export const useZoningStore = defineStore('ZoningStore', {
         let data;
         if (API_SOURCES.rcos === 'databridge') {
           const coords = feature.geometry.coordinates;
-          data = await fetchTableGeoJSON({ table: 'zoning_rco', fields: RCO_DATABRIDGE_COLS, where: `ST_Contains(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${coords[0]}, ${coords[1]}), 4326), 2272))`, service: 'carto' });
+          // AIS already lists the address's RCOs by lni_id, so the lookup is a plain
+          // match PostgREST can serve; the point-in-polygon search (carto only) covers
+          // addresses AIS lists none for
+          const rcoIds = feature.properties.zoning_rco;
+          const where = rcoIds
+            ? `lni_id IN (${rcoIds.split('|').join(', ')})`
+            : `ST_Contains(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${coords[0]}, ${coords[1]}), 4326), 2272))`;
+          data = await fetchTableGeoJSON({ table: 'zoning_rco', fields: RCO_DATABRIDGE_COLS, where, service: rcoIds ? undefined : 'carto' });
           if (!data) console.warn('fillRcos - databridge request failed, falling back to direct arcgis');
         }
         if (!data) {
