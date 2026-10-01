@@ -6,8 +6,9 @@ import { fetchRowsWithFallback, fetchTableGeoJSON, fetchTableAllRows } from '@/u
 import { buildSearchWhere, buildOrderBy, buildCountSql, buildPageSql, REMOTE_THRESHOLD, REMOTE_SERVER_PAGE } from '@/util/remoteTable.js';
 
 // databridge has no select *: shape must be transformed to 4326 explicitly, so columns are listed
-// RECMAP aliased uppercase because Deeds.vue reads properties.RECMAP (the AGO field's real casing)
-const REGMAPS_DATABRIDGE_COLS = 'recmap as "RECMAP", recsub, scale, objectid';
+// table-style fields take bare column names only (no aliases), so fillRegmaps renames recmap
+// to RECMAP after the fetch - Deeds.vue reads properties.RECMAP (the AGO field's real casing)
+const REGMAPS_DATABRIDGE_COLS = 'recmap, recsub, scale, objectid';
 
 // vue-good-table column field -> SQL column for server-side sorting of deeded condos
 const CONDOS_SORT_COLUMNS = {
@@ -457,13 +458,17 @@ export const useDorStore = defineStore("DorStore", {
               // St missed by 1.4ft). Expanding 3ft absorbs the offset
               const data = await fetchTableGeoJSON({ table: 'mastermapindex', fields: REGMAPS_DATABRIDGE_COLS, where: `ST_Intersects(shape, ST_Expand(ST_Transform(ST_MakeEnvelope(${bounds.coordinates[0][0][0]}, ${bounds.coordinates[0][0][1]}, ${bounds.coordinates[0][2][0]}, ${bounds.coordinates[0][2][1]}, 4326), 2272), 3))`, service: 'carto' });
               if (data) {
+                data.features.forEach((feature) => {
+                  feature.properties.RECMAP = feature.properties.recmap;
+                  delete feature.properties.recmap;
+                });
                 // replaces the sql order by recmap, which keeps the buttons in a
                 // stable sorted order
                 data.features.sort((a, b) => {
-                  if (a.properties.recmap === b.properties.recmap) return 0;
-                  if (a.properties.recmap === null) return 1;
-                  if (b.properties.recmap === null) return -1;
-                  return a.properties.recmap < b.properties.recmap ? -1 : 1;
+                  if (a.properties.RECMAP === b.properties.RECMAP) return 0;
+                  if (a.properties.RECMAP === null) return 1;
+                  if (b.properties.RECMAP === null) return -1;
+                  return a.properties.RECMAP < b.properties.RECMAP ? -1 : 1;
                 });
                 // consumers read regmaps.data.features, mirroring the axios response wrapper
                 this.regmaps = { data: data };
@@ -515,13 +520,23 @@ export const useDorStore = defineStore("DorStore", {
                 address_remainder = address_low - address_floor,
                 addressHigh = props.address_high,
                 addressCeil = addressHigh || address_low;
-          
+
+              // the same-side-of-street numbers in the queried stretch. PostgREST only
+              // accepts a bare column on the left of a comparison, so the parity match
+              // is an IN list rather than a function of ADDRESS_LOW
+              var sameSideNumbers = [];
+              for (var n = address_floor; n <= addressCeil; n++) {
+                if (n % 2 === address_low % 2) {
+                  sameSideNumbers.push(n);
+                }
+              }
+
               // form where clause
               where = "(((ADDRESS_LOW >= " + address_low + " AND ADDRESS_LOW <= " + addressCeil + ")"
                         + " OR (ADDRESS_LOW >= " + address_floor + " AND ADDRESS_LOW <= " + addressCeil + " AND ADDRESS_HIGH >= " + address_remainder + " ))"
                         + " AND STREET_NAME = '" + geocode.street_name
                         + "' AND STREET_SUFFIX = '" + geocode.street_suffix
-                        + "' AND (MOD(ADDRESS_LOW,2) = MOD( " + address_low + ",2))";
+                        + "' AND ADDRESS_LOW IN (" + sameSideNumbers.join(', ') + ")";
           
           
           
@@ -534,7 +549,8 @@ export const useDorStore = defineStore("DorStore", {
               }
           
               if (geocode.address_low_suffix == '') {
-                where += " AND COALESCE(ADDRESS_LOW_SUFFIX, '') = ''";
+                // null or empty, spelled out: PostgREST rejects a function on the left
+                where += " AND (ADDRESS_LOW_SUFFIX IS NULL OR ADDRESS_LOW_SUFFIX = '')";
                 // where += " AND (ADDRESS_LOW_SUFFIX = '' OR ADDRESS_LOW_SUFFIX = null)";
               }
           
