@@ -400,28 +400,31 @@ export const useZoningStore = defineStore('ZoningStore', {
       try {
         const GeocodeStore = useGeocodeStore();
         const feature = GeocodeStore.aisData.features[0];
-        const streetaddress = feature.properties.street_address;
-        const pwd_parcel_id = feature.properties.pwd_parcel_id;
-        const addressId = feature.properties.li_address_key.replace(/\|/g, "', '");
-        const eclipseLocationId = feature.properties.eclipse_location_id.replace(/\|/g, "', '");
-        const eclipseQuery = feature.properties.eclipse_location_id ? `addressobjectid IN ('${eclipseLocationId}')` : ``;
-        const zoningQuery = `applicationtype in ('Zoning Board of Adjustment', 'RB_ZBA') AND applicationtype is not null`
-        const opaQuery = feature.properties.opa_account_num ? ` AND opa_account_num IN ('${ feature.properties.opa_account_num}')` : ``;
+        const { street_address, pwd_parcel_id, li_address_key, eclipse_location_id, opa_account_num } = feature.properties;
+        const parcelMatch = `parcel_id_num IN ('${pwd_parcel_id}')`;
 
-        // the old HANSEN-arm UNION ECLIPSE-arm on the same table is identical to
-        // (arm) OR (arm) - each old arm wrapped verbatim in parens to preserve its
-        // AND/OR precedence; set-equality proven by EXCEPT in both directions
-        const hansenArm = `(address = '${ streetaddress }' AND ${zoningQuery} \
-          OR addressobjectid IN ('${ addressId }') AND ${zoningQuery} \
-          OR parcel_id_num IN ('${ pwd_parcel_id }') AND ${zoningQuery}) \
-          ${ opaQuery } AND ${zoningQuery} \
-          AND systemofrecord IN ('HANSEN')`;
-        const eclipseArm = `(${eclipseQuery} AND ${zoningQuery}  \
-          OR parcel_id_num IN ('${ pwd_parcel_id }') AND ${zoningQuery}) \
-          ${ opaQuery } AND ${zoningQuery} \
-          AND systemofrecord IN ('ECLIPSE')`;
+        // a zoning appeal at this address: HANSEN records match by address, L&I
+        // address key, or parcel; ECLIPSE records by eclipse location id or parcel.
+        // An id AIS doesn't have is left out rather than written as an empty clause
+        const hansenMatches = [`address = '${street_address}'`];
+        if (li_address_key) {
+          hansenMatches.push(`addressobjectid IN ('${li_address_key.replace(/\|/g, "', '")}')`);
+        }
+        hansenMatches.push(parcelMatch);
+        const eclipseMatches = [];
+        if (eclipse_location_id) {
+          eclipseMatches.push(`addressobjectid IN ('${eclipse_location_id.replace(/\|/g, "', '")}')`);
+        }
+        eclipseMatches.push(parcelMatch);
 
-        const data = await fetchTableWithFallback('zoningAppeals', { table: 'appeals', where: `(${hansenArm}) OR (${eclipseArm})` });
+        let where = `applicationtype IN ('Zoning Board of Adjustment', 'RB_ZBA')`
+          + ` AND ((systemofrecord = 'HANSEN' AND (${hansenMatches.join(' OR ')}))`
+          + ` OR (systemofrecord = 'ECLIPSE' AND (${eclipseMatches.join(' OR ')})))`;
+        if (opa_account_num) {
+          where += ` AND opa_account_num IN ('${opa_account_num}')`;
+        }
+
+        const data = await fetchTableWithFallback('zoningAppeals', { table: 'appeals', where });
         if (data) {
           console.log('data:', data);
           // replaces the old ORDER BY scheduleddate DESC (nulls first, like postgres)
