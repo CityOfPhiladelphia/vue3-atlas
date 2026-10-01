@@ -49,7 +49,6 @@ export const useVotingStore = defineStore("VotingStore", {
             table: 'political_divisions',
             where: division ? `division_num = '${division}'` : `ST_Intersects(shape, ST_Transform(${addressPoint}, 2272))`,
             withGeometry: true,
-            service: division ? undefined : 'carto',
             // the unaliased carto ST_AsGeoJSON lands in a column named st_asgeojson,
             // which Map.vue reads on the fallback path (table rows carry geometry)
             cartoSql: `SELECT *, ST_AsGeoJSON(the_geom) FROM political_divisions WHERE ST_Intersects(the_geom, ${addressPoint})`,
