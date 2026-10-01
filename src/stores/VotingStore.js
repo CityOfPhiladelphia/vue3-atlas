@@ -3,7 +3,7 @@ import axios from 'axios';
 import { defineStore } from 'pinia';
 import { useGeocodeStore } from '@/stores/GeocodeStore.js'
 import { API_SOURCES } from '@/config/apiSources.js';
-import { fetchRowsWithFallback, fetchTableWithFallback } from '@/util/databridge.js';
+import { fetchTableWithFallback } from '@/util/databridge.js';
 
 export const useVotingStore = defineStore("VotingStore", {
   state: () => {
@@ -41,11 +41,15 @@ export const useVotingStore = defineStore("VotingStore", {
         const feature = GeocodeStore.aisData.features[0];
         if (API_SOURCES.politicalDivisions !== 'arcgis') {
           const addressPoint = `ST_SetSRID(ST_Point(${feature.geometry.coordinates[0]}, ${feature.geometry.coordinates[1]}), 4326)`;
+          // AIS already names the address's division, so the lookup is a plain match
+          // PostgREST can serve; the point-in-polygon search (carto only) covers
+          // addresses AIS gives no division for
+          const division = feature.properties.political_division;
           const data = await fetchTableWithFallback('politicalDivisions', {
             table: 'political_divisions',
-            where: `ST_Intersects(shape, ST_Transform(${addressPoint}, 2272))`,
+            where: division ? `division_num = '${division}'` : `ST_Intersects(shape, ST_Transform(${addressPoint}, 2272))`,
             withGeometry: true,
-            service: 'carto',
+            service: division ? undefined : 'carto',
             // the unaliased carto ST_AsGeoJSON lands in a column named st_asgeojson,
             // which Map.vue reads on the fallback path (table rows carry geometry)
             cartoSql: `SELECT *, ST_AsGeoJSON(the_geom) FROM political_divisions WHERE ST_Intersects(the_geom, ${addressPoint})`,
