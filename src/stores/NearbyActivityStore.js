@@ -119,6 +119,29 @@ const fetchNearby = (feature, dataSource, source = 'carto') => {
   return params
 }
 
+// the SRID each nearby table stores shape in (verified with ST_SRID); tables not
+// listed are 2272 (PA state plane, feet)
+const NEARBY_SHAPE_SRID = {
+  public_cases_fc: 4326,
+  incidents_part1_part2: 4326,
+};
+
+// an index-friendly box around the search point, 10% wider than the radius. The
+// ST_Distance::geography test can't use the spatial index, so on its own it makes
+// carto measure every row in the table (seconds, sometimes a timeout); the box limits
+// that to nearby rows, and the exact distance test still decides which rows count
+const nearbyBoxFilter = (feature, dataSource) => {
+  const [lng, lat] = feature.geometry.coordinates;
+  const meters = (dataSource.options.distances || 250) * 1.1;
+  const pointExpr = `ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)`;
+  if (NEARBY_SHAPE_SRID[dataSource.options.table] === 4326) {
+    // a degree of longitude is the shorter one here, so this covers latitude too
+    const degrees = meters / (111320 * Math.cos(lat * Math.PI / 180));
+    return `shape && ST_Expand(${pointExpr}, ${degrees})`;
+  }
+  return `shape && ST_Expand(ST_Transform(${pointExpr}, 2272), ${meters / 0.3048006096})`;
+}
+
 // the table-style query for fetchTableWithFallback: the same table and predicates,
 // with the carto statement kept as the explicit fallback (its geometry column
 // differs); distance/lat/lng for table rows are derived by addNearbyDerived
@@ -126,7 +149,7 @@ const nearbyTableQuery = (feature, dataSource) => {
   const { where } = buildNearbyWhere(feature, dataSource, NEARBY_GEOM.databridge.expr);
   return {
     table: dataSource.options.table,
-    where,
+    where: `${nearbyBoxFilter(feature, dataSource)} and ${where}`,
     withGeometry: true,
     service: 'carto',
     cartoSql: fetchNearby(feature, dataSource).q,
