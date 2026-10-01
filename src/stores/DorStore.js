@@ -456,7 +456,7 @@ export const useDorStore = defineStore("DorStore", {
               // datum offset (~1ft here) away from the corrected parcel envelope - a
               // sheet the envelope barely clips can miss (verified: 019N02 at 2001 Beach
               // St missed by 1.4ft). Expanding 3ft absorbs the offset
-              const data = await fetchTableGeoJSON({ table: 'mastermapindex', fields: REGMAPS_DATABRIDGE_COLS, where: `ST_Intersects(shape, ST_Expand(ST_Transform(ST_MakeEnvelope(${bounds.coordinates[0][0][0]}, ${bounds.coordinates[0][0][1]}, ${bounds.coordinates[0][2][0]}, ${bounds.coordinates[0][2][1]}, 4326), 2272), 3))`, service: 'carto' });
+              const data = await fetchTableGeoJSON({ table: 'mastermapindex', fields: REGMAPS_DATABRIDGE_COLS, where: `ST_Intersects(shape, ST_Expand(ST_Transform(ST_MakeEnvelope(${bounds.coordinates[0][0][0]}, ${bounds.coordinates[0][0][1]}, ${bounds.coordinates[0][2][0]}, ${bounds.coordinates[0][2][1]}, 4326), 2272), 3))` });
               if (data) {
                 data.features.forEach((feature) => {
                   feature.properties.RECMAP = feature.properties.recmap;
