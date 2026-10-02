@@ -539,11 +539,16 @@ export const useLiStore = defineStore('LiStore', {
       try {
         const GeocodeStore = useGeocodeStore();
         const feature = GeocodeStore.aisData.features[0];
-        // stays on sql=: the table-style where can't express the ANY cast (PostgREST
-        // "Unsupported operator"), and Carto V3's table mode requires an objectid
-        // column this table lacks - verified 2026-09-17
-        const sql = `select * from ais_zoning_documents where doc_id = ANY('{ ${feature.properties.zoning_document_ids} }'::text[])`;
-        const data = await this._fetchLiSql('aisZoningDocs', sql);
+        const docIds = feature.properties.zoning_document_ids || [];
+        if (!docIds.length) {
+          this.liAisZoningDocs = { rows: [] };
+          this.loadingLiAisZoningDocs = false;
+          return;
+        }
+        const data = await fetchTableWithFallback('aisZoningDocs', {
+          table: 'ais_zoning_documents',
+          where: `doc_id IN (${docIds.map((id) => `'${id}'`).join(', ')})`,
+        });
         if (data) {
           let addedData = this.addDataToZoningDocs(data);
           this.liAisZoningDocs = addedData;
