@@ -240,7 +240,7 @@ export const useDorStore = defineStore("DorStore", {
     _decorateDocRows(rows) {
       rows.forEach((doc) => {
         doc.date = date(doc.display_date);
-        doc.link = `<a target='_blank' href='https://epayss.phila-records.com/web/web/integration/document?DocumentNumberId=${doc.document_id}'>${doc.document_id}<i class='fa fa-external-link'></i></a>`;
+        doc.link = `<a target='_blank' href='https://epayss.phila-records.com/web/web/integration/document?DocumentNumberId=${doc.document_id}'>${doc.document_id} <i class='fa fa-external-link'></i></a>`;
       });
     },
     async fetchDocsServerPage(parcelId, pageIndex) {
@@ -668,7 +668,7 @@ export const useDorStore = defineStore("DorStore", {
                   : response.data;
                 data.features.forEach((doc) => {
                   doc.attributes.date = date(doc.attributes.display_date);
-                  doc.attributes.link = `<a target='_blank' href='https://epayss.phila-records.com/web/web/integration/document?DocumentNumberId=${doc.attributes.document_id}'>${doc.attributes.document_id}<i class='fa fa-external-link'></i></a>`;
+                  doc.attributes.link = `<a target='_blank' href='https://epayss.phila-records.com/web/web/integration/document?DocumentNumberId=${doc.attributes.document_id}'>${doc.attributes.document_id} <i class='fa fa-external-link'></i></a>`;
                 })
                 this.dorDocuments[feature.properties.objectid] = data;
                 // this.dorDocuments[feature.properties.objectid] = data;
