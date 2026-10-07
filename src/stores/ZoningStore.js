@@ -12,6 +12,12 @@ const { rcoPrimaryContact, phoneNumber, date } = useTransforms();
 // databridge has no select *: shape must be transformed to 4326 explicitly, so columns are listed
 const RCO_DATABRIDGE_COLS = 'organization_name, organization_address, meeting_location_address, org_type, primary_name, primary_phone, primary_email, primary_address, alternate_name, websites, effective_date, expirationyear, lni_id, objectid';
 
+// Zoning appeals scheduled-date cell: links to the ZBA appeals calendar, or plain text when there is no hearing date
+const zoningAppealCalendarCell = (row) => {
+  if (!row.scheduleddate) return 'No Scheduled Date';
+  return "<a target='_blank' href='https://li.phila.gov/zba-appeals-calendar/appeal?from=2-7-2000&to=4-7-2050&region=all&Id="+row.appealnumber+"'>"+date(row.scheduleddate, 'MM/dd/yyyy')+" <i class='fa fa-external-link'></i></a>";
+};
+
 import { format } from 'date-fns';
 
 import { polygon, featureCollection } from '@turf/helpers';
@@ -441,8 +447,8 @@ export const useZoningStore = defineStore('ZoningStore', {
               address += ' Unit ' + row.unit_num;
             }
             console.log('in loop, row:', row);
-            row.appeallink = `<a target='_blank' href='https://li.phila.gov/Property-History/search/Appeal-Detail?address=${address}&Id=${row.appealnumber}'>${row.appealnumber}<i class='fas fa-external-link'></i></a>`
-            row.calendarlink = "<a target='_blank' href='https://li.phila.gov/zba-appeals-calendar/appeal?from=2-7-2000&to=4-7-2050&region=all&Id="+row.appealnumber+"'>"+date(row.scheduleddate, 'MM/dd/yyyy')+" <i class='fa fa-external-link'></i></a>";
+            row.appeallink = `<a target='_blank' href='https://li.phila.gov/Property-History/search/Appeal-Detail?address=${address}&Id=${row.appealnumber}'>${row.appealnumber} <i class='fas fa-external-link'></i></a>`
+            row.calendarlink = zoningAppealCalendarCell(row);
             console.log('in loop, row:', row);
           });
           this.zoningAppeals = data;
