@@ -14,7 +14,7 @@ const RCO_DATABRIDGE_COLS = 'organization_name, organization_address, meeting_lo
 
 // Zoning appeals scheduled-date cell: links to the ZBA appeals calendar, or plain text when there is no hearing date
 const zoningAppealCalendarCell = (row) => {
-  if (!row.scheduleddate) return 'No Scheduled Date';
+  if (!row.scheduleddate) return 'To Be Determined';
   return "<a target='_blank' href='https://li.phila.gov/zba-appeals-calendar/appeal?from=2-7-2000&to=4-7-2050&region=all&Id="+row.appealnumber+"'>"+date(row.scheduleddate, 'MM/dd/yyyy')+" <i class='fa fa-external-link'></i></a>";
 };
 
