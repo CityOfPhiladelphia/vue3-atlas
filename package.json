@@ -67,7 +67,7 @@
     "sass": "^1.74.1",
     "vite": "^5.1.6",
     "vite-plugin-vue-devtools": "^7.7.0",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.11"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "4.6.1"
