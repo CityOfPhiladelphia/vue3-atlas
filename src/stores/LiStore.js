@@ -36,9 +36,9 @@ const epochToIso = (epoch) => {
   return d.toISOString().replace(/\.\d{3}Z$/, 'Z');
 };
 
-// Appeals date cell: links to the appeals calendar, or plain text when no hearing is scheduled yet
+// Appeals date cell: links to the appeals calendar, or plain text when there is no hearing date
 const appealCalendarCell = (item) => {
-  if (!item.scheduleddate) return 'To Be Scheduled';
+  if (!item.scheduleddate) return 'To Be Determined';
   return "<a target='_blank' href='https://li.phila.gov/appeals-calendar/appeal?from=2-7-2000&to=4-7-2050&region=all&Id="+item.appealnumber+"'>"+date(item.scheduleddate, 'MM/dd/yyyy')+" <i class='fa fa-external-link'></i></a>";
 };
 

@@ -6,7 +6,7 @@ name: dev Push to S3 dev2 bucket
 on:
   push:
     branches:
-      - wip/zoning-docs-table
+      - wip/appeals-to-be-determined
 jobs:
   build:
 
