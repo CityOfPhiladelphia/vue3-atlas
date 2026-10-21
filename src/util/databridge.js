@@ -9,18 +9,15 @@ export const DATABRIDGE_URL = 'https://api-prod.phila.gov/databridge-api/v1/get'
 // FeatureCollection matching the ArcGIS response shape: the envelope is data.features[].properties
 // with the geometry as a geom property (select ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom),
 // feature.id stamped from objectid, single-poly MultiPolygons unwrapped
-// databridge (carto v3) serializes timestamps inconsistently: without a timezone on
-// plain selects ('2022-06-15T00:00:00'), and as UTC with milliseconds when the query
-// has an ORDER BY ('2024-11-04T00:00:00.000Z'). The tables' date parsing expects old
-// carto's form: UTC with a trailing Z and no milliseconds. A naive timestamp is local
-// time, so Date() then toISOString() reproduces the old carto value; the millisecond
-// form just needs the '.000' stripped.
-// databridge serializes every timestamp as the table's LOCAL clock reading - sometimes
-// bare ('2026-09-10T16:47:51'), sometimes with a false UTC label ('...T16:47:51.000Z') -
-// while old carto converts properly ('2026-09-10T20:47:51Z' for the same row, verified
-// on violations CF-2026-123303 and the splits election_date). Trusting the false Z
-// shifted times 4-5 hours and rolled dates back a day, so every form is read as local
-// time and relabeled to real UTC, reproducing old carto's values exactly.
+// databridge serializes every timestamp as the PHILADELPHIA clock reading, never real UTC:
+// a 9:30 AM hearing is '2026-09-02T09:30:00' (direct carto: '2026-09-02T13:30:00Z').
+// table= queries return that bare form from every backend (PostgREST, Carto V3, AGO).
+// sql= queries served by Carto V3 - any statement with a SQL function, e.g. DATE() or
+// st_astext() - return it with a false UTC label, '2026-09-02T09:30:00.000Z', which a
+// standard parser reads 4-5 hours early. Both forms are read as local time and relabeled
+// to real UTC without milliseconds, the carto form the tables' date parsing expects. The
+// regex assumes the gateway never sends genuine UTC; such a value would be shifted again.
+// Verified 2026-10-21; tracked in li.phila.gov li-4oy.
 const LOCAL_CLOCK_TIMESTAMP = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.\d{3})?Z?$/;
 function normalizeTimestamps(properties) {
   for (const key of Object.keys(properties)) {
