@@ -9,25 +9,25 @@ export const DATABRIDGE_URL = 'https://api-prod.phila.gov/databridge-api/v1/get'
 // FeatureCollection matching the ArcGIS response shape: the envelope is data.features[].properties
 // with the geometry as a geom property (select ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom),
 // feature.id stamped from objectid, single-poly MultiPolygons unwrapped
-// databridge serializes every timestamp as the PHILADELPHIA clock reading, never real UTC:
-// a 9:30 AM hearing is '2026-09-02T09:30:00' (direct carto: '2026-09-02T13:30:00Z').
-// table= queries return that bare form from every backend (PostgREST, Carto V3, AGO).
-// sql= queries served by Carto V3 - any statement with a SQL function, e.g. DATE() or
-// st_astext() - return it with a false UTC label, '2026-09-02T09:30:00.000Z', which a
-// standard parser reads 4-5 hours early. Both forms are read as local time and relabeled
-// to real UTC without milliseconds, the carto form the tables' date parsing expects. The
-// regex assumes the gateway never sends genuine UTC; such a value would be shifted again.
-// Verified 2026-10-21; tracked in li.phila.gov li-4oy.
-const LOCAL_CLOCK_TIMESTAMP = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.\d{3})?Z?$/;
+// databridge serializes timestamps as real UTC (since 2026-10-23), spelled two ways:
+// '2026-09-02T13:30:00+00:00' on table= (PostgREST) and '2026-09-02T13:30:00.000Z' on
+// sql= (Carto V3). The tables' date parsing expects carto's spelling - a trailing Z, no
+// milliseconds - so both are rewritten to that; the instant is not changed. A bare reading
+// with no zone at all ('2026-09-02T09:30:00', a table the gateway hasn't converted) is
+// still the Philadelphia clock, read as local time and relabeled to real UTC.
+const UTC_TIMESTAMP = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.\d{3})?(?:Z|\+00:00)$/;
+const LOCAL_CLOCK_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
 function normalizeTimestamps(properties) {
   for (const key of Object.keys(properties)) {
     const value = properties[key];
     if (typeof value !== 'string') {
       continue;
     }
-    const clock = value.match(LOCAL_CLOCK_TIMESTAMP);
-    if (clock) {
-      properties[key] = new Date(clock[1]).toISOString().replace('.000Z', 'Z');
+    const utc = value.match(UTC_TIMESTAMP);
+    if (utc) {
+      properties[key] = `${utc[1]}Z`;
+    } else if (LOCAL_CLOCK_TIMESTAMP.test(value)) {
+      properties[key] = new Date(value).toISOString().replace('.000Z', 'Z');
     }
   }
   return properties;
