@@ -437,28 +437,11 @@ const dorDrawnMapStyle = mergeDeep(imageryInfo,{
   sources: {
     dor: {
       tiles: [
-        'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/dor_basemap_no_labels/MapServer/tile/{z}/{y}/{x}',
+        'https://tiles.citygeo.phila.city/dor_basemap_w_labels/{z}/{x}/{y}.png',
       ],
       type: 'raster',
       tileSize: 256,
-    },
-    parcelLabels: {
-      tiles: [
-        'https://citygeo-geoserver.databridge.phila.gov/geoserver/dor_basemap_small_labels/wms?service=WMS\
-          &version=1.3.0\
-          &request=GetMap\
-          &layers=dor_basemap_small_labels\
-          &bbox={bbox-epsg-3857}\
-          &width=1024\
-          &height=1024\
-          &srs=EPSG%3A3857\
-          &format=image/png8\
-          &transparent=true\
-          &tiled=true'
-      ],
-      type: 'raster',
-      tileSize: 1024,
-      minzoom: 15
+      maxzoom: 22,
     },
     addressMarker: {
       type: 'geojson',
@@ -486,14 +469,6 @@ const dorDrawnMapStyle = mergeDeep(imageryInfo,{
       id: 'dor',
       source: 'dor',
       type: 'raster',
-    },
-    {
-      id: 'parcelLabels',
-      source: 'parcelLabels',
-      type: 'raster',
-      paint: {
-        'raster-opacity': 1,
-      }
     },
     {
       id: 'cyclomediaRecordings',
@@ -561,28 +536,11 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
   sources: {
     dor: {
       tiles: [
-        'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/dor_basemap_no_labels/MapServer/tile/{z}/{y}/{x}',
+        'https://tiles.citygeo.phila.city/dor_basemap_w_labels/{z}/{x}/{y}.png',
       ],
       type: 'raster',
       tileSize: 256,
-    },
-    parcelLabels: {
-      tiles: [
-        'https://citygeo-geoserver.databridge.phila.gov/geoserver/dor_basemap_small_labels/wms?service=WMS\
-          &version=1.3.0\
-          &request=GetMap\
-          &layers=dor_basemap_small_labels\
-          &bbox={bbox-epsg-3857}\
-          &width=1024\
-          &height=1024\
-          &srs=EPSG%3A3857\
-          &format=image/png8\
-          &transparent=true\
-          &tiled=true'
-      ],
-      type: 'raster',
-      tileSize: 1024,
-      minzoom: 15
+      maxzoom: 22,
     },
     zoning: {
       tiles: [
@@ -647,14 +605,6 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
         'circle-stroke-width': 1,
         'circle-stroke-color': '#a1a1a1',
         'circle-opacity': 0.5,
-      }
-    },
-    {
-      id: 'parcelLabels',
-      source: 'parcelLabels',
-      type: 'raster',
-      paint: {
-        'raster-opacity': 1,
       }
     },
     {
