@@ -697,14 +697,12 @@ const handleRegmapOpacityChange = (opacity) => {
   );
 }
 
-// for Zoning topic, change opacity of zoning layer
+// for Zoning topic, change opacity of the zoning vector layers
 const handleZoningOpacityChange = (opacity) => {
   MapStore.zoningOpacity = opacity / 100;
-  map.setPaintProperty(
-    'zoning',
-    'raster-opacity',
-    opacity / 100,
-  );
+  map.setPaintProperty('zoning-fill', 'fill-opacity', opacity / 100);
+  map.setPaintProperty('zoning-outline', 'line-opacity', opacity / 100);
+  map.setPaintProperty('zoning-label', 'text-opacity', opacity / 100);
 }
 
 // for Cityatlas Stormwater topic, change opacity of stormwater layer

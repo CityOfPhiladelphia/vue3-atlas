@@ -586,19 +586,13 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
     },
     zoning: {
       tiles: [
-        'https://citygeo-geoserver.databridge.phila.gov/geoserver/wms?service=WMS\
-          &version=1.3.0\
-          &request=GetMap\
-          &layers=atlas_zoning_grouped\
-          &bbox={bbox-epsg-3857}\
-          &width=1024\
-          &height=1024\
-          &srs=EPSG%3A3857\
-          &format=image/png8\
-          &transparent=true'
+        'https://tiles.citygeo.phila.city/zoning/{z}/{x}/{y}.mvt',
       ],
-      type: 'raster',
-      tileSize: 1024,
+      type: 'vector',
+      // the CityGeo tile server serves zoning at z10-16; overzoom past that
+      minzoom: 10,
+      maxzoom: 16,
+      attribution: 'City of Philadelphia',
     },
     selectedOverlay: {
       type: 'geojson',
@@ -650,19 +644,71 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
       }
     },
     {
-      id: 'parcelLabels',
-      source: 'parcelLabels',
-      type: 'raster',
+      id: 'zoning-fill',
+      source: 'zoning',
+      'source-layer': 'zoning',
+      type: 'fill',
       paint: {
-        'raster-opacity': 1,
+        'fill-color': [
+          'match',
+          ['get', 'long_code'],
+          ['CA-1', 'CA-2'], '#fed2cd',
+          ['CMX-1', 'CMX-2', 'CMX-2.5'], '#ff7070',
+          'CMX-3', '#eb0000',
+          ['CMX-4', 'CMX-5'], '#850000',
+          'I-1', '#c27df0',
+          'I-2', '#9c27db',
+          'I-3', '#43009c',
+          'I-P', '#7c7ac4',
+          'ICMX', '#c500e6',
+          'IRMX', '#ef8ff7',
+          ['RM-1', 'RM-2', 'RM-3', 'RM-4'], '#ffa929',
+          ['RMX-1', 'RMX-2', 'RMX-3'], '#ff8336',
+          ['RSA-1', 'RSA-2', 'RSA-3', 'RSA-4', 'RSA-5', 'RSA-6'], '#ffff0d',
+          ['RTA-1', 'RTA-2'], '#d4d40b',
+          ['RSD-1', 'RSD-2', 'RSD-3'], '#fff5c4',
+          'SP-AIR', '#b1b3b6',
+          'SP-ENT', '#815723',
+          ['SP-INS', 'SP-CIV'], '#63beff',
+          ['SP-PO-A', 'SP-PO-P'], '#118e00',
+          'SP-STA', '#89cd66',
+          'rgba(0,0,0,0)',
+        ],
+        'fill-opacity': 0.7,
       }
     },
     {
-      id: 'zoning',
+      id: 'zoning-outline',
       source: 'zoning',
-      type: 'raster',
+      'source-layer': 'zoning',
+      type: 'line',
+      minzoom: 15,
       paint: {
-        'raster-opacity': 1,
+        'line-color': '#232323',
+        'line-width': 2.5,
+        'line-opacity': 0.7,
+      }
+    },
+    {
+      id: 'zoning-label',
+      source: 'zoning',
+      'source-layer': 'zoning',
+      type: 'symbol',
+      minzoom: 15,
+      layout: {
+        'text-field': ['get', 'long_code'],
+        // fonts.openmaptiles.org doesn't serve Noto Sans (it returns an HTML page, which breaks
+        // the whole tile's layout), so use the closest weight it does serve
+        'text-font': ['Open Sans Semibold'],
+        'text-size': 15,
+        'text-rotate': ['coalesce', ['get', 'label_angle'], 0],
+        'text-rotation-alignment': 'map',
+      },
+      paint: {
+        'text-color': '#323232',
+        'text-halo-color': '#fafafa',
+        'text-halo-width': 2,
+        'text-opacity': 0.6,
       }
     },
     {
@@ -1385,9 +1431,10 @@ const $config = {
       type: 'raster',
     },
     zoning: {
-      id: 'zoning',
+      id: 'zoning-fill',
       source: 'zoning',
-      type: 'raster',
+      'source-layer': 'zoning',
+      type: 'fill',
     },
     addressMarker: {
       id: 'addressMarker',
