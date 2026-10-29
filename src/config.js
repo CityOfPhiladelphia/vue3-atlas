@@ -708,7 +708,7 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
         'text-color': '#323232',
         'text-halo-color': '#fafafa',
         'text-halo-width': 2,
-        'text-opacity': 0.6,
+        'text-opacity': 1,
       }
     },
     {
