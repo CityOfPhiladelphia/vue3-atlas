@@ -554,6 +554,33 @@ const dorDrawnMapStyle = mergeDeep(imageryInfo,{
   ],
 });
 
+// zoning district color by long_code, shared by the zoning fill and outline layers
+const zoningColorByCode = [
+  'match',
+  ['get', 'long_code'],
+  ['CA-1', 'CA-2'], '#fed2cd',
+  ['CMX-1', 'CMX-2', 'CMX-2.5'], '#ff7070',
+  'CMX-3', '#eb0000',
+  ['CMX-4', 'CMX-5'], '#850000',
+  'I-1', '#c27df0',
+  'I-2', '#9c27db',
+  'I-3', '#43009c',
+  'I-P', '#7c7ac4',
+  'ICMX', '#c500e6',
+  'IRMX', '#ef8ff7',
+  ['RM-1', 'RM-2', 'RM-3', 'RM-4'], '#ffa929',
+  ['RMX-1', 'RMX-2', 'RMX-3'], '#ff8336',
+  ['RSA-1', 'RSA-2', 'RSA-3', 'RSA-4', 'RSA-5', 'RSA-6'], '#ffff0d',
+  ['RTA-1', 'RTA-2'], '#d4d40b',
+  ['RSD-1', 'RSD-2', 'RSD-3'], '#fff5c4',
+  'SP-AIR', '#b1b3b6',
+  'SP-ENT', '#815723',
+  ['SP-INS', 'SP-CIV'], '#63beff',
+  ['SP-PO-A', 'SP-PO-P'], '#118e00',
+  'SP-STA', '#89cd66',
+  'rgba(0,0,0,0)',
+];
+
 const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
   version: 8,
   name: 'zoningDrawnMap',
@@ -649,31 +676,7 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
       'source-layer': 'zoning',
       type: 'fill',
       paint: {
-        'fill-color': [
-          'match',
-          ['get', 'long_code'],
-          ['CA-1', 'CA-2'], '#fed2cd',
-          ['CMX-1', 'CMX-2', 'CMX-2.5'], '#ff7070',
-          'CMX-3', '#eb0000',
-          ['CMX-4', 'CMX-5'], '#850000',
-          'I-1', '#c27df0',
-          'I-2', '#9c27db',
-          'I-3', '#43009c',
-          'I-P', '#7c7ac4',
-          'ICMX', '#c500e6',
-          'IRMX', '#ef8ff7',
-          ['RM-1', 'RM-2', 'RM-3', 'RM-4'], '#ffa929',
-          ['RMX-1', 'RMX-2', 'RMX-3'], '#ff8336',
-          ['RSA-1', 'RSA-2', 'RSA-3', 'RSA-4', 'RSA-5', 'RSA-6'], '#ffff0d',
-          ['RTA-1', 'RTA-2'], '#d4d40b',
-          ['RSD-1', 'RSD-2', 'RSD-3'], '#fff5c4',
-          'SP-AIR', '#b1b3b6',
-          'SP-ENT', '#815723',
-          ['SP-INS', 'SP-CIV'], '#63beff',
-          ['SP-PO-A', 'SP-PO-P'], '#118e00',
-          'SP-STA', '#89cd66',
-          'rgba(0,0,0,0)',
-        ],
+        'fill-color': zoningColorByCode,
         'fill-opacity': 0.7,
       }
     },
@@ -684,8 +687,8 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
       type: 'line',
       minzoom: 15,
       paint: {
-        'line-color': '#232323',
-        'line-width': 2.5,
+        'line-color': zoningColorByCode,
+        'line-width': 3,
         'line-opacity': 0.7,
       }
     },

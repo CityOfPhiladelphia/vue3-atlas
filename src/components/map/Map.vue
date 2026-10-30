@@ -702,6 +702,7 @@ const handleZoningOpacityChange = (opacity) => {
   MapStore.zoningOpacity = opacity / 100;
   map.setPaintProperty('zoning-fill', 'fill-opacity', opacity / 100);
   map.setPaintProperty('zoning-outline', 'line-opacity', opacity / 100);
+  map.setPaintProperty('zoning-label', 'text-opacity', opacity / 100);
 }
 
 // for Cityatlas Stormwater topic, change opacity of stormwater layer

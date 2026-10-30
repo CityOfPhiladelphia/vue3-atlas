@@ -30,7 +30,7 @@ export const useMapStore = defineStore("MapStore", {
       eagleviewToken: '',
       selectedRegmap: null,
       regmapOpacity: 0.5,
-      zoningOpacity: 0.6,
+      zoningOpacity: 1,
       stormwaterOpacity: 1,
       labelLayers: [],
       eagleviewParcelsOn: false,
