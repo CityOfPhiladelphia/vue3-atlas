@@ -718,13 +718,18 @@ const handleRegmapOpacityChange = (opacity) => {
 }
 
 // for Zoning topic, change opacity of the zoning fill and outline (labels stay fully opaque)
+// every zoning-* layer is scaled from the opacity set in its style, so the translucent overlay fills
+// (waterfront setback, steep slope) stay proportionally lighter than the rest
 const handleZoningOpacityChange = (opacity) => {
   MapStore.zoningOpacity = opacity / 100;
-  map.setPaintProperty('zoning-fill', 'fill-opacity', opacity / 100);
-  map.setPaintProperty('zoning-outline', 'line-opacity', opacity / 100);
-  map.setPaintProperty('zoning-parcels-outline', 'line-opacity', opacity / 100);
-  map.setPaintProperty('zoning-outline-dark', 'line-opacity', opacity / 100);
-  map.setPaintProperty('zoning-label', 'text-opacity', opacity / 100);
+  const opacityProperty = { fill: 'fill-opacity', line: 'line-opacity', symbol: 'text-opacity' };
+  $config.zoningDrawnMapStyle.layers
+    .filter(layer => layer.id.startsWith('zoning') && opacityProperty[layer.type])
+    .forEach(layer => {
+      const property = opacityProperty[layer.type];
+      const baseOpacity = layer.paint?.[property] ?? 1;
+      map.setPaintProperty(layer.id, property, baseOpacity * opacity / 100);
+    });
 }
 
 // for Cityatlas Stormwater topic, change opacity of stormwater layer
