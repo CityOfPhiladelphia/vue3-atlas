@@ -613,10 +613,20 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
     },
     zoning: {
       tiles: [
-        'https://tiles.citygeo.phila.city/zoning/{z}/{x}/{y}.mvt',
+        'https://tiles.citygeo.phila.city/atlas_zoning_basedisricts/{z}/{x}/{y}.mvt',
       ],
       type: 'vector',
       // the CityGeo tile server serves zoning at z10-16; overzoom past that
+      minzoom: 10,
+      maxzoom: 16,
+      attribution: 'City of Philadelphia',
+    },
+    zoningParcels: {
+      tiles: [
+        'https://tiles.citygeo.phila.city/atlas_zoning_parcels/{z}/{x}/{y}.mvt',
+      ],
+      type: 'vector',
+      // assumed to match the zoning tileset's z10-16 range; overzoom past that
       minzoom: 10,
       maxzoom: 16,
       attribution: 'City of Philadelphia',
@@ -673,29 +683,41 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
     {
       id: 'zoning-fill',
       source: 'zoning',
-      'source-layer': 'zoning',
+      'source-layer': 'basedistricts',
       type: 'fill',
       paint: {
         'fill-color': zoningColorByCode,
-        'fill-opacity': 0.7,
+        'fill-opacity': 1,
       }
     },
     {
       id: 'zoning-outline',
       source: 'zoning',
-      'source-layer': 'zoning',
+      'source-layer': 'basedistricts',
       type: 'line',
       minzoom: 15,
       paint: {
         'line-color': zoningColorByCode,
         'line-width': 3,
-        'line-opacity': 0.7,
+        'line-opacity': 1,
+      }
+    },
+    {
+      // parcels drawn over the zoning districts as light gray outlines only (no fill)
+      id: 'zoning-parcels-outline',
+      source: 'zoningParcels',
+      'source-layer': 'zoning_parcels',
+      type: 'line',
+      minzoom: 15,
+      paint: {
+        'line-color': '#d3d3d3',
+        'line-width': 1,
       }
     },
     {
       id: 'zoning-label',
       source: 'zoning',
-      'source-layer': 'zoning',
+      'source-layer': 'basedistricts',
       type: 'symbol',
       minzoom: 15,
       layout: {
@@ -1436,7 +1458,7 @@ const $config = {
     zoning: {
       id: 'zoning-fill',
       source: 'zoning',
-      'source-layer': 'zoning',
+      'source-layer': 'basedistricts',
       type: 'fill',
     },
     addressMarker: {
