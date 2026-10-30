@@ -739,7 +739,7 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
         // fonts.openmaptiles.org doesn't serve Noto Sans (it returns an HTML page, which breaks
         // the whole tile's layout), so use the closest weight it does serve
         'text-font': ['Open Sans Semibold'],
-        'text-size': 15,
+        'text-size': 17,
         'text-rotate': ['coalesce', ['get', 'label_angle'], 0],
         'text-rotation-alignment': 'map',
       },
