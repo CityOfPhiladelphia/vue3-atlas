@@ -1,5 +1,5 @@
 <script setup>
-import { computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { polygon, featureCollection } from '@turf/helpers';
 
 import CustomPaginationLabels from '@/components/pagination/CustomPaginationLabels.vue';
@@ -141,6 +141,50 @@ const inspectionsLength = computed(() => inspections.value && inspections.value.
 const violationsCompareFn = (a, b) => new Date(b.casecreateddate) - new Date(a.casecreateddate);
 const violations = computed(() => LiStore.liViolations.rows? [ ...LiStore.liViolations.rows ].sort(violationsCompareFn) : null );
 const violationsLength = computed(() => violations.value && violations.value.length ? violations.value.length : 0);
+
+// the violations table shows one row per case; a case opens to show its violations beneath it
+const toViolationTableRow = (row) => ({
+  date: row.violationdate,
+  id: row.violationnumber,
+  description: row.novLink,
+  status: row.violationstatus,
+});
+const toCaseTableRow = (rows) => {
+  const first = rows[0];
+  const count = `${rows.length} ${rows.length === 1 ? 'violation' : 'violations'}`;
+  return {
+    casenumber: first.casenumber,
+    date: first.casecreateddate,
+    id: first.link,
+    description: first.casetype ? `${first.casetype} (${count})` : count,
+    status: first.casestatus,
+    children: rows.map(toViolationTableRow),
+  };
+};
+const violationCases = computed(() => {
+  if (!violations.value) return [];
+  const rowsByCase = new Map();
+  for (const row of violations.value) {
+    const caseRows = rowsByCase.get(row.casenumber);
+    if (caseRows) {
+      caseRows.push(row);
+    } else {
+      rowsByCase.set(row.casenumber, [ row ]);
+    }
+  }
+  return Array.from(rowsByCase.values()).map(toCaseTableRow);
+});
+
+// paged here rather than by vue-good-table, which would count a case's violations toward the page
+const violationCasesPage = ref(1);
+const violationCasesPerPage = ref(5);
+const violationCasesOnPage = computed(() => {
+  const start = (violationCasesPage.value - 1) * violationCasesPerPage.value;
+  return violationCases.value.slice(start, start + violationCasesPerPage.value);
+});
+watch(violationCases, () => {
+  violationCasesPage.value = 1;
+});
 
 // BUSINESS LICENSES
 const businessLicensesCompareFn = (a, b) => new Date(b.initialissuedate) - new Date(a.initialissuedate);
@@ -365,28 +409,27 @@ const violationsTableData = computed(() => {
     columns: [
       {
         label: 'Date',
-        field: 'casecreateddate',
+        field: 'date',
         type: 'date',
         dateInputFormat: "yyyy-MM-dd'T'HH:mm:ssX",
         dateOutputFormat: 'MM/dd/yyyy',
       },
       {
         label: 'ID',
-        field: 'link',
+        field: 'id',
         html: true,
       },
       {
         label: 'Description',
-        // field: 'violationcodetitle',
-        field: 'novLink',
+        field: 'description',
         html: true,
       },
       {
         label: 'Status',
-        field: 'violationstatus',
+        field: 'status',
       }
     ],
-    rows: violations.value || [],
+    rows: violationCasesOnPage.value,
   }
 });
 
@@ -729,15 +772,20 @@ const liAppealsTableData = computed(() => {
         />
         <span v-else>({{ violationsLength }})</span>
       </h2>
-      <div
-        v-if="violationsTableData.rows"
-        class="horizontal-table"
-      >
+      <div class="horizontal-table">
+        <custom-pagination-labels
+          v-if="violationCases.length > violationCasesPerPage"
+          :mode="'pages'"
+          :total="violationCases.length"
+          :per-page="violationCasesPerPage"
+          @page-changed="violationCasesPage = $event.currentPage"
+          @per-page-changed="violationCasesPerPage = $event.currentPerPage"
+        />
         <vue-good-table
           id="violations"
           :columns="violationsTableData.columns"
           :rows="violationsTableData.rows"
-          :pagination-options="paginationOptions(violationsTableData.rows.length)"
+          :group-options="{ enabled: true, collapsable: true, rowKey: 'casenumber' }"
           style-class="table"
         >
           <template #emptystate>
@@ -751,14 +799,21 @@ const liAppealsTableData = computed(() => {
               No violations found
             </div>
           </template>
-          <template #pagination-top="props">
-            <custom-pagination-labels
-              :mode="'pages'"
-              :total="props.total"
-              :per-page="5"
-              @page-changed="props.pageChanged"
-              @per-page-changed="props.perPageChanged"
+          <template #table-header-row="props">
+            <button
+              v-if="props.column.field === 'date'"
+              type="button"
+              class="case-toggle"
+              :aria-expanded="props.row.vgtIsExpanded ? 'true' : 'false'"
+              :aria-label="`${props.row.vgtIsExpanded ? 'Hide' : 'Show'} violations for case ${props.row.casenumber}`"
+            >
+              <font-awesome-icon :icon="props.row.vgtIsExpanded ? 'fa-solid fa-angle-down' : 'fa-solid fa-caret-right'" />
+            </button>
+            <span
+              v-if="props.column.html"
+              v-html="props.formattedRow[props.column.field]"
             />
+            <span v-else>{{ props.formattedRow[props.column.field] }}</span>
           </template>
         </vue-good-table>
       </div>
@@ -906,6 +961,24 @@ const liAppealsTableData = computed(() => {
   font-size: .95rem
 }
 
+/* a case row: the toggle button replaces vue-good-table's own triangle */
+#violations th.vgt-row-header {
+  cursor: pointer;
+  font-weight: normal;
+}
+
+#violations .triangle {
+  display: none;
+}
+
+#violations .case-toggle {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0 .5rem 0 0;
+  color: #444444;
+}
+
 @media
 only screen and (max-width: 768px),
 (min-device-width: 768px) and (max-device-width: 1024px)  {
@@ -936,6 +1009,31 @@ only screen and (max-width: 768px),
     td:nth-of-type(3):before { content: "Description"; }
     td:nth-of-type(4):before { content: "Status"; }
   }
+
+  /* case rows are th cells, so they need the same stacking and labels as td cells */
+  #violations th.vgt-row-header {
+    border: none;
+    border-bottom: 1px solid #eee;
+    position: relative;
+    padding-left: 90px !important;
+    padding-top: 9px !important;
+    min-height: 45px;
+  }
+
+  #violations th.vgt-row-header:before {
+    position: absolute;
+    top: 9px;
+    left: 6px;
+    width: 95px;
+    padding-right: 10px;
+    word-wrap: break-word;
+    font-weight: bold;
+  }
+
+  #violations th.vgt-row-header:nth-of-type(1):before { content: "Date"; }
+  #violations th.vgt-row-header:nth-of-type(2):before { content: "ID"; }
+  #violations th.vgt-row-header:nth-of-type(3):before { content: "Description"; }
+  #violations th.vgt-row-header:nth-of-type(4):before { content: "Status"; }
 
   #zoning-permit-docs {
     /* margin-bottom: 2rem; */

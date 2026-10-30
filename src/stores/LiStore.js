@@ -764,6 +764,7 @@ export const useLiStore = defineStore('LiStore', {
             }
             // Convert epoch timestamps to ISO strings for table component
             attrs.casecreateddate = epochToIso(attrs.casecreateddate);
+            attrs.violationdate = epochToIso(attrs.violationdate);
             return attrs;
           }) : [];
           const data = { rows };
