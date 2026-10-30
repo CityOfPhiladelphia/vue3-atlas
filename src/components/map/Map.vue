@@ -702,6 +702,8 @@ const handleZoningOpacityChange = (opacity) => {
   MapStore.zoningOpacity = opacity / 100;
   map.setPaintProperty('zoning-fill', 'fill-opacity', opacity / 100);
   map.setPaintProperty('zoning-outline', 'line-opacity', opacity / 100);
+  map.setPaintProperty('zoning-parcels-outline', 'line-opacity', opacity / 100);
+  map.setPaintProperty('zoning-outline-dark', 'line-opacity', opacity / 100);
   map.setPaintProperty('zoning-label', 'text-opacity', opacity / 100);
 }
 

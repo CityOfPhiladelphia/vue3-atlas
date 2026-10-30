@@ -712,6 +712,20 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
       paint: {
         'line-color': '#d3d3d3',
         'line-width': 1,
+        'line-opacity': 1,
+      }
+    },
+    {
+      // thin dark line along the zoning district boundaries, above the parcels
+      id: 'zoning-outline-dark',
+      source: 'zoning',
+      'source-layer': 'basedistricts',
+      type: 'line',
+      minzoom: 15,
+      paint: {
+        'line-color': '#232323',
+        'line-width': 1.5,
+        'line-opacity': 1,
       }
     },
     {
