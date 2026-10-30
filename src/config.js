@@ -626,17 +626,18 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
         'https://tiles.citygeo.phila.city/atlas_zoning_parcels/{z}/{x}/{y}.mvt',
       ],
       type: 'vector',
-      // the parcel and overlay tilesets are only built at z16; nothing shows below it, overzoom above
+      // the parcel tileset is only built at z16; nothing shows below it, overzoom above
       minzoom: 16,
       maxzoom: 16,
       attribution: 'City of Philadelphia',
     },
     zoningFloodplain: {
+      // the overlay tilesets (floodplain, waterfront setback, hydro, steep slope) are built at z10-16
       tiles: [
         'https://tiles.citygeo.phila.city/atlas_zoning_floodplain/{z}/{x}/{y}.mvt',
       ],
       type: 'vector',
-      minzoom: 16,
+      minzoom: 10,
       maxzoom: 16,
       attribution: 'City of Philadelphia',
     },
@@ -645,7 +646,7 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
         'https://tiles.citygeo.phila.city/atlas_zoning_waterfrontsetback/{z}/{x}/{y}.mvt',
       ],
       type: 'vector',
-      minzoom: 16,
+      minzoom: 10,
       maxzoom: 16,
       attribution: 'City of Philadelphia',
     },
@@ -654,7 +655,7 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
         'https://tiles.citygeo.phila.city/atlas_zoning_hydroclip2012/{z}/{x}/{y}.mvt',
       ],
       type: 'vector',
-      minzoom: 16,
+      minzoom: 10,
       maxzoom: 16,
       attribution: 'City of Philadelphia',
     },
@@ -663,7 +664,7 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
         'https://tiles.citygeo.phila.city/atlas_zoning_steepslopeprotectarea_r/{z}/{x}/{y}.mvt',
       ],
       type: 'vector',
-      minzoom: 16,
+      minzoom: 10,
       maxzoom: 16,
       attribution: 'City of Philadelphia',
     },
