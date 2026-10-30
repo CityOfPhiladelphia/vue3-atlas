@@ -788,13 +788,13 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
       }
     },
     {
-      // 'crosshatch' is generated and registered in Map.vue
+      // 'hatch' (single diagonal lines) is generated and registered in Map.vue
       id: 'zoning-floodplain-hatch',
       source: 'zoningFloodplain',
       'source-layer': 'zoning_fema_floodplain',
       type: 'fill',
       paint: {
-        'fill-pattern': 'crosshatch',
+        'fill-pattern': 'hatch',
       }
     },
     {

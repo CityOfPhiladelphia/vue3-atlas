@@ -118,10 +118,10 @@ onMounted(async () => {
     attributionControl: false,
   });
 
-  // the zoning floodplain fill uses a generated crosshatch pattern; register it whenever a style asks
-  // for it, since a style rebuilt from scratch drops images added with addImage
+  // the zoning floodplain fill uses a generated single-hatch (diagonal line) pattern; register it whenever
+  // a style asks for it, since a style rebuilt from scratch drops images added with addImage
   map.on('styleimagemissing', (e) => {
-    if (e.id !== 'crosshatch' || map.hasImage('crosshatch')) return;
+    if (e.id !== 'hatch' || map.hasImage('hatch')) return;
     const size = 8;
     const canvas = document.createElement('canvas');
     canvas.width = size;
@@ -130,12 +130,15 @@ onMounted(async () => {
     ctx.strokeStyle = '#000000';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(size, size);
-    ctx.moveTo(size, 0);
-    ctx.lineTo(0, size);
+    // the main diagonal plus the two corner stubs, so the lines join up where the pattern repeats
+    ctx.moveTo(0, size);
+    ctx.lineTo(size, 0);
+    ctx.moveTo(-1, 1);
+    ctx.lineTo(1, -1);
+    ctx.moveTo(size - 1, size + 1);
+    ctx.lineTo(size + 1, size - 1);
     ctx.stroke();
-    map.addImage('crosshatch', ctx.getImageData(0, 0, size, size));
+    map.addImage('hatch', ctx.getImageData(0, 0, size, size));
   });
 
   map.on('load', () => {
