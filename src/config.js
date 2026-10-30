@@ -626,8 +626,44 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
         'https://tiles.citygeo.phila.city/atlas_zoning_parcels/{z}/{x}/{y}.mvt',
       ],
       type: 'vector',
-      // assumed to match the zoning tileset's z10-16 range; overzoom past that
-      minzoom: 10,
+      // the parcel and overlay tilesets are only built at z16; nothing shows below it, overzoom above
+      minzoom: 16,
+      maxzoom: 16,
+      attribution: 'City of Philadelphia',
+    },
+    zoningFloodplain: {
+      tiles: [
+        'https://tiles.citygeo.phila.city/atlas_zoning_floodplain/{z}/{x}/{y}.mvt',
+      ],
+      type: 'vector',
+      minzoom: 16,
+      maxzoom: 16,
+      attribution: 'City of Philadelphia',
+    },
+    zoningWaterfrontSetback: {
+      tiles: [
+        'https://tiles.citygeo.phila.city/atlas_zoning_waterfrontsetback/{z}/{x}/{y}.mvt',
+      ],
+      type: 'vector',
+      minzoom: 16,
+      maxzoom: 16,
+      attribution: 'City of Philadelphia',
+    },
+    zoningHydro: {
+      tiles: [
+        'https://tiles.citygeo.phila.city/atlas_zoning_hydroclip2012/{z}/{x}/{y}.mvt',
+      ],
+      type: 'vector',
+      minzoom: 16,
+      maxzoom: 16,
+      attribution: 'City of Philadelphia',
+    },
+    zoningSteepSlope: {
+      tiles: [
+        'https://tiles.citygeo.phila.city/atlas_zoning_steepslopeprotectarea_r/{z}/{x}/{y}.mvt',
+      ],
+      type: 'vector',
+      minzoom: 16,
       maxzoom: 16,
       attribution: 'City of Philadelphia',
     },
@@ -726,6 +762,68 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
         'line-color': '#232323',
         'line-width': 1.5,
         'line-opacity': 1,
+      }
+    },
+    {
+      id: 'zoning-waterfront-setback-fill',
+      source: 'zoningWaterfrontSetback',
+      'source-layer': 'zoning_waterfrontsetback',
+      type: 'fill',
+      paint: {
+        'fill-color': '#a6d8f5',
+        'fill-opacity': 0.6,
+      }
+    },
+    {
+      // the fill drops out at z18 and closer; the outline below shows at every zoom
+      id: 'zoning-steep-slope-fill',
+      source: 'zoningSteepSlope',
+      'source-layer': 'zoning_steepslopeprotectarea_r',
+      type: 'fill',
+      maxzoom: 18,
+      paint: {
+        'fill-color': '#a0703c',
+        'fill-opacity': 0.35,
+      }
+    },
+    {
+      // 'crosshatch' is generated and registered in Map.vue
+      id: 'zoning-floodplain-hatch',
+      source: 'zoningFloodplain',
+      'source-layer': 'zoning_fema_floodplain',
+      type: 'fill',
+      paint: {
+        'fill-pattern': 'crosshatch',
+      }
+    },
+    {
+      id: 'zoning-floodplain-outline',
+      source: 'zoningFloodplain',
+      'source-layer': 'zoning_fema_floodplain',
+      type: 'line',
+      paint: {
+        'line-color': '#000000',
+        'line-width': 1,
+      }
+    },
+    {
+      id: 'zoning-hydro-outline',
+      source: 'zoningHydro',
+      'source-layer': 'zoning_hydroclip2012',
+      type: 'line',
+      paint: {
+        'line-color': '#5b9fd0',
+        'line-width': 1.5,
+      }
+    },
+    {
+      id: 'zoning-steep-slope-outline',
+      source: 'zoningSteepSlope',
+      'source-layer': 'zoning_steepslopeprotectarea_r',
+      type: 'line',
+      paint: {
+        'line-color': '#6b4423',
+        'line-width': 1.5,
       }
     },
     {

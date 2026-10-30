@@ -118,6 +118,26 @@ onMounted(async () => {
     attributionControl: false,
   });
 
+  // the zoning floodplain fill uses a generated crosshatch pattern; register it whenever a style asks
+  // for it, since a style rebuilt from scratch drops images added with addImage
+  map.on('styleimagemissing', (e) => {
+    if (e.id !== 'crosshatch' || map.hasImage('crosshatch')) return;
+    const size = 8;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(size, size);
+    ctx.moveTo(size, 0);
+    ctx.lineTo(0, size);
+    ctx.stroke();
+    map.addImage('crosshatch', ctx.getImageData(0, 0, size, size));
+  });
+
   map.on('load', () => {
     let canvas = document.querySelector(".maplibregl-canvas");
     canvas.setAttribute('tabindex', -1);
