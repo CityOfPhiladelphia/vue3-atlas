@@ -843,7 +843,7 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
         'text-rotation-alignment': 'map',
         // keep labels at least ~40px apart; a district split across tiles gets one label per tile piece,
         // and this hides the copies that land close together
-        'text-padding': 40,
+        'text-padding': 20,
       },
       paint: {
         'text-color': '#323232',
