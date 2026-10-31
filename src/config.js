@@ -554,6 +554,33 @@ const dorDrawnMapStyle = mergeDeep(imageryInfo,{
   ],
 });
 
+// zoning district color by long_code, shared by the zoning fill and outline layers
+const zoningColorByCode = [
+  'match',
+  ['get', 'long_code'],
+  ['CA-1', 'CA-2'], '#fed2cd',
+  ['CMX-1', 'CMX-2', 'CMX-2.5'], '#ff7070',
+  'CMX-3', '#eb0000',
+  ['CMX-4', 'CMX-5'], '#850000',
+  'I-1', '#c27df0',
+  'I-2', '#9c27db',
+  'I-3', '#43009c',
+  'I-P', '#7c7ac4',
+  'ICMX', '#c500e6',
+  'IRMX', '#ef8ff7',
+  ['RM-1', 'RM-2', 'RM-3', 'RM-4'], '#ffa929',
+  ['RMX-1', 'RMX-2', 'RMX-3'], '#ff8336',
+  ['RSA-1', 'RSA-2', 'RSA-3', 'RSA-4', 'RSA-5', 'RSA-6'], '#ffff0d',
+  ['RTA-1', 'RTA-2'], '#d4d40b',
+  ['RSD-1', 'RSD-2', 'RSD-3'], '#fff5c4',
+  'SP-AIR', '#b1b3b6',
+  'SP-ENT', '#815723',
+  ['SP-INS', 'SP-CIV'], '#63beff',
+  ['SP-PO-A', 'SP-PO-P'], '#118e00',
+  'SP-STA', '#89cd66',
+  'rgba(0,0,0,0)',
+];
+
 const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
   version: 8,
   name: 'zoningDrawnMap',
@@ -586,19 +613,60 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
     },
     zoning: {
       tiles: [
-        'https://citygeo-geoserver.databridge.phila.gov/geoserver/wms?service=WMS\
-          &version=1.3.0\
-          &request=GetMap\
-          &layers=atlas_zoning_grouped\
-          &bbox={bbox-epsg-3857}\
-          &width=1024\
-          &height=1024\
-          &srs=EPSG%3A3857\
-          &format=image/png8\
-          &transparent=true'
+        'https://tiles.citygeo.phila.city/atlas_zoning_basedisricts/{z}/{x}/{y}.mvt',
       ],
-      type: 'raster',
-      tileSize: 1024,
+      type: 'vector',
+      // the CityGeo tile server serves zoning at z10-16; overzoom past that
+      minzoom: 10,
+      maxzoom: 16,
+      attribution: 'City of Philadelphia',
+    },
+    zoningParcels: {
+      tiles: [
+        'https://tiles.citygeo.phila.city/atlas_zoning_parcels/{z}/{x}/{y}.mvt',
+      ],
+      type: 'vector',
+      // the parcel tileset is only built at z16; nothing shows below it, overzoom above
+      minzoom: 16,
+      maxzoom: 16,
+      attribution: 'City of Philadelphia',
+    },
+    zoningFloodplain: {
+      // the overlay tilesets (floodplain, waterfront setback, hydro, steep slope) are built at z10-16
+      tiles: [
+        'https://tiles.citygeo.phila.city/atlas_zoning_floodplain/{z}/{x}/{y}.mvt',
+      ],
+      type: 'vector',
+      minzoom: 10,
+      maxzoom: 16,
+      attribution: 'City of Philadelphia',
+    },
+    zoningWaterfrontSetback: {
+      tiles: [
+        'https://tiles.citygeo.phila.city/atlas_zoning_waterfrontsetback/{z}/{x}/{y}.mvt',
+      ],
+      type: 'vector',
+      minzoom: 10,
+      maxzoom: 16,
+      attribution: 'City of Philadelphia',
+    },
+    zoningHydro: {
+      tiles: [
+        'https://tiles.citygeo.phila.city/atlas_zoning_hydroclip2012/{z}/{x}/{y}.mvt',
+      ],
+      type: 'vector',
+      minzoom: 10,
+      maxzoom: 16,
+      attribution: 'City of Philadelphia',
+    },
+    zoningSteepSlope: {
+      tiles: [
+        'https://tiles.citygeo.phila.city/atlas_zoning_steepslopeprotectarea_r/{z}/{x}/{y}.mvt',
+      ],
+      type: 'vector',
+      minzoom: 10,
+      maxzoom: 16,
+      attribution: 'City of Philadelphia',
     },
     selectedOverlay: {
       type: 'geojson',
@@ -650,19 +718,138 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
       }
     },
     {
-      id: 'parcelLabels',
-      source: 'parcelLabels',
-      type: 'raster',
+      id: 'zoning-fill',
+      source: 'zoning',
+      'source-layer': 'basedistricts',
+      type: 'fill',
       paint: {
-        'raster-opacity': 1,
+        'fill-color': zoningColorByCode,
+        'fill-opacity': 1,
       }
     },
     {
-      id: 'zoning',
+      id: 'zoning-outline',
       source: 'zoning',
-      type: 'raster',
+      'source-layer': 'basedistricts',
+      type: 'line',
+      minzoom: 15,
       paint: {
-        'raster-opacity': 1,
+        'line-color': zoningColorByCode,
+        'line-width': 3,
+        'line-opacity': 1,
+      }
+    },
+    {
+      // parcels drawn over the zoning districts as light gray outlines only (no fill)
+      id: 'zoning-parcels-outline',
+      source: 'zoningParcels',
+      'source-layer': 'zoning_parcels',
+      type: 'line',
+      minzoom: 15,
+      paint: {
+        'line-color': '#d3d3d3',
+        'line-width': 1,
+        'line-opacity': 1,
+      }
+    },
+    {
+      // thin dark line along the zoning district boundaries, above the parcels
+      id: 'zoning-outline-dark',
+      source: 'zoning',
+      'source-layer': 'basedistricts',
+      type: 'line',
+      minzoom: 15,
+      paint: {
+        'line-color': '#232323',
+        'line-width': 1.5,
+        'line-opacity': 1,
+      }
+    },
+    {
+      id: 'zoning-waterfront-setback-fill',
+      source: 'zoningWaterfrontSetback',
+      'source-layer': 'zoning_waterfrontsetback',
+      type: 'fill',
+      paint: {
+        'fill-color': '#a6d8f5',
+        'fill-opacity': 0.6,
+      }
+    },
+    {
+      // the fill drops out at z18 and closer; the outline below shows at every zoom
+      id: 'zoning-steep-slope-fill',
+      source: 'zoningSteepSlope',
+      'source-layer': 'zoning_steepslopeprotectarea_r',
+      type: 'fill',
+      maxzoom: 18,
+      paint: {
+        'fill-color': '#a0703c',
+        'fill-opacity': 0.35,
+      }
+    },
+    {
+      // 'hatch' (single diagonal lines) is generated and registered in Map.vue
+      id: 'zoning-floodplain-hatch',
+      source: 'zoningFloodplain',
+      'source-layer': 'zoning_fema_floodplain',
+      type: 'fill',
+      paint: {
+        'fill-pattern': 'hatch',
+      }
+    },
+    {
+      id: 'zoning-floodplain-outline',
+      source: 'zoningFloodplain',
+      'source-layer': 'zoning_fema_floodplain',
+      type: 'line',
+      paint: {
+        'line-color': '#000000',
+        'line-width': 1,
+      }
+    },
+    {
+      id: 'zoning-hydro-outline',
+      source: 'zoningHydro',
+      'source-layer': 'zoning_hydroclip2012',
+      type: 'line',
+      paint: {
+        'line-color': '#5b9fd0',
+        'line-width': 1.5,
+      }
+    },
+    {
+      id: 'zoning-steep-slope-outline',
+      source: 'zoningSteepSlope',
+      'source-layer': 'zoning_steepslopeprotectarea_r',
+      type: 'line',
+      paint: {
+        'line-color': '#6b4423',
+        'line-width': 1.5,
+      }
+    },
+    {
+      id: 'zoning-label',
+      source: 'zoning',
+      'source-layer': 'basedistricts',
+      type: 'symbol',
+      minzoom: 15,
+      layout: {
+        'text-field': ['get', 'long_code'],
+        // fonts.openmaptiles.org doesn't serve Noto Sans (it returns an HTML page, which breaks
+        // the whole tile's layout), so use the closest weight it does serve
+        'text-font': ['Open Sans Semibold'],
+        'text-size': 17,
+        'text-rotate': ['coalesce', ['get', 'label_angle'], 0],
+        'text-rotation-alignment': 'map',
+        // keep labels at least ~40px apart; a district split across tiles gets one label per tile piece,
+        // and this hides the copies that land close together
+        'text-padding': 20,
+      },
+      paint: {
+        'text-color': '#323232',
+        'text-halo-color': '#fafafa',
+        'text-halo-width': 2,
+        'text-opacity': 1,
       }
     },
     {
@@ -1385,9 +1572,10 @@ const $config = {
       type: 'raster',
     },
     zoning: {
-      id: 'zoning',
+      id: 'zoning-fill',
       source: 'zoning',
-      type: 'raster',
+      'source-layer': 'basedistricts',
+      type: 'fill',
     },
     addressMarker: {
       id: 'addressMarker',

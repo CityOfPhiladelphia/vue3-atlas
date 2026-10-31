@@ -118,6 +118,29 @@ onMounted(async () => {
     attributionControl: false,
   });
 
+  // the zoning floodplain fill uses a generated single-hatch (diagonal line) pattern; register it whenever
+  // a style asks for it, since a style rebuilt from scratch drops images added with addImage
+  map.on('styleimagemissing', (e) => {
+    if (e.id !== 'hatch' || map.hasImage('hatch')) return;
+    const size = 8;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    // the main diagonal plus the two corner stubs, so the lines join up where the pattern repeats
+    ctx.moveTo(0, size);
+    ctx.lineTo(size, 0);
+    ctx.moveTo(-1, 1);
+    ctx.lineTo(1, -1);
+    ctx.moveTo(size - 1, size + 1);
+    ctx.lineTo(size + 1, size - 1);
+    ctx.stroke();
+    map.addImage('hatch', ctx.getImageData(0, 0, size, size));
+  });
+
   map.on('load', () => {
     let canvas = document.querySelector(".maplibregl-canvas");
     canvas.setAttribute('tabindex', -1);
@@ -697,14 +720,19 @@ const handleRegmapOpacityChange = (opacity) => {
   );
 }
 
-// for Zoning topic, change opacity of zoning layer
+// for Zoning topic, change opacity of the zoning fill and outline (labels stay fully opaque)
+// every zoning-* layer is scaled from the opacity set in its style, so the translucent overlay fills
+// (waterfront setback, steep slope) stay proportionally lighter than the rest
 const handleZoningOpacityChange = (opacity) => {
   MapStore.zoningOpacity = opacity / 100;
-  map.setPaintProperty(
-    'zoning',
-    'raster-opacity',
-    opacity / 100,
-  );
+  const opacityProperty = { fill: 'fill-opacity', line: 'line-opacity', symbol: 'text-opacity' };
+  $config.zoningDrawnMapStyle.layers
+    .filter(layer => layer.id.startsWith('zoning') && opacityProperty[layer.type])
+    .forEach(layer => {
+      const property = opacityProperty[layer.type];
+      const baseOpacity = layer.paint?.[property] ?? 1;
+      map.setPaintProperty(layer.id, property, baseOpacity * opacity / 100);
+    });
 }
 
 // for Cityatlas Stormwater topic, change opacity of stormwater layer
