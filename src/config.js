@@ -437,7 +437,7 @@ const dorDrawnMapStyle = mergeDeep(imageryInfo,{
   sources: {
     dor: {
       tiles: [
-        'https://tiles.citygeo.phila.city/dor_basemap_w_labels/{z}/{x}/{y}.png',
+        'https://api-prod.phila.gov/city_basemap_tiles/v1/dor_basemap_w_labels/{z}/{x}/{y}.png',
       ],
       type: 'raster',
       tileSize: 256,
@@ -536,7 +536,7 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
   sources: {
     dor: {
       tiles: [
-        'https://tiles.citygeo.phila.city/dor_basemap_w_labels/{z}/{x}/{y}.png',
+        'https://api-prod.phila.gov/city_basemap_tiles/v1/dor_basemap_w_labels/{z}/{x}/{y}.png',
       ],
       type: 'raster',
       tileSize: 256,
