@@ -33,8 +33,8 @@ export const useMainStore = defineStore("MainStore", {
       fullScreenTopicsEnabled: false,
       windowDimensions: {},
       // on election days, switch these two
-      // currentTopic: 'property',
-      currentTopic: 'voting',
+      currentTopic: 'property',
+      // currentTopic: 'voting',
     };
   },
 
