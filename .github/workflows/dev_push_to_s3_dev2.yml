@@ -6,7 +6,7 @@ name: dev Push to S3 dev2 bucket
 on:
   push:
     branches:
-      - wip/appeals-to-be-determined
+      - wip/dor-basemap-dev-tiles
 jobs:
   build:
 
