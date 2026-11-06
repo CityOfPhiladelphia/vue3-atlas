@@ -191,10 +191,9 @@ export async function fetchTableAllRows(sourceKey, { table, fields, where, maxAg
 }
 
 // fetches a table-style query as a GeoJSON FeatureCollection - the table response
-// carries geometry natively in 4326, replacing select ST_AsGeoJSON(ST_Transform(...)).
-// Same contract as fetchDatabridgeGeoJSON: null on any failure so call sites fall
-// through to their arcgis/carto branch; feature.id stamped from objectid,
-// single-poly MultiPolygons unwrapped
+// carries geometry natively in 4326. Returns null on any failure (bad response OR
+// network/gateway error) so call sites can fall through to their arcgis/carto branch;
+// feature.id stamped from objectid, single-poly MultiPolygons unwrapped
 export async function fetchTableGeoJSON({ table, fields, where, limit, maxAge, service }) {
   const params = { table, client_id: GATEWAY_CLIENT_ID };
   if (fields) {
@@ -227,30 +226,6 @@ export async function fetchTableGeoJSON({ table, fields, where, limit, maxAge, s
   const features = response.data.data.features.map((f) => {
     const properties = normalizeTimestamps(f.properties);
     let geometry = f.geometry;
-    if (geometry && geometry.type === 'MultiPolygon' && geometry.coordinates.length === 1) {
-      geometry = { type: 'Polygon', coordinates: geometry.coordinates[0] };
-    }
-    return { type: 'Feature', id: properties.objectid, properties: properties, geometry: geometry };
-  });
-  return { type: 'FeatureCollection', features: features };
-}
-
-// returns null on any failure (bad response OR network/gateway error) so call sites
-// can fall through to their carto/arcgis branch without a try/catch of their own
-export async function fetchDatabridgeGeoJSON(sql) {
-  const params = { sql, client_id: GATEWAY_CLIENT_ID };
-  let response;
-  try {
-    response = await axios(DATABRIDGE_URL, { params });
-  } catch {
-    return null;
-  }
-  if (response.status !== 200 || !response.data.data || !response.data.data.features) {
-    return null;
-  }
-  const features = response.data.data.features.map((f) => {
-    const { geom, ...properties } = f.properties;
-    let geometry = geom;
     if (geometry && geometry.type === 'MultiPolygon' && geometry.coordinates.length === 1) {
       geometry = { type: 'Polygon', coordinates: geometry.coordinates[0] };
     }

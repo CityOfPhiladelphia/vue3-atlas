@@ -1,33 +1,16 @@
 import { defineStore } from 'pinia';
 import { useGeocodeStore } from '@/stores/GeocodeStore.js'
 import { useMainStore } from '@/stores/MainStore.js'
-import axios from 'axios';
 import useParcels from '@/composables/useParcels';
 import $config from '@/config';
-import { API_SOURCES } from '@/config/apiSources.js';
-import { fetchDatabridgeGeoJSON, fetchTableGeoJSON } from '@/util/databridge.js';
+import { fetchTableGeoJSON } from '@/util/databridge.js';
 const { processParcels } = useParcels();
 
-// databridge has no select *: shape must be transformed to 4326 explicitly, so columns are listed
+// the *_3857 parcel tables carry the NAD83->WGS84 datum shift and land within ~0.2m
+// of the Esri-served DOR basemap (verified against mapreg 089N040106 / parcelid 79436);
+// the plain dor_parcel/pwd_parcels tables sit ~0.9m off
 const DOR_DATABRIDGE_COLS = 'recsub, basereg, mapreg, parcel, recmap, stcod, house, suf, unit, stex, stdir, stnam, stdessuf, condoflag, inactdate, orig_date, status, stdes, addr_source, addr_std, pin, frac, unit_type, objectid';
 const PWD_DATABRIDGE_COLS = 'parcelid, address, owner1, owner2, brt_id, gross_area, objectid';
-
-// fetches parcels from carto as GeoJSON, normalized to match the ArcGIS response shape:
-// carto features carry no top-level id (consumers match feature.id against selectedParcelId),
-// and carto wraps single polygons in MultiPolygon
-async function fetchCartoParcels(sql) {
-  const response = await axios('https://phl.carto.com/api/v2/sql', { params: { q: sql, format: 'GeoJSON' } });
-  if (response.status !== 200 || !response.data.features) {
-    return null;
-  }
-  for (const feature of response.data.features) {
-    feature.id = feature.properties.objectid;
-    if (feature.geometry && feature.geometry.type === 'MultiPolygon' && feature.geometry.coordinates.length === 1) {
-      feature.geometry = { type: 'Polygon', coordinates: feature.geometry.coordinates[0] };
-    }
-  }
-  return response.data;
-}
 
 export const useParcelsStore = defineStore('ParcelsStore', {
   state: () => {
@@ -52,28 +35,11 @@ export const useParcelsStore = defineStore('ParcelsStore', {
         return;
       }
       try {
-        if (API_SOURCES.pwdParcels === 'arcgis') {
-          const response = await fetch(`https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/PWD_PARCELS/FeatureServer/0/query?where=parcelid=%27${pwdParcelNumber}%27&outSR=4326&f=geojson&outFields=*&returnGeometry=true`);
-          if (response.ok) {
-            this.pwd = await response.json()
-          } else {
-            if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillPwdParcelData - await resolved but HTTP status was not successful');
-          }
+        const data = await fetchTableGeoJSON({ table: 'pwd_parcels_3857', fields: PWD_DATABRIDGE_COLS, where: `parcelid = '${pwdParcelNumber}'` });
+        if (data) {
+          this.pwd = data;
         } else {
-          let data = null;
-          if (API_SOURCES.pwdParcels === 'databridge') {
-            // stays on sql=: the table-style catalog has no schema for pwd_parcels_3857
-            data = await fetchDatabridgeGeoJSON(`select ${PWD_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from pwd_parcels_3857 where parcelid = '${pwdParcelNumber}'`);
-            if (!data) console.warn('fillPwdParcelData - databridge request failed, falling back to direct carto');
-          }
-          if (!data) {
-            data = await fetchCartoParcels(`select * from pwd_parcels where parcelid = '${pwdParcelNumber}'`);
-          }
-          if (data) {
-            this.pwd = data;
-          } else {
-            if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillPwdParcelData - query did not return features');
-          }
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillPwdParcelData - query did not return features');
         }
       } catch {
         if (import.meta.env.VITE_DEBUG == 'true') console.error('fillPwdParcelData - await never resolved, failed to fetch parcel data');
@@ -93,7 +59,6 @@ export const useParcelsStore = defineStore('ParcelsStore', {
         return;
       }
 
-      const url = 'https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/DOR_Parcel/FeatureServer/0/query';
       let whereClause;
 
       if (dorParcelId.includes('|')) {
@@ -115,35 +80,11 @@ export const useParcelsStore = defineStore('ParcelsStore', {
         whereClause = "mapreg='" + dorParcelId + "'";
       }
 
-      let params = {
-        'outSR': 4326,
-        'f': 'geojson',
-        'outFields': '*',
-        'returnGeometry': true,
-      };
-
       try {
-        let originalJson;
-        if (API_SOURCES.dorParcels === 'arcgis') {
-          const response = await axios(url + '?where=' + whereClause, { params });
-          if (response.status !== 200) {
-            if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillDorParcelData - await resolved but HTTP status was not successful');
-            return;
-          }
-          if (import.meta.env.VITE_DEBUG == 'true') console.log('response', response);
-          originalJson = response.data;
-        } else {
-          if (API_SOURCES.dorParcels === 'databridge') {
-            originalJson = await fetchTableGeoJSON({ table: 'dor_parcel_3857', fields: DOR_DATABRIDGE_COLS, where: whereClause });
-            if (!originalJson) console.warn('fillDorParcelData - databridge request failed, falling back to direct carto');
-          }
-          if (!originalJson) {
-            originalJson = await fetchCartoParcels(`select * from dor_parcel where ${whereClause}`);
-          }
-          if (!originalJson) {
-            if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillDorParcelData - query did not return features');
-            return;
-          }
+        const originalJson = await fetchTableGeoJSON({ table: 'dor_parcel_3857', fields: DOR_DATABRIDGE_COLS, where: whereClause });
+        if (!originalJson) {
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('fillDorParcelData - query did not return features');
+          return;
         }
         const processedData = await processParcels(originalJson);
         const MainStore = useMainStore();
@@ -156,40 +97,13 @@ export const useParcelsStore = defineStore('ParcelsStore', {
 
     async checkParcelDataByLngLat(lng, lat, parcelLayer) {
       if (import.meta.env.VITE_DEBUG == 'true') console.log('checkParcelDataByLngLat, lng:', lng, 'lat:', lat, 'parcelLayer:', parcelLayer);
-      let ESRILayer = parcelLayer === 'pwd' ? 'PWD_PARCELS' : 'DOR_Parcel';
-      let params = {
-        'where': '1=1',
-        'outSR': 4326,
-        'f': 'geojson',
-        'outFields': '*',
-        'returnGeometry': true,
-        'geometry': `{ "x": ${lng}, "y": ${lat}, "spatialReference":{ "wkid":4326 }}`,
-        'geometryType': 'esriGeometryPoint',
-        'spatialRel': 'esriSpatialRelWithin',
-      };
       const MainStore = useMainStore();
       try {
-        let responseData;
-        if (API_SOURCES[parcelLayer === 'pwd' ? 'pwdParcels' : 'dorParcels'] === 'arcgis') {
-          const response = await axios(`https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/${ESRILayer}/FeatureServer/0/query`, { params });
-          if (response.status !== 200) {
-            if (import.meta.env.VITE_DEBUG == 'true') console.warn('checkParcelDataByLngLat - await resolved but HTTP status was not successful')
-          }
-          responseData = response.data;
-        } else {
-          if (API_SOURCES[parcelLayer === 'pwd' ? 'pwdParcels' : 'dorParcels'] === 'databridge') {
-            const table = parcelLayer === 'pwd' ? 'pwd_parcels_3857' : 'dor_parcel_3857';
-            const cols = parcelLayer === 'pwd' ? PWD_DATABRIDGE_COLS : DOR_DATABRIDGE_COLS;
-            responseData = await fetchDatabridgeGeoJSON(`select ${cols}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from ${table} where ST_Contains(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326), 3857))`);
-            if (!responseData) console.warn('checkParcelDataByLngLat - databridge request failed, falling back to direct carto');
-          }
-          if (!responseData) {
-            const cartoTable = parcelLayer === 'pwd' ? 'pwd_parcels' : 'dor_parcel';
-            responseData = await fetchCartoParcels(`select * from ${cartoTable} where ST_Contains(the_geom, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326))`) || {};
-          }
-        }
-        // a failed query can return 200 with an { error } body and no features
-        if (responseData.features && responseData.features.length > 0) {
+        const table = parcelLayer === 'pwd' ? 'pwd_parcels_3857' : 'dor_parcel_3857';
+        const cols = parcelLayer === 'pwd' ? PWD_DATABRIDGE_COLS : DOR_DATABRIDGE_COLS;
+        // the spatial where routes to Carto V3 (PostgREST has no ST_Contains)
+        const responseData = await fetchTableGeoJSON({ table, fields: cols, where: `ST_Contains(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326), 3857))` });
+        if (responseData && responseData.features.length > 0) {
           let data = responseData;
           let processedData;
 
