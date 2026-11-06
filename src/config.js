@@ -1,4 +1,10 @@
 import mergeDeep from './util/merge-deep.js';
+import { GATEWAY_CLIENT_ID } from './util/gateway.js';
+
+// the DOR basemap tiles sit behind the phila.gov gateway, which recognizes the deployed
+// origins but needs the client id from the local dev server (see util/gateway.js)
+const DOR_TILE_URL = 'https://api-prod.phila.gov/city_basemap_tiles/v1/dor_basemap_w_labels/{z}/{x}/{y}.png'
+  + (GATEWAY_CLIENT_ID ? `?client_id=${GATEWAY_CLIENT_ID}` : '');
 
 const cityCenterCoords = [-75.163471, 39.953338];
 
@@ -437,7 +443,7 @@ const dorDrawnMapStyle = mergeDeep(imageryInfo,{
   sources: {
     dor: {
       tiles: [
-        'https://api-prod.phila.gov/city_basemap_tiles/v1/dor_basemap_w_labels/{z}/{x}/{y}.png',
+        DOR_TILE_URL,
       ],
       type: 'raster',
       tileSize: 256,
@@ -536,7 +542,7 @@ const zoningDrawnMapStyle = mergeDeep(imageryInfo,{
   sources: {
     dor: {
       tiles: [
-        'https://api-prod.phila.gov/city_basemap_tiles/v1/dor_basemap_w_labels/{z}/{x}/{y}.png',
+        DOR_TILE_URL,
       ],
       type: 'raster',
       tileSize: 256,
