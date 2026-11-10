@@ -157,16 +157,16 @@ const handleTopicClick = () => {
   contents scroll under it, and leaves with its section once that scrolls past.
   In the mobile layout #topic-panel-content is overflow-y: hidden, so it does not stick there */
   position: sticky;
-  top: .5em;
+  top: .25em;
   z-index: 1;
 }
 
 /* white bands above and below the open topic's header, so scrolled contents disappear a
 little short of the stuck header instead of right at its edges. When the header is not stuck,
-the top band covers exactly its .5em margin-top and the bottom band sits inside
+the top band sits inside its .5em margin-top and the bottom band sits inside
 .inside-topic's top padding, both already white, so neither is visible */
 .topic-open {
-  box-shadow: 0 .5em 0 #ffffff, 0 -.5em 0 #ffffff;
+  box-shadow: 0 .25em 0 #ffffff, 0 -.25em 0 #ffffff;
 }
 
 .topic:hover, .topic:active {
