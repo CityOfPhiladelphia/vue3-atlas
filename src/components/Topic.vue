@@ -152,6 +152,12 @@ const handleTopicClick = () => {
   cursor: pointer;
   width: 100%;
   text-align: left;
+  /* the open topic's header stays at the top of #topic-panel-content while its
+  contents scroll under it, and leaves with its section once that scrolls past.
+  In the mobile layout #topic-panel-content is overflow-y: hidden, so it does not stick there */
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .topic:hover, .topic:active {
@@ -171,6 +177,11 @@ const handleTopicClick = () => {
   padding: 1em;
   left: 0 !important;
   right: 0 !important;
+}
+
+/* keeps keyboard-focused elements from landing under the sticky topic header */
+.inside-topic :deep(*) {
+  scroll-margin-top: 70px;
 }
 
 </style>
