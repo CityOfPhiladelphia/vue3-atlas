@@ -153,19 +153,20 @@ const handleTopicClick = () => {
   cursor: pointer;
   width: 100%;
   text-align: left;
-  /* the open topic's header stays at the top of #topic-panel-content while its
+  /* the open topic's header stays near the top of #topic-panel-content while its
   contents scroll under it, and leaves with its section once that scrolls past.
   In the mobile layout #topic-panel-content is overflow-y: hidden, so it does not stick there */
   position: sticky;
-  top: 0;
+  top: .5em;
   z-index: 1;
 }
 
-/* a white band under the open topic's header, so scrolled contents disappear a little
-below the stuck header instead of right at its edge. It is shorter than .inside-topic's
-top padding, so when the header is not stuck it sits inside that padding and is invisible */
+/* white bands above and below the open topic's header, so scrolled contents disappear a
+little short of the stuck header instead of right at its edges. When the header is not stuck,
+the top band covers exactly its .5em margin-top and the bottom band sits inside
+.inside-topic's top padding, both already white, so neither is visible */
 .topic-open {
-  box-shadow: 0 .5em 0 #ffffff;
+  box-shadow: 0 .5em 0 #ffffff, 0 -.5em 0 #ffffff;
 }
 
 .topic:hover, .topic:active {
@@ -189,7 +190,7 @@ top padding, so when the header is not stuck it sits inside that padding and is 
 
 /* keeps keyboard-focused elements from landing under the sticky topic header */
 .inside-topic :deep(*) {
-  scroll-margin-top: 85px;
+  scroll-margin-top: 90px;
 }
 
 </style>
