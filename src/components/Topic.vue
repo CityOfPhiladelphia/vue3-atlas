@@ -70,6 +70,7 @@ const handleTopicClick = () => {
   <section :id="topicName+'-topic'">
     <button
       class="topic is-vcentered"
+      :class="{ 'topic-open': open }"
       @click="handleTopicClick"
     >
       <div class="topic-name">
@@ -160,6 +161,13 @@ const handleTopicClick = () => {
   z-index: 1;
 }
 
+/* a white band under the open topic's header, so scrolled contents disappear a little
+below the stuck header instead of right at its edge. It is shorter than .inside-topic's
+top padding, so when the header is not stuck it sits inside that padding and is invisible */
+.topic-open {
+  box-shadow: 0 .5em 0 #ffffff;
+}
+
 .topic:hover, .topic:active {
   background-color: #cfcfcf;
   /* background-color: #fff; */
@@ -181,7 +189,7 @@ const handleTopicClick = () => {
 
 /* keeps keyboard-focused elements from landing under the sticky topic header */
 .inside-topic :deep(*) {
-  scroll-margin-top: 70px;
+  scroll-margin-top: 85px;
 }
 
 </style>
