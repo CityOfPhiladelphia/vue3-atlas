@@ -12,6 +12,8 @@ import FullScreenTopicsToggleTab from '@/components/FullScreenTopicsToggleTab.vu
 import AddressSearchControl from '@/components/AddressSearchControl.vue';
 
 import Topic from '@/components/Topic.vue';
+import ChecksButton from '@/components/ChecksButton.vue';
+import ChecksPanel from '@/components/ChecksPanel.vue';
 import AtlasIntro from '@/components/intros/AtlasIntro.vue';
 import CityAtlasIntro from '@/components/intros/CityAtlasIntro.vue';
 import VotingIntro from '@/components/intros/VotingIntro.vue';
@@ -87,22 +89,33 @@ const zipCode = computed(() => {
     v-if="route.name !== 'home' && route.name !== 'not-found' && address"
     class="address-holder"
   >
-    <div>
-      <h1 class="address-and-marker subtitle is-3">
-        <font-awesome-icon :icon="['fas', 'map-marker-alt']" /><div class="address">
-          {{ address }}
+    <div class="address-row">
+      <div>
+        <div>
+          <h1 class="address-and-marker subtitle is-3">
+            <font-awesome-icon :icon="['fas', 'map-marker-alt']" /><div class="address">
+              {{ address }}
+            </div>
+          </h1>
         </div>
-      </h1>
+        <div>PHILADELPHIA, PA {{ zipCode }}</div>
+      </div>
+      <checks-button />
     </div>
-    <div>PHILADELPHIA, PA {{ zipCode }}</div>
 
     <div v-if="MainStore.fullScreenTopicsEnabled">
       <address-search-control :input-id="'address-bar-search-input'" />
     </div>
   </div>
 
+  <!-- while the Checks panel is open it takes the topic list's place; v-show keeps the topics' state -->
+  <checks-panel
+    v-if="MainStore.checksPanelOpen && route.name !== 'home' && route.name !== 'not-found' && route.name !== 'topic'"
+  />
+
   <div
     v-if="route.name !== 'home' && route.name !== 'not-found' && route.name !== 'topic'"
+    v-show="!MainStore.checksPanelOpen"
     id="topic-panel-content"
     class="topics"
   >
@@ -244,6 +257,12 @@ const zipCode = computed(() => {
 .address-and-marker {
   margin-top: .5rem !important;
   margin-bottom: 0px !important;
+}
+
+.address-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 </style>

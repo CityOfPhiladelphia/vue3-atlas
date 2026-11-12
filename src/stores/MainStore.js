@@ -31,6 +31,7 @@ export const useMainStore = defineStore("MainStore", {
       selectedParcelId: null,
       fullScreenMapEnabled: false,
       fullScreenTopicsEnabled: false,
+      checksPanelOpen: false,
       windowDimensions: {},
       // on election days, switch these two
       currentTopic: 'property',

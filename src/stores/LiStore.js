@@ -50,6 +50,8 @@ export const useLiStore = defineStore('LiStore', {
       loadingLiBuildingCerts: false,
       liPermits: {},
       loadingLiPermits: false,
+      liStopWorkPermits: {},
+      loadingLiStopWorkPermits: true,
       // remote-mode permits state: used when a parcel has more permits than
       // PERMITS_REMOTE_THRESHOLD - pages are fetched from the server on demand
       liPermitsRemote: false,
@@ -104,6 +106,8 @@ export const useLiStore = defineStore('LiStore', {
       this.liBuildingCerts = {};
       this.liPermits = {};
       this.loadingLiPermits = true;
+      this.liStopWorkPermits = {};
+      this.loadingLiStopWorkPermits = true;
       this.liPermitsRemote = false;
       this.liPermitsTotal = null;
       this.liPermitsGrandTotal = null;
@@ -375,24 +379,48 @@ export const useLiStore = defineStore('LiStore', {
         if (import.meta.env.VITE_DEBUG == 'true') console.error('permits - await never resolved, failed to fetch address data')
       }
     },
+    // Returns the HANSEN and ECLIPSE where-clause arms matching the current address's permits
+    _permitsAddressArms() {
+      const GeocodeStore = useGeocodeStore();
+      const feature = GeocodeStore.aisData.features[0];
+      const eclipse_location_id = feature.properties.eclipse_location_id.replace(/\|/g, "', '");
+      const streetaddress = feature.properties.street_address;
+      const opaQuery = feature.properties.opa_account_num ? ` OR opa_account_num IN ('${ feature.properties.opa_account_num}')` : ``;
+      const pwd_parcel_id = feature.properties.pwd_parcel_id;
+      const addressId = feature.properties.li_address_key.replace(/\|/g, "', '");
+
+      // the old HANSEN-arm UNION ECLIPSE-arm on the same table is identical to
+      // (arm) OR (arm) - each old arm wrapped verbatim in parens to preserve its
+      // AND/OR precedence; set-equality proven by EXCEPT in both directions
+      const hansenArm = `address = '${ streetaddress }' or addressobjectid IN ('${ addressId }') \
+      AND systemofrecord IN ('HANSEN') ${ opaQuery }`;
+      const eclipseArm = `addressobjectid IN ('${ eclipse_location_id }') OR parcel_id_num IN ( '${ pwd_parcel_id }' ) \
+      AND systemofrecord IN ('ECLIPSE')${ opaQuery }`;
+      return { hansenArm, eclipseArm };
+    },
+    // the Checks panel's stop work order check - only the address's permits whose current
+    // status is 'Stop Work', so it can load on every address change without fetching every permit
+    async fillLiStopWorkPermits() {
+      try {
+        const { hansenArm, eclipseArm } = this._permitsAddressArms();
+        const data = await fetchTableWithFallback('permits', {
+          table: 'permits',
+          where: `((${hansenArm}) OR (${eclipseArm})) AND status = 'Stop Work'`,
+        });
+        if (data) {
+          this.liStopWorkPermits = data;
+        } else if (import.meta.env.VITE_DEBUG == 'true') {
+          console.warn('stop work permits - query did not return rows');
+        }
+      } catch {
+        if (import.meta.env.VITE_DEBUG == 'true') console.error('stop work permits - await never resolved, failed to fetch address data')
+      }
+      this.loadingLiStopWorkPermits = false;
+    },
     async _fillLiPermitsCarto() {
       try {
         // if (import.meta.env.VITE_DEBUG == 'true') console.log('fillLiPermits is running');
-        const GeocodeStore = useGeocodeStore();
-        const feature = GeocodeStore.aisData.features[0];
-        const eclipse_location_id = feature.properties.eclipse_location_id.replace(/\|/g, "', '");
-        const streetaddress = feature.properties.street_address;
-        const opaQuery = feature.properties.opa_account_num ? ` OR opa_account_num IN ('${ feature.properties.opa_account_num}')` : ``;
-        const pwd_parcel_id = feature.properties.pwd_parcel_id;
-        const addressId = feature.properties.li_address_key.replace(/\|/g, "', '");
-
-        // the old HANSEN-arm UNION ECLIPSE-arm on the same table is identical to
-        // (arm) OR (arm) - each old arm wrapped verbatim in parens to preserve its
-        // AND/OR precedence; set-equality proven by EXCEPT in both directions
-        const hansenArm = `address = '${ streetaddress }' or addressobjectid IN ('${ addressId }') \
-        AND systemofrecord IN ('HANSEN') ${ opaQuery }`;
-        const eclipseArm = `addressobjectid IN ('${ eclipse_location_id }') OR parcel_id_num IN ( '${ pwd_parcel_id }' ) \
-        AND systemofrecord IN ('ECLIPSE')${ opaQuery }`;
+        const { hansenArm, eclipseArm } = this._permitsAddressArms();
 
         // keyset-walks the COMPLETE set however many rows (2001 BEACH ST: 2,227 in
         // three pages), so permits always render through the ordinary client-side

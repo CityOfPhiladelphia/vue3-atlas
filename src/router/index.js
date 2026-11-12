@@ -166,6 +166,16 @@ const dataFetch = async (to, from) => {
         await getGeocodeAndPutInStore(address);
       }
     }
+
+    // the Checks button in the address bar summarizes these, so they load on every address
+    // change instead of waiting for the L&I topic to open (not awaited). This is outside the
+    // geocode block above because a search-box search geocodes in the /search route first
+    if (GeocodeStore.aisData.features) {
+      const LiStore = useLiStore();
+      LiStore.fillLiViolations();
+      LiStore.fillLiBusinessLicenses();
+      LiStore.fillLiStopWorkPermits();
+    }
     if (import.meta.env.VITE_DEBUG == 'true') console.log('in datafetch, after geocode, GeocodeStore.aisData:', GeocodeStore.aisData);
 
     // if this was NOT started by a map click, get the parcels
