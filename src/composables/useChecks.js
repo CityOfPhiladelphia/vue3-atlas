@@ -33,6 +33,23 @@ const BALANCE_DUE_CASES_LISTED_MAX = 5;
 // expiration date, then as no license at all
 const EXPIRED_RENTAL_LICENSE_MONTHS = 3;
 
+// building_cert_summary status columns, one per certification type, and their display names
+const BUILDING_CERT_STATUS_COLUMNS = {
+  fire_alarm_status: 'Fire alarm certification',
+  sprinkler_status: 'Sprinkler certification',
+  special_hazards_status: 'Special hazards certification',
+  emer_stdby_pwr_sys_status: 'Emergency and standby power systems certification',
+  fire_escape_status: 'Fire escape report',
+  facade_status: 'Facade report',
+  damper_status: 'Damper certification',
+  smoke_control_status: 'Smoke control certification',
+  standpipe_status: 'Standpipe certification',
+  pier_status: 'Pier report',
+  private_bridge_status: 'Private bridge report',
+};
+// building_cert_summary status value for a certification type whose most recent certification has expired
+const BUILDING_CERT_EXPIRED_STATUS = 'Expired';
+
 const RENTAL_LICENSE_REQUIRED = 'This license is required to legally rent residential units in the city and to collect rent.';
 const REPORT_UNLICENSED_RENTALS = 'Report unlicensed rentals or other tenant-landlord issues to 311.';
 
@@ -84,6 +101,28 @@ const stopWorkCheck = (stopWorkPermitRows) => {
       { text: permit.permitnumber, href: `https://li.phila.gov/Property-History/search/Permit-Detail?address="${encodeURIComponent(permit.address)}"&Id=${permit.permitnumber}` },
       permit.permitdescription ? ` (${permit.permitdescription}) has a stop work order.` : ' has a stop work order.',
     ]) };
+};
+
+// Returns the expired building certification check, or null when no certification type's most
+// recent certification has expired. It reports a failed load itself, since no other check
+// reads the certification summary
+const expiredBuildingCertCheck = (certSummaryRows, propertyHistoryUrl) => {
+  if (!certSummaryRows) {
+    return { id: 'building-certs', severity: 'grey', department: LI_DEPARTMENT,
+      title: 'Building certification information could not be loaded.', bullets: [] };
+  }
+  const expiredTypes = Object.keys(BUILDING_CERT_STATUS_COLUMNS)
+    .filter(column => certSummaryRows.some(row => row[column] === BUILDING_CERT_EXPIRED_STATUS))
+    .map(column => BUILDING_CERT_STATUS_COLUMNS[column]);
+  if (!expiredTypes.length) {
+    return null;
+  }
+  return { id: 'building-certs', severity: 'yellow', department: LI_DEPARTMENT,
+    title: `This property has ${expiredTypes.length > 1 ? 'expired building certifications' : 'an expired building certification'}.`,
+    bullets: [
+      ...expiredTypes.map(type => [`${type} has expired.`]),
+      ['See the certifications at ', { text: 'L&I Property History', href: propertyHistoryUrl }, '.'],
+    ] };
 };
 
 // Returns the violation balance due check, or null when no case has a balance due. It is
@@ -139,7 +178,7 @@ export default function useChecks() {
   const LiStore = useLiStore();
   const MainStore = useMainStore();
 
-  const loading = computed(() => LiStore.loadingLiViolations || LiStore.loadingLiBusinessLicenses || LiStore.loadingLiStopWorkPermits);
+  const loading = computed(() => LiStore.loadingLiViolations || LiStore.loadingLiBusinessLicenses || LiStore.loadingLiStopWorkPermits || LiStore.loadingLiBuildingCertSummary);
 
   const checks = computed(() => {
     const propertyHistoryUrl = `https://li.phila.gov/Property-History/search?address=${encodeURIComponent(MainStore.currentAddress)}`;
@@ -147,6 +186,7 @@ export default function useChecks() {
     const all = [
       violationsCheck(violationRows),
       stopWorkCheck(LiStore.liStopWorkPermits.rows),
+      expiredBuildingCertCheck(LiStore.liBuildingCertSummary.rows, propertyHistoryUrl),
       balanceDueCheck(violationRows, propertyHistoryUrl),
       rentalLicenseCheck(LiStore.liBusinessLicenses.rows),
     ].filter(check => check);

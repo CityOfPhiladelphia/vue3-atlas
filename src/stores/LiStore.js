@@ -46,6 +46,7 @@ export const useLiStore = defineStore('LiStore', {
       liBuildingFootprints: {},
       loadingLiBuildingFootprints: false,
       liBuildingCertSummary: {},
+      loadingLiBuildingCertSummary: true,
       liBuildingCerts: {},
       loadingLiBuildingCerts: false,
       liPermits: {},
@@ -103,6 +104,7 @@ export const useLiStore = defineStore('LiStore', {
       this.liBuildingFootprints = {};
       this.loadingLiBuildingFootprints = true;
       this.liBuildingCertSummary = {};
+      this.loadingLiBuildingCertSummary = true;
       this.liBuildingCerts = {};
       this.liPermits = {};
       this.loadingLiPermits = true;
@@ -179,9 +181,11 @@ export const useLiStore = defineStore('LiStore', {
     },
     async fillLiBuildingCertSummary() {
       if (API_SOURCES.buildingCertSummary === 'arcgis') {
-        return this._fillLiBuildingCertSummaryArcGIS();
+        await this._fillLiBuildingCertSummaryArcGIS();
+      } else {
+        await this._fillLiBuildingCertSummaryCarto();
       }
-      return this._fillLiBuildingCertSummaryCarto();
+      this.loadingLiBuildingCertSummary = false;
     },
     async _fillLiBuildingCertSummaryArcGIS() {
       // if (import.meta.env.VITE_DEBUG == 'true') console.log('fillLiBuildingCertSummary is running');

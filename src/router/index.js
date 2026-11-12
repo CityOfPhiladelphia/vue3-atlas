@@ -175,6 +175,7 @@ const dataFetch = async (to, from) => {
       LiStore.fillLiViolations();
       LiStore.fillLiBusinessLicenses();
       LiStore.fillLiStopWorkPermits();
+      LiStore.fillLiBuildingCertSummary();
     }
     if (import.meta.env.VITE_DEBUG == 'true') console.log('in datafetch, after geocode, GeocodeStore.aisData:', GeocodeStore.aisData);
 
