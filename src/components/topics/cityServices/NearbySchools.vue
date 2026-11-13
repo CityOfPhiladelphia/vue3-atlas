@@ -5,7 +5,7 @@ import { point, featureCollection } from '@turf/helpers';
 import bbox from '@turf/bbox';
 import buffer from '@turf/buffer';
 
-import maplibregl from 'maplibre-gl';
+import * as maplibregl from 'maplibre-gl';
 
 import { useGeocodeStore } from '@/stores/GeocodeStore';
 const GeocodeStore = useGeocodeStore();
