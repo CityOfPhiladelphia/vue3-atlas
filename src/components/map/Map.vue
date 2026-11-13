@@ -303,7 +303,7 @@ onMounted(async () => {
     if (e.features.length > 0) {
       // if (import.meta.env.VITE_DEBUG == 'true') console.log('map.getSource(nearby):', map.getSource('nearby'), 'map.getStyle().sources:', map.getStyle().sources);
       map.getCanvas().style.cursor = 'pointer'
-      MainStore.hoveredSchoolId = e.features[0].properties.SCHOOL_NUM.toString();
+      MainStore.hoveredSchoolId = e.features[0].properties.school_num.toString();
     }
   });
 
@@ -319,7 +319,7 @@ onMounted(async () => {
     const properties = e.features[0].properties;
     // if (import.meta.env.VITE_DEBUG) console.log('click schoolMarkers, properties:', properties);
 
-    MainStore.clickedMarkerId = properties.SCHOOL_NUM;
+    MainStore.clickedMarkerId = properties.school_num;
 
     const popup = document.getElementsByClassName('maplibregl-popup');
     if (popup.length) {
