@@ -1,6 +1,6 @@
 <script setup>
 
-import { computed } from 'vue';
+import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useMainStore } from '@/stores/MainStore.js';
 
 const MainStore = useMainStore();
@@ -39,6 +39,44 @@ const open = computed(() => {
   return route.params.topic == props.topicSlug ? true : false;
 });
 
+// the open topic's header is "stuck" once its section has scrolled above the top of the
+// topics panel, so its contents are scrolling under the header (which then gets a drop shadow)
+const sectionEl = ref(null);
+const stuck = ref(false);
+let scrollPanel = null;
+
+// Sets stuck from where this topic's section sits relative to the top of the topics panel
+const updateStuck = () => {
+  stuck.value = sectionEl.value.getBoundingClientRect().top < scrollPanel.getBoundingClientRect().top;
+};
+
+// Stops listening to the topics panel's scrolling and clears stuck
+const stopWatchingScroll = () => {
+  if (scrollPanel) {
+    scrollPanel.removeEventListener('scroll', updateStuck);
+    scrollPanel = null;
+  }
+  stuck.value = false;
+};
+
+// Starts listening to the topics panel's scrolling if this topic is open. Only the open topic
+// listens. In the mobile layout the panel does not scroll (overflow-y: hidden), so no scroll
+// events arrive and stuck stays false
+const watchScrollIfOpen = () => {
+  stopWatchingScroll();
+  if (open.value && sectionEl.value) {
+    scrollPanel = sectionEl.value.closest('#topic-panel-content');
+    if (scrollPanel) {
+      scrollPanel.addEventListener('scroll', updateStuck, { passive: true });
+      updateStuck();
+    }
+  }
+};
+
+watch(open, watchScrollIfOpen, { flush: 'post' });
+onMounted(watchScrollIfOpen);
+onBeforeUnmount(stopWatchingScroll);
+
 const handleTopicClick = () => {
   if (props.topicSlug == route.params.topic) {
     MainStore.currentTopic = '';
@@ -67,9 +105,13 @@ const handleTopicClick = () => {
 </script>
 
 <template>
-  <section :id="topicName+'-topic'">
+  <section
+    :id="topicName+'-topic'"
+    ref="sectionEl"
+  >
     <button
       class="topic is-vcentered"
+      :class="{ 'topic-open': open, 'topic-stuck': stuck }"
       @click="handleTopicClick"
     >
       <div class="topic-name">
@@ -152,6 +194,25 @@ const handleTopicClick = () => {
   cursor: pointer;
   width: 100%;
   text-align: left;
+  /* the open topic's header stays near the top of #topic-panel-content while its
+  contents scroll under it, and leaves with its section once that scrolls past.
+  In the mobile layout #topic-panel-content is overflow-y: hidden, so it does not stick there */
+  position: sticky;
+  top: .25em;
+  z-index: 1;
+}
+
+/* white bands above and below the open topic's header, so scrolled contents disappear a
+little short of the stuck header instead of right at its edges. When the header is not stuck,
+the top band sits inside its .5em margin-top and the bottom band sits inside
+.inside-topic's top padding, both already white, so neither is visible */
+.topic-open {
+  box-shadow: 0 .25em 0 #ffffff, 0 -.25em 0 #ffffff;
+}
+
+/* while contents scroll under the stuck header, a drop shadow replaces the white band below it */
+.topic-stuck {
+  box-shadow: 0 -.25em 0 #ffffff, 0 5px 8px -2px rgba(0, 0, 0, 0.4);
 }
 
 .topic:hover, .topic:active {
@@ -171,6 +232,11 @@ const handleTopicClick = () => {
   padding: 1em;
   left: 0 !important;
   right: 0 !important;
+}
+
+/* keeps keyboard-focused elements from landing under the sticky topic header */
+.inside-topic :deep(*) {
+  scroll-margin-top: 90px;
 }
 
 </style>

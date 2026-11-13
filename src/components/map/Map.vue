@@ -6,8 +6,12 @@ if (import.meta.env.VITE_DEBUG == 'true') console.log('Map.vue $config:', $confi
 import { ref, onMounted, watch, watchEffect, computed } from 'vue';
 
 // PACKAGE IMPORTS
-import maplibregl from 'maplibre-gl';
+import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+// maplibre looks for its worker file next to its own file, which no longer exists once Vite bundles it,
+// so the worker is built as its own file and its URL is handed to maplibre
+import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
+maplibregl.setWorkerUrl(maplibreWorkerUrl);
 // this was recommended by a comment in https://github.com/mapbox/mapbox-gl-js/issues/9114
 // the official mapbox-gl-draw was blocking map clicks
 import '@/assets/mapbox-gl-draw.min.js'
@@ -64,7 +68,7 @@ let map;
 
 // keep image sources as computed props so that the publicPath can be used, for pushing the app to different environments
 const markerSrc = computed(() => {
-  return MainStore.publicPath + 'images/marker_blue_base_5.png';
+  return MainStore.publicPath + 'images/address-marker.png';
 })
 const pinkSchoolSrc = computed(() => {
   return MainStore.publicPath + 'images/pink-school-solid.png';
@@ -299,7 +303,7 @@ onMounted(async () => {
     if (e.features.length > 0) {
       // if (import.meta.env.VITE_DEBUG == 'true') console.log('map.getSource(nearby):', map.getSource('nearby'), 'map.getStyle().sources:', map.getStyle().sources);
       map.getCanvas().style.cursor = 'pointer'
-      MainStore.hoveredSchoolId = e.features[0].properties.SCHOOL_NUM.toString();
+      MainStore.hoveredSchoolId = e.features[0].properties.school_num.toString();
     }
   });
 
@@ -315,7 +319,7 @@ onMounted(async () => {
     const properties = e.features[0].properties;
     // if (import.meta.env.VITE_DEBUG) console.log('click schoolMarkers, properties:', properties);
 
-    MainStore.clickedMarkerId = properties.SCHOOL_NUM;
+    MainStore.clickedMarkerId = properties.school_num;
 
     const popup = document.getElementsByClassName('maplibregl-popup');
     if (popup.length) {
