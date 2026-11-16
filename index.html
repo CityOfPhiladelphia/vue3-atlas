@@ -23,6 +23,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>phila.gov</title>
     <script src="https://code.jquery.com/pep/0.4.3/pep.min.js" integrity="sha256-ibZWIASZ948myvthXu3qCoTOg8bnJzjMJoYZz1RPg6E=" crossorigin="anonymous"></script>
+    <!-- this was recommended by a comment in https://github.com/mapbox/mapbox-gl-js/issues/9114 -->
+    <!-- the official mapbox-gl-draw was blocking map clicks -->
+    <!-- loaded as a plain script so it sets window.MapboxDraw; bundling it makes it export MapboxDraw instead of setting the global -->
+    <script src="/mapbox-gl-draw.min.js"></script>
   </head>
   <body>
     <!-- Google Tag Manager (noscript) -->
