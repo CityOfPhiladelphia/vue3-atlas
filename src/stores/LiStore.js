@@ -150,8 +150,13 @@ export const useLiStore = defineStore('LiStore', {
         const opa_account_num = feature.properties.opa_account_num;
         const baseUrl = `https://phl.carto.com/api/v2/sql?q=`;
         const url = baseUrl + `SELECT * FROM lhhp_lead_certifications WHERE opa_account IN ('${opa_account_num}')`;
-        const response = await axios.get(url);
-        const unsortedData = await response.data;
+        const response = await fetch(url);
+        if (!response.ok) {
+          this.loadingLeadCertifications = false;
+          console.warn('leadCertifications - await resolved but HTTP status was not successful');
+          return;
+        }
+        const unsortedData = await response.json();
         const sortedRows = unsortedData.rows.sort((a, b) => {
           return b.lhhp_property_type.localeCompare(a.lhhp_property_type);
         });
@@ -170,8 +175,13 @@ export const useLiStore = defineStore('LiStore', {
         const baseUrl = `https://phl.carto.com/api/v2/sql?q=`;
         // const url = baseUrl + `SELECT * FROM lhhp_lead_unit_inspections WHERE opaaccountnumber IN ('${opa_account_num}')`;
         const url = baseUrl + `SELECT * FROM lhhp_lead_units_for_atlas WHERE opaaccountnumber IN ('${opa_account_num}')`;
-        const response = await axios.get(url);
-        const data = await response.data;
+        const response = await fetch(url);
+        if (!response.ok) {
+          this.loadingLeadUnitInspections = false;
+          console.warn('leadUnitInspections - await resolved but HTTP status was not successful');
+          return;
+        }
+        const data = await response.json();
         this.leadUnitInspections = { rows: data.rows };
         this.loadingLeadUnitInspections = false;
       } catch {
