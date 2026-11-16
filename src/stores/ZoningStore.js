@@ -12,6 +12,12 @@ const { rcoPrimaryContact, phoneNumber, date } = useTransforms();
 // databridge has no select *: shape must be transformed to 4326 explicitly, so columns are listed
 const RCO_DATABRIDGE_COLS = 'organization_name, organization_address, meeting_location_address, org_type, primary_name, primary_phone, primary_email, primary_address, alternate_name, websites, effective_date, expirationyear, lni_id, objectid';
 
+// Zoning appeals scheduled-date cell: links to the ZBA appeals calendar, or plain text when there is no hearing date
+const zoningAppealCalendarCell = (row) => {
+  if (!row.scheduleddate) return 'To Be Determined';
+  return "<a target='_blank' href='https://li.phila.gov/zba-appeals-calendar/appeal?from=2-7-2000&to=4-7-2050&region=all&Id="+row.appealnumber+"'>"+date(row.scheduleddate, 'MM/dd/yyyy')+" <i class='fa fa-external-link'></i></a>";
+};
+
 import { format } from 'date-fns';
 
 import { polygon, featureCollection } from '@turf/helpers';
@@ -400,28 +406,31 @@ export const useZoningStore = defineStore('ZoningStore', {
       try {
         const GeocodeStore = useGeocodeStore();
         const feature = GeocodeStore.aisData.features[0];
-        const streetaddress = feature.properties.street_address;
-        const pwd_parcel_id = feature.properties.pwd_parcel_id;
-        const addressId = feature.properties.li_address_key.replace(/\|/g, "', '");
-        const eclipseLocationId = feature.properties.eclipse_location_id.replace(/\|/g, "', '");
-        const eclipseQuery = feature.properties.eclipse_location_id ? `addressobjectid IN ('${eclipseLocationId}')` : ``;
-        const zoningQuery = `applicationtype in ('Zoning Board of Adjustment', 'RB_ZBA') AND applicationtype is not null`
-        const opaQuery = feature.properties.opa_account_num ? ` AND opa_account_num IN ('${ feature.properties.opa_account_num}')` : ``;
+        const { street_address, pwd_parcel_id, li_address_key, eclipse_location_id, opa_account_num } = feature.properties;
+        const parcelMatch = `parcel_id_num IN ('${pwd_parcel_id}')`;
 
-        // the old HANSEN-arm UNION ECLIPSE-arm on the same table is identical to
-        // (arm) OR (arm) - each old arm wrapped verbatim in parens to preserve its
-        // AND/OR precedence; set-equality proven by EXCEPT in both directions
-        const hansenArm = `(address = '${ streetaddress }' AND ${zoningQuery} \
-          OR addressobjectid IN ('${ addressId }') AND ${zoningQuery} \
-          OR parcel_id_num IN ('${ pwd_parcel_id }') AND ${zoningQuery}) \
-          ${ opaQuery } AND ${zoningQuery} \
-          AND systemofrecord IN ('HANSEN')`;
-        const eclipseArm = `(${eclipseQuery} AND ${zoningQuery}  \
-          OR parcel_id_num IN ('${ pwd_parcel_id }') AND ${zoningQuery}) \
-          ${ opaQuery } AND ${zoningQuery} \
-          AND systemofrecord IN ('ECLIPSE')`;
+        // a zoning appeal at this address: HANSEN records match by address, L&I
+        // address key, or parcel; ECLIPSE records by eclipse location id or parcel.
+        // An id AIS doesn't have is left out rather than written as an empty clause
+        const hansenMatches = [`address = '${street_address}'`];
+        if (li_address_key) {
+          hansenMatches.push(`addressobjectid IN ('${li_address_key.replace(/\|/g, "', '")}')`);
+        }
+        hansenMatches.push(parcelMatch);
+        const eclipseMatches = [];
+        if (eclipse_location_id) {
+          eclipseMatches.push(`addressobjectid IN ('${eclipse_location_id.replace(/\|/g, "', '")}')`);
+        }
+        eclipseMatches.push(parcelMatch);
 
-        const data = await fetchTableWithFallback('zoningAppeals', { table: 'appeals', where: `(${hansenArm}) OR (${eclipseArm})` });
+        let where = `applicationtype IN ('Zoning Board of Adjustment', 'RB_ZBA')`
+          + ` AND ((systemofrecord = 'HANSEN' AND (${hansenMatches.join(' OR ')}))`
+          + ` OR (systemofrecord = 'ECLIPSE' AND (${eclipseMatches.join(' OR ')})))`;
+        if (opa_account_num) {
+          where += ` AND opa_account_num IN ('${opa_account_num}')`;
+        }
+
+        const data = await fetchTableWithFallback('zoningAppeals', { table: 'appeals', where });
         if (data) {
           console.log('data:', data);
           // replaces the old ORDER BY scheduleddate DESC (nulls first, like postgres)
@@ -438,8 +447,8 @@ export const useZoningStore = defineStore('ZoningStore', {
               address += ' Unit ' + row.unit_num;
             }
             console.log('in loop, row:', row);
-            row.appeallink = `<a target='_blank' href='https://li.phila.gov/Property-History/search/Appeal-Detail?address=${address}&Id=${row.appealnumber}'>${row.appealnumber}<i class='fas fa-external-link'></i></a>`
-            row.calendarlink = "<a target='_blank' href='https://li.phila.gov/zba-appeals-calendar/appeal?from=2-7-2000&to=4-7-2050&region=all&Id="+row.appealnumber+"'>"+date(row.scheduleddate, 'MM/dd/yyyy')+" <i class='fa fa-external-link'></i></a>";
+            row.appeallink = `<a target='_blank' href='https://li.phila.gov/Property-History/search/Appeal-Detail?address=${address}&Id=${row.appealnumber}'>${row.appealnumber} <i class='fas fa-external-link'></i></a>`
+            row.calendarlink = zoningAppealCalendarCell(row);
             console.log('in loop, row:', row);
           });
           this.zoningAppeals = data;
@@ -462,7 +471,14 @@ export const useZoningStore = defineStore('ZoningStore', {
         let data;
         if (API_SOURCES.rcos === 'databridge') {
           const coords = feature.geometry.coordinates;
-          data = await fetchTableGeoJSON({ table: 'zoning_rco', fields: RCO_DATABRIDGE_COLS, where: `ST_Contains(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${coords[0]}, ${coords[1]}), 4326), 2272))`, service: 'carto' });
+          // AIS already lists the address's RCOs by lni_id, so the lookup is a plain
+          // match PostgREST can serve; the point-in-polygon search (carto only) covers
+          // addresses AIS lists none for
+          const rcoIds = feature.properties.zoning_rco;
+          const where = rcoIds
+            ? `lni_id IN (${rcoIds.split('|').join(', ')})`
+            : `ST_Contains(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${coords[0]}, ${coords[1]}), 4326), 2272))`;
+          data = await fetchTableGeoJSON({ table: 'zoning_rco', fields: RCO_DATABRIDGE_COLS, where });
           if (!data) console.warn('fillRcos - databridge request failed, falling back to direct arcgis');
         }
         if (!data) {

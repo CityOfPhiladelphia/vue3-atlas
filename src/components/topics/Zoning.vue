@@ -137,13 +137,10 @@ const appealsTableData = computed(() => {
     columns: [
       {
         label: 'Processed Date',
-        field: 'calendarlink',
-        html: true,
-        // label: 'Processed Date',
-        // field: 'createddate',
-        // type: 'date',
-        // dateInputFormat: "yyyy-MM-dd'T'HH:mm:ssX",
-        // dateOutputFormat: 'MM/dd/yyyy',
+        field: 'createddate',
+        type: 'date',
+        dateInputFormat: "yyyy-MM-dd'T'HH:mm:ssX",
+        dateOutputFormat: 'MM/dd/yyyy',
       },
       {
         label: 'Id',
@@ -156,10 +153,10 @@ const appealsTableData = computed(() => {
       },
       {
         label: 'Scheduled Date',
-        field: 'scheduleddate',
-        type: 'date',
-        dateInputFormat: "yyyy-MM-dd'T'HH:mm:ssX",
-        dateOutputFormat: 'MM/dd/yyyy',
+        field: 'calendarlink',
+        html: true,
+        // the cell is link markup, so sort on the underlying date; no date sorts as earliest
+        sortFn: (x, y, col, rowX, rowY) => (rowX.scheduleddate || '').localeCompare(rowY.scheduleddate || ''),
       },
       {
         label: 'Status',

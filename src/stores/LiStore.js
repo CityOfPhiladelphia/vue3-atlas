@@ -1,15 +1,12 @@
 import { defineStore } from 'pinia';
 import { useGeocodeStore } from '@/stores/GeocodeStore.js'
 import { API_SOURCES } from '@/config/apiSources.js';
-import { fetchDatabridgeGeoJSON, fetchDatabridgeRows, fetchRowsWithFallback, fetchTableWithFallback, fetchTableAllRows } from '@/util/databridge.js';
+import { fetchTableGeoJSON, fetchDatabridgeRows, fetchRowsWithFallback, fetchTableWithFallback, fetchTableAllRows } from '@/util/databridge.js';
 import { buildSearchWhere, buildOrderBy, buildCountSql, buildPageSql, REMOTE_THRESHOLD, REMOTE_SERVER_PAGE } from '@/util/remoteTable.js';
 
 import useTransforms from '@/composables/useTransforms';
 const { date } = useTransforms();
-import axios from 'axios';
 
-// databridge has no select *: shape must be transformed to 4326 explicitly, so columns are listed
-const FOOTPRINTS_DATABRIDGE_COLS = 'bin, address, building_name, approx_hgt, max_hgt, base_elevation, square_ft, parcel_id_num, parcel_id_source, fcode, objectid';
 // vue-good-table column field -> SQL column for server-side sorting
 const PERMITS_SORT_COLUMNS = {
   permitissuedate: 'permitissuedate',
@@ -34,6 +31,12 @@ const epochToIso = (epoch) => {
   const d = new Date(epoch);
   // Remove milliseconds from ISO string to match expected format
   return d.toISOString().replace(/\.\d{3}Z$/, 'Z');
+};
+
+// Appeals date cell: links to the appeals calendar, or plain text when there is no hearing date
+const appealCalendarCell = (item) => {
+  if (!item.scheduleddate) return 'To Be Determined';
+  return "<a target='_blank' href='https://li.phila.gov/appeals-calendar/appeal?from=2-7-2000&to=4-7-2050&region=all&Id="+item.appealnumber+"'>"+date(item.scheduleddate, 'MM/dd/yyyy')+" <i class='fa fa-external-link'></i></a>";
 };
 
 export const useLiStore = defineStore('LiStore', {
@@ -181,7 +184,6 @@ export const useLiStore = defineStore('LiStore', {
       try {
         const GeocodeStore = useGeocodeStore();
         const feature = GeocodeStore.aisData.features[0].properties.bin.split('|');
-        const baseUrl = 'https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/LI_BUILDING_FOOTPRINTS/FeatureServer/0/query';
         let data;
         let where;
         let bin = "";
@@ -199,37 +201,21 @@ export const useLiStore = defineStore('LiStore', {
           where = "parcel_id_num = '" + data + "'";
         }
         // if (import.meta.env.VITE_DEBUG == 'true') console.log('where:', where);
-        if (API_SOURCES.liBuildingFootprints === 'databridge') {
-          // stays on sql=: the table-style catalog has no schema for the _3857 tables
-          // ("Schema not found", verified 2026-09-17) - ask CityGeo to register them
-          const result = await fetchDatabridgeGeoJSON(`select ${FOOTPRINTS_DATABRIDGE_COLS}, ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom from building_footprints_3857 where ${where}`);
-          if (result) {
-            // reshape to the ArcGIS pjson format LI.vue reads: attributes + geometry.rings
-            this.liBuildingFootprints = {
-              features: result.features.map((f) => ({
-                attributes: f.properties,
-                geometry: { rings: f.geometry ? (f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates.flat() : f.geometry.coordinates) : [] },
-              })),
-            };
-            this.loadingLiBuildingFootprints = false;
-            return;
-          }
-          console.warn('liBuildingFootprints - databridge request failed, falling back to direct arcgis');
-        }
-        const params = {
-          where: where,
-          outFields: '*',
-          outSR: 4326,
-          f: 'pjson',
-        };
-        const response = await axios.get(baseUrl, { params });
-        if (response.status === 200) {
-          this.liBuildingFootprints = await response.data;
-          this.loadingLiBuildingFootprints = false;
+        // building_footprints_3857 carries the NAD83->WGS84 shift and aligns with
+        // the Esri basemap
+        const result = await fetchTableGeoJSON({ table: 'building_footprints_3857', where });
+        if (result) {
+          // reshape to the ArcGIS pjson format LI.vue reads: attributes + geometry.rings
+          this.liBuildingFootprints = {
+            features: result.features.map((f) => ({
+              attributes: f.properties,
+              geometry: { rings: f.geometry ? (f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates.flat() : f.geometry.coordinates) : [] },
+            })),
+          };
         } else {
-          if (import.meta.env.VITE_DEBUG == 'true') console.warn('liBuildingFootprints - await resolved but HTTP status was not successful')
-          this.loadingLiBuildingFootprints = false;
+          if (import.meta.env.VITE_DEBUG == 'true') console.warn('liBuildingFootprints - databridge request failed')
         }
+        this.loadingLiBuildingFootprints = false;
       } catch {
         if (import.meta.env.VITE_DEBUG == 'true') console.error('liBuildingFootprints - await never resolved, failed to fetch address data')
         this.loadingLiBuildingFootprints = false;
@@ -587,11 +573,16 @@ export const useLiStore = defineStore('LiStore', {
       try {
         const GeocodeStore = useGeocodeStore();
         const feature = GeocodeStore.aisData.features[0];
-        // stays on sql=: the table-style where can't express the ANY cast (PostgREST
-        // "Unsupported operator"), and Carto V3's table mode requires an objectid
-        // column this table lacks - verified 2026-09-17
-        const sql = `select * from ais_zoning_documents where doc_id = ANY('{ ${feature.properties.zoning_document_ids} }'::text[])`;
-        const data = await this._fetchLiSql('aisZoningDocs', sql);
+        const docIds = feature.properties.zoning_document_ids || [];
+        if (!docIds.length) {
+          this.liAisZoningDocs = { rows: [] };
+          this.loadingLiAisZoningDocs = false;
+          return;
+        }
+        const data = await fetchTableWithFallback('aisZoningDocs', {
+          table: 'ais_zoning_documents',
+          where: `doc_id IN (${docIds.map((id) => `'${id}'`).join(', ')})`,
+        });
         if (data) {
           let addedData = this.addDataToZoningDocs(data);
           this.liAisZoningDocs = addedData;
@@ -1120,7 +1111,7 @@ export const useLiStore = defineStore('LiStore', {
               address += ' Unit ' + item.unit_num;
             }
             item.appeallink = "<a target='_blank' href='https://li.phila.gov/Property-History/search/appeal-detail?address="+encodeURIComponent(address)+"&Id="+item.appealnumber+"'>"+item.appealnumber+" <i class='fa fa-external-link'></i></a>";
-            item.calendarlink = "<a target='_blank' href='https://li.phila.gov/appeals-calendar/appeal?from=2-7-2000&to=4-7-2050&region=all&Id="+item.appealnumber+"'>"+date(item.scheduleddate, 'MM/dd/yyyy')+" <i class='fa fa-external-link'></i></a>";
+            item.calendarlink = appealCalendarCell(item);
           });
           console.log('fillLiAppeals forEach completed, setting liAppeals');
           this.liAppeals = data;
@@ -1192,7 +1183,7 @@ export const useLiStore = defineStore('LiStore', {
               address += ' Unit ' + item.unit_num;
             }
             item.appeallink = "<a target='_blank' href='https://li.phila.gov/Property-History/search/appeal-detail?address="+encodeURIComponent(address)+"&Id="+item.appealnumber+"'>"+item.appealnumber+" <i class='fa fa-external-link'></i></a>";
-            item.calendarlink = "<a target='_blank' href='https://li.phila.gov/appeals-calendar/appeal?from=2-7-2000&to=4-7-2050&region=all&Id="+item.appealnumber+"'>"+date(item.scheduleddate, 'MM/dd/yyyy')+" <i class='fa fa-external-link'></i></a>";
+            item.calendarlink = appealCalendarCell(item);
           });
           console.log('fillLiAppealsCarto forEach completed, setting liAppeals');
           this.liAppeals = data;

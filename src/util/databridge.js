@@ -9,28 +9,25 @@ export const DATABRIDGE_URL = 'https://api-prod.phila.gov/databridge-api/v1/get'
 // FeatureCollection matching the ArcGIS response shape: the envelope is data.features[].properties
 // with the geometry as a geom property (select ST_AsGeoJSON(ST_Transform(shape, 4326)) as geom),
 // feature.id stamped from objectid, single-poly MultiPolygons unwrapped
-// databridge (carto v3) serializes timestamps inconsistently: without a timezone on
-// plain selects ('2022-06-15T00:00:00'), and as UTC with milliseconds when the query
-// has an ORDER BY ('2024-11-04T00:00:00.000Z'). The tables' date parsing expects old
-// carto's form: UTC with a trailing Z and no milliseconds. A naive timestamp is local
-// time, so Date() then toISOString() reproduces the old carto value; the millisecond
-// form just needs the '.000' stripped.
-// databridge serializes every timestamp as the table's LOCAL clock reading - sometimes
-// bare ('2026-09-10T16:47:51'), sometimes with a false UTC label ('...T16:47:51.000Z') -
-// while old carto converts properly ('2026-09-10T20:47:51Z' for the same row, verified
-// on violations CF-2026-123303 and the splits election_date). Trusting the false Z
-// shifted times 4-5 hours and rolled dates back a day, so every form is read as local
-// time and relabeled to real UTC, reproducing old carto's values exactly.
-const LOCAL_CLOCK_TIMESTAMP = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.\d{3})?Z?$/;
+// databridge serializes timestamps as real UTC (since 2026-10-23), spelled two ways:
+// '2026-09-02T13:30:00+00:00' on table= (PostgREST) and '2026-09-02T13:30:00.000Z' on
+// sql= (Carto V3). The tables' date parsing expects carto's spelling - a trailing Z, no
+// milliseconds - so both are rewritten to that; the instant is not changed. A bare reading
+// with no zone at all ('2026-09-02T09:30:00', a table the gateway hasn't converted) is
+// still the Philadelphia clock, read as local time and relabeled to real UTC.
+const UTC_TIMESTAMP = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.\d{3})?(?:Z|\+00:00)$/;
+const LOCAL_CLOCK_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
 function normalizeTimestamps(properties) {
   for (const key of Object.keys(properties)) {
     const value = properties[key];
     if (typeof value !== 'string') {
       continue;
     }
-    const clock = value.match(LOCAL_CLOCK_TIMESTAMP);
-    if (clock) {
-      properties[key] = new Date(clock[1]).toISOString().replace('.000Z', 'Z');
+    const utc = value.match(UTC_TIMESTAMP);
+    if (utc) {
+      properties[key] = `${utc[1]}Z`;
+    } else if (LOCAL_CLOCK_TIMESTAMP.test(value)) {
+      properties[key] = new Date(value).toISOString().replace('.000Z', 'Z');
     }
   }
   return properties;
@@ -89,9 +86,8 @@ export async function fetchTableWithFallback(sourceKey, { table, fields, where, 
       params.max_age = maxAge;
     }
     if (service) {
-      // spatial wheres only run on the carto backend; pinning skips the PostgREST
-      // attempt, which on some tables (public_cases_fc) burns the upstream timeout
-      // instead of failing fast
+      // forces one backend; without it databridge tries PostgREST, then Carto,
+      // then AGO, so spatial wheres (Carto only) land on Carto on their own
       params.service = service;
     }
     let response = null;
@@ -195,10 +191,9 @@ export async function fetchTableAllRows(sourceKey, { table, fields, where, maxAg
 }
 
 // fetches a table-style query as a GeoJSON FeatureCollection - the table response
-// carries geometry natively in 4326, replacing select ST_AsGeoJSON(ST_Transform(...)).
-// Same contract as fetchDatabridgeGeoJSON: null on any failure so call sites fall
-// through to their arcgis/carto branch; feature.id stamped from objectid,
-// single-poly MultiPolygons unwrapped
+// carries geometry natively in 4326. Returns null on any failure (bad response OR
+// network/gateway error) so call sites can fall through to their arcgis/carto branch;
+// feature.id stamped from objectid, single-poly MultiPolygons unwrapped
 export async function fetchTableGeoJSON({ table, fields, where, limit, maxAge, service }) {
   const params = { table, client_id: GATEWAY_CLIENT_ID };
   if (fields) {
@@ -215,8 +210,8 @@ export async function fetchTableGeoJSON({ table, fields, where, limit, maxAge, s
     params.max_age = maxAge;
   }
   if (service) {
-    // spatial wheres only run on the carto backend; pinning skips the PostgREST
-    // attempt, which on some tables burns the upstream timeout instead of failing fast
+    // forces one backend; without it databridge tries PostgREST, then Carto,
+    // then AGO, so spatial wheres (Carto only) land on Carto on their own
     params.service = service;
   }
   let response;
@@ -231,30 +226,6 @@ export async function fetchTableGeoJSON({ table, fields, where, limit, maxAge, s
   const features = response.data.data.features.map((f) => {
     const properties = normalizeTimestamps(f.properties);
     let geometry = f.geometry;
-    if (geometry && geometry.type === 'MultiPolygon' && geometry.coordinates.length === 1) {
-      geometry = { type: 'Polygon', coordinates: geometry.coordinates[0] };
-    }
-    return { type: 'Feature', id: properties.objectid, properties: properties, geometry: geometry };
-  });
-  return { type: 'FeatureCollection', features: features };
-}
-
-// returns null on any failure (bad response OR network/gateway error) so call sites
-// can fall through to their carto/arcgis branch without a try/catch of their own
-export async function fetchDatabridgeGeoJSON(sql) {
-  const params = { sql, client_id: GATEWAY_CLIENT_ID };
-  let response;
-  try {
-    response = await axios(DATABRIDGE_URL, { params });
-  } catch {
-    return null;
-  }
-  if (response.status !== 200 || !response.data.data || !response.data.data.features) {
-    return null;
-  }
-  const features = response.data.data.features.map((f) => {
-    const { geom, ...properties } = f.properties;
-    let geometry = geom;
     if (geometry && geometry.type === 'MultiPolygon' && geometry.coordinates.length === 1) {
       geometry = { type: 'Polygon', coordinates: geometry.coordinates[0] };
     }
