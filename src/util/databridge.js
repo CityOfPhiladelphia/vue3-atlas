@@ -193,8 +193,11 @@ export async function fetchTableAllRows(sourceKey, { table, fields, where, maxAg
 // fetches a table-style query as a GeoJSON FeatureCollection - the table response
 // carries geometry natively in 4326. Returns null on any failure (bad response OR
 // network/gateway error) so call sites can fall through to their arcgis/carto branch;
-// feature.id stamped from objectid, single-poly MultiPolygons unwrapped
-export async function fetchTableGeoJSON({ table, fields, where, limit, maxAge, service }) {
+// feature.id stamped from objectid, single-poly MultiPolygons unwrapped.
+// point ({ lng, lat }, 4326) selects the polygons containing that point. It runs as
+// the API's own x/y lookup on PostgREST, where an ST_Contains where would route to
+// Carto and count against the Carto quota
+export async function fetchTableGeoJSON({ table, fields, where, point, limit, maxAge, service }) {
   const params = { table, client_id: GATEWAY_CLIENT_ID };
   if (fields) {
     // the fields param wants bare commas - a 'col1, col2' list reads ' col2' as a column name
@@ -202,6 +205,10 @@ export async function fetchTableGeoJSON({ table, fields, where, limit, maxAge, s
   }
   if (where) {
     params.where = where;
+  }
+  if (point) {
+    params.x = point.lng;
+    params.y = point.lat;
   }
   if (limit) {
     params.limit = limit;
