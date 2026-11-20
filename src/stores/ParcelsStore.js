@@ -101,8 +101,7 @@ export const useParcelsStore = defineStore('ParcelsStore', {
       try {
         const table = parcelLayer === 'pwd' ? 'pwd_parcels_3857' : 'dor_parcel_3857';
         const cols = parcelLayer === 'pwd' ? PWD_DATABRIDGE_COLS : DOR_DATABRIDGE_COLS;
-        // the spatial where routes to Carto V3 (PostgREST has no ST_Contains)
-        const responseData = await fetchTableGeoJSON({ table, fields: cols, where: `ST_Contains(shape, ST_Transform(ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326), 3857))` });
+        const responseData = await fetchTableGeoJSON({ table, fields: cols, point: { lng, lat } });
         if (responseData && responseData.features.length > 0) {
           let data = responseData;
           let processedData;
