@@ -7,6 +7,7 @@ on:
   push:
     branches:
       - fix/mapbox-draw-script
+      - feat/regmaps-from-pmtiles
 jobs:
   build:
 
