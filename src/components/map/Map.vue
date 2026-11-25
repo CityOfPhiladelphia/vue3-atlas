@@ -652,7 +652,7 @@ watch(
         map.removeSource('regmap');
       }
       if (import.meta.env.VITE_DEBUG == 'true') console.log('add newRegmap:', newRegmap);
-      const tiles = `https://ags-regmaps.phila.gov/arcgis/rest/services/RegMaps/MapServer/export?dpi=96&layerDefs=0:NAME='g${newRegmap.toLowerCase().trim()}.tif'&transparent=true&format=png24&bbox={bbox-epsg-3857}&bboxSR=3857&imageSR=3857&size=700,700&f=image&layers=show%3A0`;
+      const tiles = `https://api-prod.phila.gov/city_basemap_tiles/v1/regmaps/g${newRegmap.toLowerCase().trim()}/{z}/{x}/{y}.png`;
       $config.dorDrawnMapStyle.sources.regmap = {
         type: 'raster',
         tiles: [tiles],
@@ -669,7 +669,7 @@ watch(
     } else {
       map.removeLayer('regmap');
       map.removeSource('regmap');
-      const tiles = `https://ags-regmaps.phila.gov/arcgis/rest/services/RegMaps/MapServer/export?dpi=96&layerDefs=0:NAME='g${newRegmap.toLowerCase().trim()}.tif'&transparent=true&format=png24&bbox={bbox-epsg-3857}&bboxSR=3857&imageSR=3857&size=700,700&f=image&layers=show%3A0`;
+      const tiles = `https://api-prod.phila.gov/city_basemap_tiles/v1/regmaps/g${newRegmap.toLowerCase().trim()}/{z}/{x}/{y}.png`;
       $config.dorDrawnMapStyle.sources.regmap = {
         type: 'raster',
         tiles: [tiles],
